@@ -47,12 +47,12 @@ const getAuthorizationToken = async (req, res, next) => {
     if (bearerToken) {
         const token = jwt.sign({ bearerToken }, JWT_SECRET, { expiresIn: '12h' });
         // res.cookie('')
+
+        // console.warn("Tokens:", bearerToken)
         res.json({ token });
     } else {
         res.status(401).send('Credenciais inválidas');
     }
-
-    // console.warn("Tokens:", bearerToken)
 }
 
 module.exports = {
