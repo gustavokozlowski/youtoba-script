@@ -1,38 +1,23 @@
 const axios = require('axios')
-const google = require('googleapis')
 
-const youtube = new google.youtube_v3.Youtube({
-    version: 'v3',
-    auth: apiKey
-})
-
-const oauth2Client = new google.Auth.OAuth2Client(
-
-);
-
-
-const getAllPlaylists = async (req, res) => {
+const getAllPlaylists = async () => {
     try {
-        const response = youtube.playlists.list({       
-            part: 'snippet',
-            mine: true,
-            access_token: "",
+        const result = await axios({
+            method: 'GET',
+            headers: {
+                authorization: `Bearer ${bearerToken}`
+            },
+            "Accept": "application/json",
+            url: `https://youtube.googleapis.com/youtube/v3/playlists?part=snippet%2CcontentDetails&mine=true&key=${API_KEY}`
 
-        }, (err, resultado) => {
-            if (err) {
-                console.log("Error:", err)
-            }
-            if (resultado) {
-                console.info("Resultado", resultado.data)
-            }
         })
-        // await axios.get(`${baseUrl}playlists?part=snippet&mine=true&key=${apiKey}`)
-        res.json({ message: response.data });
+        console.info(result)
     } catch (e) {
-        console.error("Error:", e.response)
+        console.error("Error daqueles", e.response)
+
         return null
     }
-};
+}
 
 
 module.exports = {
