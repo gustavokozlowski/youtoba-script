@@ -5,6 +5,9 @@ const request = require('request')
 const urlParse = require('url-parse')
 const queryParse = require('query-string')
 const jwt = require('jsonwebtoken');
+const NodeCache = require("node-cache");
+
+const tokenCache = new NodeCache();
 
 const scopes = ['https://www.googleapis.com/auth/youtube.readonly', 'https://www.googleapis.com/auth/youtube.force-ssl', 'https://www.googleapis.com/auth/youtube']
 
@@ -38,21 +41,26 @@ const getAuthorizationToken = async (req, res, next) => {
     const { query } = queryParse.default.parseUrl(queryURL.query);
     const code = query.code
 
-    // console.warn("Codiguin:", code)
+    console.warn("Codiguin:", code)
 
-    const tokens = await oauth2Client.getToken(code)
+    const data = await oauth2Client.getToken(code)
 
-    const bearerToken = tokens.tokens.access_token
+    const bearerToken = data.tokens.access_token
 
     if (bearerToken) {
         const token = jwt.sign({ bearerToken }, JWT_SECRET, { expiresIn: '12h' });
-        // res.cookie('')
 
-        // console.warn("Tokens:", bearerToken)
-        res.json({ token });
-    } else {
-        res.status(401).send('Credenciais inválidas');
+        tokenCache.set("bearerToken", bearerToken)
+        // res.redirect('/')
+        return res.json({
+            message: "Token gerado com sucesso",
+            bearerToken: bearerToken,
+            jwtToken: token
+        });
     }
+    return res.status(401).send(
+        'Credenciais inválidas!'
+    );
 }
 
 module.exports = {
