@@ -1,13 +1,11 @@
 require('dotenv').config()
 const { CLIENT_ID, CLIENT_SECRET_KEY, REDIRECT_URL, JWT_SECRET } = process.env
 const { google } = require('googleapis')
-const request = require('request')
+const axios = require('axios')
 const urlParse = require('url-parse')
-const queryParse = require('query-string')
+const queryString = require('node:querystring')
 const jwt = require('jsonwebtoken');
-const NodeCache = require("node-cache");
-
-const tokenCache = new NodeCache();
+const { getToken, saveToken } = require('../utils/repository/user.repository')
 
 const scopes = ['https://www.googleapis.com/auth/youtube.readonly', 'https://www.googleapis.com/auth/youtube.force-ssl', 'https://www.googleapis.com/auth/youtube']
 
@@ -17,7 +15,7 @@ const oauth2Client = new google.auth.OAuth2(
     REDIRECT_URL
 )
 
-const authUserGetUrl = async (req, res) => {
+const authUserGetUrl = async (req, res, next) => {
 
     const url = await oauth2Client.generateAuthUrl({
         access_type: 'offline',
@@ -28,43 +26,41 @@ const authUserGetUrl = async (req, res) => {
         })
     })
 
-    request(url, (err, response, body) => {
-        // console.error("ERROR: ", err)
-        // // biome-ignore lint/complexity/useOptionalChain: <explanation>
-        // console.info("STATUSCODE: ", response && response.statusCode)
-        res.status(200).json({ url })
-    })
+    if (!url) {
+        res.status(401).send('Ixiiii deu merda aqui ò!!!');
+    }
+
+    res.status(200).json({ url })
 }
 
 const getAuthorizationToken = async (req, res, next) => {
+    console.warn('=============================== #GET_AUTHORIZATION_TOKEN ==================================')
     const queryURL = new urlParse(req.url);
-    const { query } = queryParse.default.parseUrl(queryURL.query);
+    const query = queryString.decode(queryURL.query);
     const code = query.code
-
-    console.warn("Codiguin:", code)
-
     const data = await oauth2Client.getToken(code)
 
+    console.info("CODE", code)
+    console.info("DATA TOKEN \n", data.tokens.access_token)
     const bearerToken = data.tokens.access_token
 
     if (bearerToken) {
-        const token = jwt.sign({ bearerToken }, JWT_SECRET, { expiresIn: '12h' });
+        // const token = jwt.sign({ bearerToken }, JWT_SECRET, { expiresIn: '12h' });
+        const success = saveToken("bearerToken", bearerToken);
+        console.warn("Salvou? \n", success)
 
-        tokenCache.set("bearerToken", bearerToken)
-        // res.redirect('/')
         return res.json({
             message: "Token gerado com sucesso",
             bearerToken: bearerToken,
-            jwtToken: token
+            // jwtToken: token
         });
     }
-    return res.status(401).send(
-        'Credenciais inválidas!'
-    );
+
+    return res.status(401).send('Credenciais inválidas!');
 }
 
 module.exports = {
     getAuthorizationToken,
     oauth2Client,
     authUserGetUrl
-};
+}
