@@ -151,14 +151,15 @@ const getPlaylistItems = async (req, res) => {
 };
 
 const removeItemsDulicated = (list) => {
-
     const newList = []
+
 	list.forEach((item) => {
 		const videoId = item.contentDetails.videoId;
 		if (!newList.some((i) => i.contentDetails.videoId === videoId)) {
 			newList.push(item);
 		}
 	});
+
 	return newList;
 };
 
