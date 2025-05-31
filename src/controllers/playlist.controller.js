@@ -130,10 +130,19 @@ const getPlaylistItems = async (req, res) => {
 			if (!playlistData.nextPageToken) nextPageToken = undefined;
 		} while (nextPageToken !== undefined);
 
+        const filteredPlaylist = removeItemsDulicated(initialPlaylist);
+
+		console.info(
+			"======================== OLHA A DESCREPÂNCIA: ==============================\n",
+			"Items na playlist nova:", filteredPlaylist.length, "\n",
+			"Items na playlist original:", initialPlaylist.length,
+		);
+
 		return res.status(200).json({
 			mensagem: "DEU BOM CARAAALHO!",
-			resultado: initialPlaylist,
+			resultado: filteredPlaylist,
 		});
+
 	} catch (e) {
 		console.error("Error daqueles", e);
 
@@ -141,44 +150,20 @@ const getPlaylistItems = async (req, res) => {
 	}
 };
 
-const removeItemsDulicated = () => {
-	// usaremos esses dados dentro dos items para mapealos pelo id e remover suas réplicas
-	//  "contentDetails": {
-	//     "videoId": "huHT9E6d73s",
-	//     "videoPublishedAt": "2023-02-04T16:00:22Z"
-	//   }
+const removeItemsDulicated = (list) => {
+
+    const newList = []
+	list.forEach((item) => {
+		const videoId = item.contentDetails.videoId;
+		if (!newList.some((i) => i.contentDetails.videoId === videoId)) {
+			newList.push(item);
+		}
+	});
+	return newList;
 };
 
 module.exports = {
 	getAllPlaylists,
-	// removeItemsDulicated,
+	removeItemsDulicated,
 	getPlaylistItems,
 };
-
-// EXEMPLO QUE ESTAVAMOS UTILIZANDO ANTES DE REFINAR A FUNCTION removeItemsDulicated
-// .then((playlistData) => {
-//     // biome-ignore lint/style/useConst: <explanation>
-//     let nextPage = ""
-
-//     for (let index = 0; index < quantity; index++) {
-//         if (initialPlaylist.length < playlistData.data.items.length) {
-//             playlistData.data.items.map((item) => {
-//                 return initialPlaylist.push(item)
-//             })
-//         } if (initialPlaylist.length > playlistData.data.items.length) {
-//             axios.request({
-//                 method: 'GET',
-//                 headers: {
-//                     Authorization: `Bearer ${bearerToken.token}`,
-//                     Accept: 'application/json',
-//                     'Content-Type': 'application/json'
-//                 },
-//                 "Accept": "application/json",
-//                 url: `https://youtube.googleapis.com/youtube/v3/playlistItems?part=snippet&part=id&part=contentDetails&pageToken=${nextPage}&playlistId=${playlistId}&key=${API_KEY}`
-//             }).then((response) => {
-//                 response.data
-//             }).catch(e)
-//         }
-
-//     }
-// })
