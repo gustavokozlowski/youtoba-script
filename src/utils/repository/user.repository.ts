@@ -1,9 +1,9 @@
-const NodeCache = require("node-cache");
+import NodeCache from "node-cache";
 
-db = new NodeCache()
+const db = new NodeCache()
 
-function saveToken(name, value) {
-    success = this.db.set(name, value)
+export function saveToken(name, value) {
+    success = db.set(name, value)
     if (success !== true) {
         return {
             message: 'Error ao criar salvar token novo'
@@ -16,7 +16,7 @@ function saveToken(name, value) {
 }
 
 function getToken(name) {
-    success = this.db.get(name)
+    success = db.get(name)
     if (success === undefined) {
         return {
             message: 'Esse token não existe!'

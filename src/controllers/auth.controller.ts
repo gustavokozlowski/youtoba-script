@@ -1,11 +1,11 @@
 require('dotenv').config()
 const { CLIENT_ID, CLIENT_SECRET_KEY, REDIRECT_URL, JWT_SECRET } = process.env
-const { google } = require('googleapis')
-const axios = require('axios')
-const urlParse = require('url-parse')
-const queryString = require('node:querystring')
-const jwt = require('jsonwebtoken');
-const { getToken, saveToken } = require('../utils/repository/user.repository')
+import { google } from 'googleapis'
+import axios from 'axios'
+import urlParse from 'url-parse'
+import queryString from 'node:querystring'
+import jwt from 'jsonwebtoken'
+import { getToken, saveToken } from '../utils/repository/user.repository'
 
 const scopes = ['https://www.googleapis.com/auth/youtube.readonly', 'https://www.googleapis.com/auth/youtube.force-ssl', 'https://www.googleapis.com/auth/youtube']
 
