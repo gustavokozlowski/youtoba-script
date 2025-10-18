@@ -5,6 +5,7 @@
   "type": "commonjs",
   "scripts": {
     "build": "tsc",
+    "build:prev": "tsc -p .",
     "start": "node dist/server/index.js",
     "dev": "ts-node-dev --no-warnings --respawn --ignore-watch node_modules --transpile-only src/server/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
