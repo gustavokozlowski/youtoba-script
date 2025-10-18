@@ -1,30 +1,31 @@
-require("dotenv").config();
-import axios  from "axios";
+require('dotenv').config();
+
+import axios from 'axios';
+
 const { API_KEY } = process.env;
 // import { getToken } from "../utils/repository/user.repository";
 
 export class YoutubeService {
-  constructor( public token: string) {}
+   constructor(public token: string) {}
 
- 
-  //  private async getCredentials(){
-      // const bearerToken =  getToken("bearerToken");
+   //  private async getCredentials(){
+   // const bearerToken =  getToken("bearerToken");
 
-    // if (!bearerToken.token || typeof bearerToken.token === undefined) {
-    //   console.info("DEU MERDA AQUI NA PORRA DO TOKEN DO YOUTOBA HEIN PQP!");
-    //   throw new Error('Token is invalid or undefined');
-    // }
+   // if (!bearerToken.token || typeof bearerToken.token === undefined) {
+   //   console.info("DEU MERDA AQUI NA PORRA DO TOKEN DO YOUTOBA HEIN PQP!");
+   //   throw new Error('Token is invalid or undefined');
+   // }
 
-  //  }
+   //  }
 
-  async removeItemsDuplicated(itemsToRemove: any) {
-    itemsToRemove.map(async (itemId: any) => {
-      await axios.delete( `https://youtube.googleapis.com/youtube/v3/playlistItems?id=${itemId}&key=${API_KEY}`,{
-        headers: {
-          Authorization: `Bearer ${this.token}`,
-          Accept: "application/json",
-        }
+   async removeItemsDuplicated(itemsToRemove: any) {
+      itemsToRemove.map(async (itemId: any) => {
+         await axios.delete(`https://youtube.googleapis.com/youtube/v3/playlistItems?id=${itemId}&key=${API_KEY}`, {
+            headers: {
+               Authorization: `Bearer ${this.token}`,
+               Accept: 'application/json',
+            },
+         });
       });
-    });
-  }
+   }
 }

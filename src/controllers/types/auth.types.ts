@@ -1,4 +1,4 @@
 export interface GetAuthorizationTokenResponse {
- message: string,
- bearerToken: string,
+   message: string;
+   bearerToken: string;
 }

@@ -1,65 +1,68 @@
-require('dotenv').config()
-const { CLIENT_ID, CLIENT_SECRET_KEY, REDIRECT_URL, JWT_SECRET } = process.env
-import { google } from 'googleapis'
-import axios from 'axios'
-import urlParse from 'url-parse'
-import queryString from 'node:querystring'
+require('dotenv').config();
+const { CLIENT_ID, CLIENT_SECRET_KEY, REDIRECT_URL, JWT_SECRET } = process.env;
+
+import queryString from 'node:querystring';
+import axios from 'axios';
+import type { NextFunction, Request, Response } from 'express';
+import { google } from 'googleapis';
+import urlParse from 'url-parse';
 // import jwt from 'jsonwebtoken'
-import { getToken, saveToken } from '../utils/repository/user.repository'
-import { NextFunction, Response, Request } from 'express'
-import {type GetAuthorizationTokenResponse } from './types/auth.types'
+import { getToken, saveToken } from '../utils/repository/user.repository';
+import type { GetAuthorizationTokenResponse } from './types/auth.types';
 
-const scopes = ['https://www.googleapis.com/auth/youtube.readonly', 'https://www.googleapis.com/auth/youtube.force-ssl', 'https://www.googleapis.com/auth/youtube']
+const scopes = [
+   'https://www.googleapis.com/auth/youtube.readonly',
+   'https://www.googleapis.com/auth/youtube.force-ssl',
+   'https://www.googleapis.com/auth/youtube',
+];
 
-export const oauth2Client = new google.auth.OAuth2(
-    CLIENT_ID,
-    CLIENT_SECRET_KEY,
-    REDIRECT_URL
-)
+export const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET_KEY, REDIRECT_URL);
 
-export const authUserGetUrl = (req: Request , res: Response, next: NextFunction) => {
+export const authUserGetUrl = (req: Request, res: Response, next: NextFunction) => {
+   const url = oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: scopes,
+      state: JSON.stringify({
+         callbackUrl: req.body.callbackUrl,
+         userID: req.body.userid,
+      }),
+   });
 
-    const url = oauth2Client.generateAuthUrl({
-        access_type: 'offline',
-        scope: scopes,
-        state: JSON.stringify({
-            callbackUrl: req.body.callbackUrl,
-            userID: req.body.userid
-        })
-    })
+   if (!url) {
+      res.status(401).send('Ixiiii deu merda aqui ò!!!');
+   }
 
-    if (!url) {
-        res.status(401).send('Ixiiii deu merda aqui ò!!!');
-    }
+   res.status(200).json({ url });
+};
 
-    res.status(200).json({ url })
-}
+export const getAuthorizationToken = async (
+   req: Request,
+   res: Response,
+   next: NextFunction,
+): Promise<GetAuthorizationTokenResponse> => {
+   console.warn('=============================== #GET_AUTHORIZATION_TOKEN ==================================');
+   const queryURL = new urlParse(req.url);
+   const query = queryString.decode(queryURL.query);
+   const code = query.code as string;
+   const data = await oauth2Client.getToken(code);
 
-export const getAuthorizationToken = async (req: Request , res: Response, next: NextFunction): Promise<GetAuthorizationTokenResponse> => {
-    console.warn('=============================== #GET_AUTHORIZATION_TOKEN ==================================')
-    const queryURL = new urlParse(req.url);
-    const query = queryString.decode(queryURL.query);
-    const code = query.code as string;
-    const data = await oauth2Client.getToken(code)
+   console.info('CODE', code);
+   console.info('DATA TOKEN \n', data.tokens.access_token);
+   const bearerToken = data.tokens.access_token;
 
-    console.info("CODE", code)
-    console.info("DATA TOKEN \n", data.tokens.access_token)
-    const bearerToken = data.tokens.access_token
+   if (typeof bearerToken === 'string') {
+      // const token = jwt.sign({ bearerToken }, JWT_SECRET, { expiresIn: '12h' });
+      const success = saveToken('bearerToken', bearerToken);
+      console.warn('Salvou? \n', success);
 
-    if (typeof bearerToken === 'string') {
-        // const token = jwt.sign({ bearerToken }, JWT_SECRET, { expiresIn: '12h' });
-        const success = saveToken("bearerToken", bearerToken);
-        console.warn("Salvou? \n", success)
-        
-        const response: GetAuthorizationTokenResponse = {
-            message: "Token gerado com sucesso",
-            bearerToken: bearerToken
-            // jwtToken: token
-        };
-        res.json(response);
-        return response;
-    }
-    
-    throw new Error('Falha para gerar Token!');
-}
+      const response: GetAuthorizationTokenResponse = {
+         message: 'Token gerado com sucesso',
+         bearerToken: bearerToken,
+         // jwtToken: token
+      };
+      res.json(response);
+      return response;
+   }
 
+   throw new Error('Falha para gerar Token!');
+};
