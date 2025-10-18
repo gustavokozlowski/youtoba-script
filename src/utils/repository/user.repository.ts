@@ -1,34 +1,26 @@
 import NodeCache from "node-cache";
+import { AccessToken } from "./types";
 
 const db = new NodeCache()
 
-export function saveToken(name, value) {
-    success = db.set(name, value)
+export function saveToken(name: string, value: string) {
+    const success =  db.set(name, value)
     if (success !== true) {
-        return {
-            message: 'Error ao criar salvar token novo'
-        }
+        return success
     }
-    return {
-        message: 'Sucessada, #vadias!'
-    }
+    return success
 
 }
 
-function getToken(name) {
-    success = db.get(name)
-    if (success === undefined) {
+export async function getToken(name: string): Promise<AccessToken> {
+   const token: string | undefined = await db.get(name)
+    if (token === undefined || !token) {
         return {
             message: 'Esse token não existe!'
-        }
+        } as AccessToken
     }
     return {
         message: 'Sucessada, #vadias! o token ta na mão!',
-        token: success
-    }
-}
-
-module.exports = {
-    getToken,
-    saveToken
+        token: token
+    } as AccessToken
 }

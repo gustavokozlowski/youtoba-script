@@ -1,14 +1,26 @@
+import { NextFunction, Request, Response } from "express";
+
+declare global {
+    namespace Express {
+        interface Request {
+            user?: any;
+        }
+    }
+}
+
+
 require('dotenv').config()
 // const cors = require('cors')
 // const urlParse = require('url-parse')
 // const queryParse = require('query-string')
 // const axios = require('axios')
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 
+const { CLIENT_ID, CLIENT_SECRET_KEY, REDIRECT_URL, API_KEY, JWT_SECRET } = process.env
 
-const { PORT, CLIENT_ID, CLIENT_SECRET_KEY, REDIRECT_URL, API_KEY, JWT_SECRET } = process.env
+if (!JWT_SECRET) throw new Error('JWT_SECRET must be defined in environment variables');
 
-const authenticate = (req, res, next) => {
+export const authenticate = (req: Request, res:Response, next: NextFunction) => {
     const token = req.cookies.token;
     if (!token) {
         return res.status(401).send('Access Denied. No token provided.');
@@ -22,7 +34,7 @@ const authenticate = (req, res, next) => {
     }
 };
 
-const authenticateGetCookies = (req, res, next) => {
+export const authenticateGetCookies = (req: Request, res: Response, _next: NextFunction) => {
     const token = req.cookies.token;
     if (!token) {
 
@@ -41,5 +53,3 @@ const authenticateGetCookies = (req, res, next) => {
         return res.redirect('/auth');
     }
 };
-
-module.exports = { authenticate }

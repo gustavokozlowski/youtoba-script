@@ -1,11 +1,13 @@
-require("dotenv").config();
-const axios = require("axios");
-const { API_KEY } = process.env;
-const { getToken } = require("../utils/repository/user.repository");
+import { Request, Response } from "express";
 
-const getAllPlaylists = async (req, res) => {
+require("dotenv").config();
+import axios from "axios";
+const { API_KEY } = process.env;
+import { getToken } from "../utils/repository/user.repository";
+
+export const getAllPlaylists = async (req: Request, res: Response) => {
   // const decode = jwt.verify(token, JWT_SECRET);
-  const bearerToken = getToken("bearerToken");
+  const bearerToken = await getToken("bearerToken");
 
   if (!bearerToken) {
     return res.send("Token inválido! Por favor, faça o login novamente!");
@@ -19,15 +21,12 @@ const getAllPlaylists = async (req, res) => {
     // console.log("decode: ", decoded)
     console.log("BEAR TOKEN: ", bearerToken.token);
     console.log("MSG TOKEN: ", bearerToken.message);
-    const result = await axios({
-      method: "GET",
+    const result = await axios.get(`https://youtube.googleapis.com/youtube/v3/playlists?part=contentDetails&mine=true&key=${API_KEY}`,{
       headers: {
         Authorization: `Bearer ${bearerToken.token}`,
         Accept: "application/json",
         "Content-Type": "application/json",
-      },
-      Accept: "application/json",
-      url: `https://youtube.googleapis.com/youtube/v3/playlists?part=contentDetails&mine=true&key=${API_KEY}`,
+      }
     });
 
     // console.info(result.headers)
@@ -36,30 +35,27 @@ const getAllPlaylists = async (req, res) => {
       mensagem: "DEU BOM CARAAALHO!",
       resultado: result.data,
     });
-  } catch (e) {
+  } catch (e:any) {
     console.error("Error daqueles", e.response);
 
     return res.status(400).json({ messagem: "deu merda no get heein" });
   }
 };
 
-const getPlaylistInfoById = async (playlistId) => {
-  const bearerToken = getToken("bearerToken");
+export const getPlaylistInfoById = async (playlistId: any) => {
+  const bearerToken = await getToken("bearerToken");
 
   if (!bearerToken) {
-    return res.send("Token inválido! Por favor, faça o login novamente!");
+    throw new Error("Token inválido! Por favor, faça o login novamente!");
   }
 
   try {
-    const playlistInfo = await axios({
-      method: "GET",
+    const playlistInfo = await axios.get( `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,{
       headers: {
         Authorization: `Bearer ${bearerToken.token}`,
         Accept: "application/json",
         "Content-Type": "application/json",
-      },
-      Accept: "application/json",
-      url: `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,
+      }
     });
 
     const { totalResults } = playlistInfo.data.pageInfo;
@@ -71,14 +67,13 @@ const getPlaylistInfoById = async (playlistId) => {
     };
   } catch (e) {
     console.error("Error daqueles:", e);
-
-    return res.status(400).json({ messagem: "deu merda no get heein" });
+    throw new Error("deu merda no get heein");
   }
 };
 
-const getPlaylistItems = async (req, res) => {
+export const getPlaylistItems = async (req: Request, res: Response) => {
   let initialPlaylist = [];
-  const bearerToken = getToken("bearerToken");
+  const bearerToken = await getToken("bearerToken");
   const { playlistId } = req.params;
 
   if (!bearerToken) {
@@ -88,47 +83,43 @@ const getPlaylistItems = async (req, res) => {
   try {
     // const decoded = jwt.verify(token, JWT_SECRET);
 
-    const result = await axios({
-      method: "GET",
+    const result = await axios.get(`https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,{
       headers: {
         Authorization: `Bearer ${bearerToken.token}`,
         Accept: "application/json",
         "Content-Type": "application/json",
-      },
-      Accept: "application/json",
-      url: `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,
+      }
     });
 
     const { data } = result;
 
-    const firstList = data.items.map((item) => item);
+    const firstList = data.items.map((item: any) => item);
 
     initialPlaylist = [...firstList];
 
     console.info("Mais informações dessa Playlist", result.data);
 
     let nextPageToken = result.data.nextPageToken;
-
-    do {
-      const playlist = await axios({
-        method: "GET",
+   
+    if (nextPageToken) {
+      
+      do {
+      const playlist = await axios.get(`https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&pageToken=${nextPageToken}&playlistId=${playlistId}&key=${API_KEY}`,{
         headers: {
           Authorization: `Bearer ${bearerToken.token}`,
           Accept: "application/json",
           "Content-Type": "application/json",
-        },
-        Accept: "application/json",
-        url: `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&pageToken=${nextPageToken}&playlistId=${playlistId}&key=${API_KEY}`,
+        }
       });
 
       const playlistData = playlist.data;
 
       nextPageToken = playlistData.nextPageToken;
 
-      playlistData.items.map((item) => initialPlaylist.push(item));
+      playlistData.items.map((item: any) => initialPlaylist.push(item));
 
-      if (!playlistData.nextPageToken) nextPageToken = undefined;
-    } while (nextPageToken !== undefined);
+        if (!playlistData.nextPageToken) nextPageToken = undefined;
+    } while (nextPageToken !== undefined)};
 
     const filteredPlaylist = removeItemsDulicated(initialPlaylist);
 
@@ -152,8 +143,8 @@ const getPlaylistItems = async (req, res) => {
   }
 };
 
-const removeItemsDulicated = (list) => {
-  const newList = [];
+export const removeItemsDulicated = (list: any[]) => {
+  const newList = [] as any[];
 
   list.forEach((item) => {
     const videoId = item.contentDetails.videoId;
@@ -165,8 +156,3 @@ const removeItemsDulicated = (list) => {
   return newList;
 };
 
-module.exports = {
-  getAllPlaylists,
-  removeItemsDulicated,
-  getPlaylistItems,
-};

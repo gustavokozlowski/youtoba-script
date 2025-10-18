@@ -4,20 +4,22 @@ import { google } from 'googleapis'
 import axios from 'axios'
 import urlParse from 'url-parse'
 import queryString from 'node:querystring'
-import jwt from 'jsonwebtoken'
+// import jwt from 'jsonwebtoken'
 import { getToken, saveToken } from '../utils/repository/user.repository'
+import { NextFunction, Response, Request } from 'express'
+import {type GetAuthorizationTokenResponse } from './types/auth.types'
 
 const scopes = ['https://www.googleapis.com/auth/youtube.readonly', 'https://www.googleapis.com/auth/youtube.force-ssl', 'https://www.googleapis.com/auth/youtube']
 
-const oauth2Client = new google.auth.OAuth2(
+export const oauth2Client = new google.auth.OAuth2(
     CLIENT_ID,
     CLIENT_SECRET_KEY,
     REDIRECT_URL
 )
 
-const authUserGetUrl = async (req, res, next) => {
+export const authUserGetUrl = (req: Request , res: Response, next: NextFunction) => {
 
-    const url = await oauth2Client.generateAuthUrl({
+    const url = oauth2Client.generateAuthUrl({
         access_type: 'offline',
         scope: scopes,
         state: JSON.stringify({
@@ -33,34 +35,31 @@ const authUserGetUrl = async (req, res, next) => {
     res.status(200).json({ url })
 }
 
-const getAuthorizationToken = async (req, res, next) => {
+export const getAuthorizationToken = async (req: Request , res: Response, next: NextFunction): Promise<GetAuthorizationTokenResponse> => {
     console.warn('=============================== #GET_AUTHORIZATION_TOKEN ==================================')
     const queryURL = new urlParse(req.url);
     const query = queryString.decode(queryURL.query);
-    const code = query.code
+    const code = query.code as string;
     const data = await oauth2Client.getToken(code)
 
     console.info("CODE", code)
     console.info("DATA TOKEN \n", data.tokens.access_token)
     const bearerToken = data.tokens.access_token
 
-    if (bearerToken) {
+    if (typeof bearerToken === 'string') {
         // const token = jwt.sign({ bearerToken }, JWT_SECRET, { expiresIn: '12h' });
         const success = saveToken("bearerToken", bearerToken);
         console.warn("Salvou? \n", success)
-
-        return res.json({
+        
+        const response: GetAuthorizationTokenResponse = {
             message: "Token gerado com sucesso",
-            bearerToken: bearerToken,
+            bearerToken: bearerToken
             // jwtToken: token
-        });
+        };
+        res.json(response);
+        return response;
     }
-
-    return res.status(401).send('Credenciais inválidas!');
+    
+    throw new Error('Falha para gerar Token!');
 }
 
-module.exports = {
-    getAuthorizationToken,
-    oauth2Client,
-    authUserGetUrl
-}

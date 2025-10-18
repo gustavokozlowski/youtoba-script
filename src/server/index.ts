@@ -1,11 +1,11 @@
 require('dotenv').config()
-const express = require("express")
-const cors = require('cors')
-const { authenticate } = require('../middlewares/auth.middlewares.js')
+import express from "express"
+import cors from 'cors'
+// import { authenticate } from '../middlewares/auth.middlewares'
 const { PORT } = process.env
-const playlistRoutes = require('../routes/playlist.routes.js')
-const authRoutes = require('../routes/auth.routes.js')
-const cookieParser = require('cookie-parser')
+import cookieParser from 'cookie-parser'
+import { router as authRoutes } from '../routes/auth.routes'
+import { router as playlistRoutes } from '../routes/playlist.routes'
 
 const app = express()
 app.use(express.json())
@@ -15,8 +15,6 @@ app.use(cookieParser())
 
 app.use('/playlist', playlistRoutes)
 app.use('/auth', authRoutes)
-
-console.log(PORT)
 
 app.listen(PORT, () => {
     console.log(`Servidor rodando liso na porta ${PORT}`)
