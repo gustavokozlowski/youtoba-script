@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import { getAllPlaylists, getPlaylistItems } from '../controllers/playlist.controller';
 
-const router = Router();
+export const playlistRouter = Router();
 
-router.get('/get-all', getAllPlaylists);
-router.get('/:playlistId', getPlaylistItems);
+playlistRouter.
+route('/get-all').get(getAllPlaylists)
 
-export { router };
+playlistRouter.
+route('/:playlistId').get(getPlaylistItems);
+
