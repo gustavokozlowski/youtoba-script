@@ -16,7 +16,7 @@ require('dotenv').config();
 // const axios = require('axios')
 import jwt from 'jsonwebtoken';
 
-const { CLIENT_ID, CLIENT_SECRET_KEY, REDIRECT_URL, API_KEY, JWT_SECRET } = process.env;
+const { JWT_SECRET } = process.env;
 
 if (!JWT_SECRET) throw new Error('JWT_SECRET must be defined in environment variables');
 
@@ -29,7 +29,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
       const decoded = jwt.verify(token, JWT_SECRET);
       req.user = decoded;
       next();
-   } catch (error) {
+   } catch (_error) {
       return res.status(400).send('Invalid Token.');
    }
 };
@@ -46,7 +46,7 @@ export const authenticateGetCookies = (req: Request, res: Response, _next: NextF
       res.json({ decoded });
 
       // next();
-   } catch (error) {
+   } catch (_error) {
       // res.clearCookie("token")
 
       return res.redirect('/auth');

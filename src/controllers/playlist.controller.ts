@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/suspicious/noExplicitAny: <explanation> */
 import type { Request, Response } from 'express';
 
 require('dotenv').config();
@@ -9,7 +8,7 @@ const { API_KEY } = process.env;
 
 import { getToken } from '../utils/repository/user.repository';
 
-export const getAllPlaylists = async (req: Request, res: Response) => {
+export const getAllPlaylists = async (_req: Request, res: Response) => {
    // const decode = jwt.verify(token, JWT_SECRET);
    const bearerToken = await getToken('bearerToken');
 
@@ -55,7 +54,7 @@ export const getPlaylistInfoById = async (playlistId: any) => {
    }
 
    try {
-      const playlistInfo = await axios.get(
+      const playlistInfo: any = await axios.get(
          `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,
          {
             headers: {
@@ -90,7 +89,7 @@ export const getPlaylistItems = async (req: Request, res: Response) => {
    try {
       // const decoded = jwt.verify(token, JWT_SECRET);
 
-      const result = await axios.get(
+      const result = await axios.get<any>(
          `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,
          {
             headers: {
@@ -113,7 +112,7 @@ export const getPlaylistItems = async (req: Request, res: Response) => {
 
       if (nextPageToken) {
          do {
-            const playlist = await axios.get(
+            const playlist = await axios.get<any>(
                `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&pageToken=${nextPageToken}&playlistId=${playlistId}&key=${API_KEY}`,
                {
                   headers: {

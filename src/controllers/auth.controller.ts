@@ -1,13 +1,13 @@
 require('dotenv').config();
-const { CLIENT_ID, CLIENT_SECRET_KEY, REDIRECT_URL, JWT_SECRET } = process.env;
+const { CLIENT_ID, CLIENT_SECRET_KEY, REDIRECT_URL } = process.env;
 
 import queryString from 'node:querystring';
-import axios from 'axios';
+
 import type { NextFunction, Request, Response } from 'express';
 import { google } from 'googleapis';
 import urlParse from 'url-parse';
-// import jwt from 'jsonwebtoken'
-import { getToken, saveToken } from '../utils/repository/user.repository';
+
+import { saveToken } from '../utils/repository/user.repository';
 import type { GetAuthorizationTokenResponse } from './types/auth.types';
 
 const scopes = [
@@ -16,9 +16,9 @@ const scopes = [
    'https://www.googleapis.com/auth/youtube',
 ];
 
-export const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET_KEY, REDIRECT_URL);
+const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET_KEY, REDIRECT_URL);
 
-export const authUserGetUrl = (req: Request, res: Response, next: NextFunction) => {
+export const authUserGetUrl = (req: Request, res: Response, _next: NextFunction) => {
    const url = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: scopes,
@@ -38,7 +38,7 @@ export const authUserGetUrl = (req: Request, res: Response, next: NextFunction) 
 export const getAuthorizationToken = async (
    req: Request,
    res: Response,
-   next: NextFunction,
+   _next: NextFunction,
 ): Promise<GetAuthorizationTokenResponse> => {
    console.warn('=============================== #GET_AUTHORIZATION_TOKEN ==================================');
    const queryURL = new urlParse(req.url);

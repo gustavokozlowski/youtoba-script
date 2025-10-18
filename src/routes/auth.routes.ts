@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authUserGetUrl, getAuthorizationToken, oauth2Client } from '../controllers/auth.controller';
+import { authUserGetUrl, getAuthorizationToken } from '../controllers/auth.controller';
 
 const router = Router();
 

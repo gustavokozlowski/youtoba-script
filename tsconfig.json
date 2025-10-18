@@ -13,7 +13,12 @@
     "src/**/*"
   ],
   "exclude": [
-    "node_modules",
-    "dist"
+    "dist/*",
+    "node_modules/",
+    "docker/",
+    ".vscode/",
+    ".idea/",
+    ".husky/",
+    ".github/"
   ]
 }
