@@ -18,8 +18,9 @@ export class YoutubeService {
 
    //  }
 
-   async removeItemsDuplicated(itemsToRemove: any) {
-      itemsToRemove.map(async (itemId: any) => {
+   async removeDuplicatedItems(itemsToRemove: any) {
+     
+     const success = itemsToRemove.map(async (itemId: any) => {
          await axios.delete(`https://youtube.googleapis.com/youtube/v3/playlistItems?id=${itemId}&key=${API_KEY}`, {
             headers: {
                Authorization: `Bearer ${this.token}`,
@@ -27,5 +28,8 @@ export class YoutubeService {
             },
          });
       });
+     
+     const result = await Promise.all(success).catch((e: any) => console.error('Fudeo pra excluir os videos!\n', e));
+     return result
    }
 }
