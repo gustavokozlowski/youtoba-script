@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import { authUserGetUrl, getAuthorizationToken } from '../controllers/auth.controller';
 
-const router = Router();
+const authRouter = Router();
 
-router.get('/', getAuthorizationToken);
+authRouter.get('/', getAuthorizationToken);
 
-router.get('/login', authUserGetUrl);
+authRouter.get('/login', authUserGetUrl);
 
-export { router };
+export { authRouter };
