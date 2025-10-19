@@ -46,14 +46,11 @@ export const getAuthorizationToken = async (
    const code = query.code as string;
    const data = await oauth2Client.getToken(code);
 
-   console.info('CODE', code);
-   console.info('DATA TOKEN \n', data.tokens.access_token);
    const bearerToken = data.tokens.access_token;
 
    if (typeof bearerToken === 'string') {
       // const token = jwt.sign({ bearerToken }, JWT_SECRET, { expiresIn: '12h' });
       const success = saveToken('bearerToken', bearerToken);
-      console.warn('Salvou? \n', success);
 
       const response: GetAuthorizationTokenResponse = {
          message: 'Token gerado com sucesso',
