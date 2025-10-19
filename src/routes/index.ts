@@ -1,7 +1,10 @@
-// import {Router} from 'express'
+import {Router} from 'express'
+import {authRouter } from '../routes/auth.routes';
+import {playlistRouter } from '../routes/playlist.routes';
 
-// const router = Router()
+const routes = Router()
 
-// router.get('/')
+routes.use('/playlist', playlistRouter);
+routes.use('/auth', authRouter);
 
-// export { router };
+export { routes };
