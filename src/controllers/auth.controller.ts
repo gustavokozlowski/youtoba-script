@@ -6,7 +6,6 @@ import queryString from 'node:querystring';
 import type { NextFunction, Request, Response } from 'express';
 import { google } from 'googleapis';
 import urlParse from 'url-parse';
-
 import { saveToken } from '../utils/repository/user.repository';
 import type { GetAuthorizationTokenResponse } from './types/auth.types';
 
