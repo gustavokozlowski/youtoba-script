@@ -9,161 +9,161 @@ const { API_KEY } = process.env;
 import { getToken } from '../utils/repository/user.repository';
 
 export const getAllPlaylists = async (_req: Request, res: Response) => {
-   // const decode = jwt.verify(token, JWT_SECRET);
-   const bearerToken = await getToken('bearerToken');
+    // const decode = jwt.verify(token, JWT_SECRET);
+    const bearerToken = await getToken('bearerToken');
 
-   if (!bearerToken) {
-      return res.send('Token inválido! Por favor, faça o login novamente!');
-   }
+    if (!bearerToken) {
+        return res.send('Token inválido! Por favor, faça o login novamente!');
+    }
 
-   try {
-      // const decoded = jwt.verify(bearerToken, JWT_SECRET);
-      console.warn('=============================== #GET_ALL_PLAYLISTS ==================================');
-      // console.log("decode: ", decoded)
-      console.log('BEAR TOKEN: ', bearerToken.token);
-      console.log('MSG TOKEN: ', bearerToken.message);
-      const result = await axios.get(
-         `https://youtube.googleapis.com/youtube/v3/playlists?part=contentDetails&mine=true&key=${API_KEY}`,
-         {
-            headers: {
-               Authorization: `Bearer ${bearerToken.token}`,
-               Accept: 'application/json',
-               'Content-Type': 'application/json',
+    try {
+        // const decoded = jwt.verify(bearerToken, JWT_SECRET);
+        console.warn('=============================== #GET_ALL_PLAYLISTS ==================================');
+        // console.log("decode: ", decoded)
+        console.log('BEAR TOKEN: ', bearerToken.token);
+        console.log('MSG TOKEN: ', bearerToken.message);
+        const result = await axios.get(
+            `https://youtube.googleapis.com/youtube/v3/playlists?part=contentDetails&mine=true&key=${API_KEY}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${bearerToken.token}`,
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
             },
-         },
-      );
+        );
 
-      // console.info(result.headers)
+        // console.info(result.headers)
 
-      return res.status(200).json({
-         mensagem: 'DEU BOM CARAAALHO!',
-         resultado: result.data,
-      });
-   } catch (e: any) {
-      console.error('Error daqueles', e.response);
+        return res.status(200).json({
+            mensagem: 'DEU BOM CARAAALHO!',
+            resultado: result.data,
+        });
+    } catch (e: any) {
+        console.error('Error daqueles', e.response);
 
-      return res.status(400).json({ messagem: 'deu merda no get heein' });
-   }
+        return res.status(400).json({ messagem: 'deu merda no get heein' });
+    }
 };
 
 export const getPlaylistInfoById = async (playlistId: any) => {
-   const bearerToken = await getToken('bearerToken');
+    const bearerToken = await getToken('bearerToken');
 
-   if (!bearerToken) {
-      throw new Error('Token inválido! Por favor, faça o login novamente!');
-   }
+    if (!bearerToken) {
+        throw new Error('Token inválido! Por favor, faça o login novamente!');
+    }
 
-   try {
-      const playlistInfo: any = await axios.get(
-         `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,
-         {
-            headers: {
-               Authorization: `Bearer ${bearerToken.token}`,
-               Accept: 'application/json',
-               'Content-Type': 'application/json',
+    try {
+        const playlistInfo: any = await axios.get(
+            `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${bearerToken.token}`,
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
             },
-         },
-      );
+        );
 
-      const { totalResults } = playlistInfo.data.pageInfo;
+        const { totalResults } = playlistInfo.data.pageInfo;
 
-      return {
-         mensagem: '========================OLHA ESSA PLAYLIST==============================\n',
-         totalPages: totalResults,
-      };
-   } catch (e) {
-      console.error('Error daqueles:', e);
-      throw new Error('deu merda no get heein');
-   }
+        return {
+            mensagem: '========================OLHA ESSA PLAYLIST==============================\n',
+            totalPages: totalResults,
+        };
+    } catch (e) {
+        console.error('Error daqueles:', e);
+        throw new Error('deu merda no get heein');
+    }
 };
 
 export const getPlaylistItems = async (req: Request, res: Response) => {
-   let initialPlaylist = [];
-   const bearerToken = await getToken('bearerToken');
-   const { playlistId } = req.params;
+    let initialPlaylist = [];
+    const bearerToken = await getToken('bearerToken');
+    const { playlistId } = req.params;
 
-   if (!bearerToken) {
-      return res.send('Token inválido! Por favor, faça o login novamente!');
-   }
+    if (!bearerToken) {
+        return res.send('Token inválido! Por favor, faça o login novamente!');
+    }
 
-   try {
-      // const decoded = jwt.verify(token, JWT_SECRET);
+    try {
+        // const decoded = jwt.verify(token, JWT_SECRET);
 
-      const result = await axios.get<any>(
-         `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,
-         {
-            headers: {
-               Authorization: `Bearer ${bearerToken.token}`,
-               Accept: 'application/json',
-               'Content-Type': 'application/json',
+        const result = await axios.get<any>(
+            `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${bearerToken.token}`,
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
             },
-         },
-      );
+        );
 
-      const { data } = result;
+        const { data } = result;
 
-      const firstList = data.items.map((item: any) => item);
+        const firstList = data.items.map((item: any) => item);
 
-      initialPlaylist = [...firstList];
+        initialPlaylist = [...firstList];
 
-      console.info('Mais informações dessa Playlist', result.data);
+        console.info('Mais informações dessa Playlist', result.data);
 
-      let nextPageToken = result.data.nextPageToken;
+        let nextPageToken = result.data.nextPageToken;
 
-      if (nextPageToken) {
-         do {
-            const playlist = await axios.get<any>(
-               `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&pageToken=${nextPageToken}&playlistId=${playlistId}&key=${API_KEY}`,
-               {
-                  headers: {
-                     Authorization: `Bearer ${bearerToken.token}`,
-                     Accept: 'application/json',
-                     'Content-Type': 'application/json',
-                  },
-               },
-            );
+        if (nextPageToken) {
+            do {
+                const playlist = await axios.get<any>(
+                    `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&pageToken=${nextPageToken}&playlistId=${playlistId}&key=${API_KEY}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${bearerToken.token}`,
+                            Accept: 'application/json',
+                            'Content-Type': 'application/json',
+                        },
+                    },
+                );
 
-            const playlistData = playlist.data;
+                const playlistData = playlist.data;
 
-            nextPageToken = playlistData.nextPageToken;
+                nextPageToken = playlistData.nextPageToken;
 
-            playlistData.items.map((item: any) => initialPlaylist.push(item));
+                playlistData.items.map((item: any) => initialPlaylist.push(item));
 
-            if (!playlistData.nextPageToken) nextPageToken = undefined;
-         } while (nextPageToken !== undefined);
-      }
+                if (!playlistData.nextPageToken) nextPageToken = undefined;
+            } while (nextPageToken !== undefined);
+        }
 
-      const filteredPlaylist = removeItemsDulicated(initialPlaylist);
+        const filteredPlaylist = removeItemsDulicated(initialPlaylist);
 
-      console.info(
-         '======================== OLHA A DESCREPÂNCIA: ==============================\n',
-         'Items na playlist nova:',
-         filteredPlaylist.length,
-         '\n',
-         'Items na playlist original:',
-         initialPlaylist.length,
-      );
+        console.info(
+            '======================== OLHA A DESCREPÂNCIA: ==============================\n',
+            'Items na playlist nova:',
+            filteredPlaylist.length,
+            '\n',
+            'Items na playlist original:',
+            initialPlaylist.length,
+        );
 
-      return res.status(200).json({
-         mensagem: 'DEU BOM CARAAALHO!',
-         resultado: filteredPlaylist,
-      });
-   } catch (e) {
-      console.error('Error daqueles', e);
+        return res.status(200).json({
+            mensagem: 'DEU BOM CARAAALHO!',
+            resultado: filteredPlaylist,
+        });
+    } catch (e) {
+        console.error('Error daqueles', e);
 
-      return res.status(400).json({ messagem: 'deu merda no get heein' });
-   }
+        return res.status(400).json({ messagem: 'deu merda no get heein' });
+    }
 };
 
 export const removeItemsDulicated = (list: any[]) => {
-   const newList = [] as any[];
+    const newList = [] as any[];
 
-   list.forEach((item) => {
-      const videoId = item.contentDetails.videoId;
-      if (!newList.some((i) => i.contentDetails.videoId === videoId)) {
-         newList.push(item);
-      }
-   });
+    list.forEach((item) => {
+        const videoId = item.contentDetails.videoId;
+        if (!newList.some((i) => i.contentDetails.videoId === videoId)) {
+            newList.push(item);
+        }
+    });
 
-   return newList;
+    return newList;
 };

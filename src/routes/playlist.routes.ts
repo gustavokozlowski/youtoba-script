@@ -3,9 +3,6 @@ import { getAllPlaylists, getPlaylistItems } from '../controllers/playlist.contr
 
 export const playlistRouter = Router();
 
-playlistRouter.
-route('/get-all').get(getAllPlaylists)
+playlistRouter.route('/get-all').get(getAllPlaylists);
 
-playlistRouter.
-route('/:playlistId').get(getPlaylistItems);
-
+playlistRouter.route('/:playlistId').get(getPlaylistItems);
