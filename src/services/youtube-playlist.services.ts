@@ -6,12 +6,12 @@ import { getToken } from '../utils/repository/user.repository';
 
 const { API_KEY } = process.env;
 
-export class YoutubeService { 
-token: string | undefined;
+export class YoutubeService {
+    token: string | undefined;
 
-constructor(){
-this._getCredentials()
-}
+    constructor() {
+        this._getCredentials();
+    }
 
     private async _getCredentials() {
         const { token } = await getToken('bearerToken');
@@ -30,7 +30,7 @@ this._getCredentials()
             // const decoded = jwt.verify(bearerToken, JWT_SECRET);
             console.warn('=============================== #GET_ALL_PLAYLISTS ==================================');
             // console.log("decode: ", decoded)
-        
+
             const result = await axios.get(
                 `https://youtube.googleapis.com/youtube/v3/playlists?part=contentDetails&mine=true&key=${API_KEY}`,
                 {
@@ -63,7 +63,9 @@ this._getCredentials()
             });
         });
 
-        const result = await Promise.all(requests).catch((e: any) => console.error('Fudeo pra excluir os videos!\n', e));
+        const result = await Promise.all(requests).catch((e: any) =>
+            console.error('Fudeo pra excluir os videos!\n', e),
+        );
         return result;
     }
 }
