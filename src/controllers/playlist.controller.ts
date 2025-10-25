@@ -34,8 +34,6 @@ export const getAllPlaylists = async (_req: Request, res: Response) => {
             },
         );
 
-        // console.info(result.headers)
-
         return res.status(200).json({
             mensagem: 'DEU BOM CARAAALHO!',
             resultado: result.data,
