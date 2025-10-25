@@ -53,31 +53,30 @@ export class YoutubeService {
         }
     }
 
-    async getPlaylistDetailsById (playlistId: string) {
-
-    try {
-        const playlistInfo: any = await axios.get(
-            `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${this.token}`,
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
+    async getPlaylistDetailsById(playlistId: string) {
+        try {
+            const playlistInfo: any = await axios.get(
+                `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${this.token}`,
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
                 },
-            },
-        );
+            );
 
-        const { totalResults } = playlistInfo.data.pageInfo;
+            const { totalResults } = playlistInfo.data.pageInfo;
 
-        return {
-            mensagem: 'OLHA ESSA PLAYLIST:\n',
-            totalPages: totalResults,
-        };
-    } catch (e) {
-        console.error('Error daqueles:', e);
-        throw new Error('deu merda no get heein');
+            return {
+                mensagem: 'OLHA ESSA PLAYLIST:\n',
+                totalPages: totalResults,
+            };
+        } catch (e) {
+            console.error('Error daqueles:', e);
+            throw new Error('deu merda no get heein');
+        }
     }
-};
 
     async removeDuplicatedItems(itemsToRemove: string[]) {
         const requests = itemsToRemove.map(async (itemId: string) => {
