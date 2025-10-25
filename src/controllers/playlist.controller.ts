@@ -154,7 +154,6 @@ export const getPlaylistItems = async (req: Request, res: Response) => {
     }
 };
 
-
 // REFATORAR EM BREVE!
 export const removeItemsDuplicated = (list: any[]) => {
     const newList = [] as any[];
