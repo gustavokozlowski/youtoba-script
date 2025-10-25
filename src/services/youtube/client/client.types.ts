@@ -1,4 +1,4 @@
-export type YoutubeClinetConfig = {
+export type YoutubeClientConfig = {
     apiKey: string;
     token: string;
 };
