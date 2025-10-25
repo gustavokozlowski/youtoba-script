@@ -6,8 +6,8 @@ import axios from 'axios';
 
 const { API_KEY } = process.env;
 
-import { getToken } from '../utils/repository/user.repository';
 import { YoutubeService } from '../services/youtube-playlist.services';
+import { getToken } from '../utils/repository/user.repository';
 
 export const getAllPlaylists = async (_req: Request, res: Response) => {
     // const decode = jwt.verify(token, JWT_SECRET);
@@ -53,7 +53,7 @@ export const getPlaylistInfoById = async (playlistId: any) => {
     }
 
     try {
-        const playlistInfo: any = await axios.get(
+        const playlistInfo = await axios.get<any>(
             `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,
             {
                 headers: {
