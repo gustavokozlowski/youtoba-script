@@ -1,36 +1,32 @@
 require('dotenv').config();
 
 import axios from 'axios';
+import type { YoutubeClinetConfig } from './client.types';
 
-const { YOUTUBE_BASE_UR } = process.env;
+const { YOUTUBE_BASE_URL } = process.env;
 
 export class YoutubeClient {
     // Youtube client methods and properties here
     private client;
     private apiKey: string;
-    private baseURL: string;
 
-    constructor(apiKey: string) {
+    constructor({ apiKey, token }: YoutubeClinetConfig) {
         this.apiKey = apiKey;
-        this.baseURL = YOUTUBE_BASE_UR ?? '';
         this.client = axios.create({
-            baseURL: this.baseURL,
+            baseURL: YOUTUBE_BASE_URL,
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`
             },
         });
     }
 
-    public async getPlaylists(token: string) {
+    public async getPlaylists() {
         try {
-            const response = await this.client.get(`/playlists?part=contentDetails&mine=true&key=${this.apiKey}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            const response = await this.client.get(`/playlists?part=contentDetails&mine=true&key=${this.apiKey}`);
             return response.data;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error fetching playlists:', error);
             throw error;
         }
