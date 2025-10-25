@@ -22,9 +22,9 @@ export class YoutubeClient {
         });
     }
 
-    public async getPlaylists() {
+     async getPlaylists() {
         try {
-            const response = await this.client.get(`/playlists?part=contentDetails&mine=true&key=${this.apiKey}`);
+            const response = await this.client.get(`playlists?part=contentDetails&mine=true&key=${this.apiKey}`);
             return response.data;
         } catch (error: any) {
             console.error('Error fetching playlists:', error);
