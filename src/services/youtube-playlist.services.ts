@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 import axios from 'axios';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { getToken } from '../utils/repository/user.repository';
 
 const { API_KEY } = process.env;
@@ -11,17 +11,6 @@ export class YoutubeService {
 
     constructor() {
         this._getCredentials();
-    }
-
-    private async _getCredentials() {
-        const { token } = await getToken('bearerToken');
-
-        if (!token || typeof token === 'undefined') {
-            console.info('DEU MERDA AQUI NA PORRA DO TOKEN DO YOUTOBA HEIN PQP!');
-            return undefined;
-        }
-        this.token = token;
-        return null;
     }
 
     async getAllPlaylists(_req: Request, res: Response) {
@@ -78,8 +67,81 @@ export class YoutubeService {
         }
     }
 
-    async removeDuplicatedItems(itemsToRemove: string[]) {
-        const requests = itemsToRemove.map(async (itemId: string) => {
+    async getPlaylistItems(req: Request, res: Response) {
+        let initialPlaylist = [];
+        const { playlistId } = req.params;
+
+        try {
+            // const decoded = jwt.verify(token, JWT_SECRET);
+
+            const result = await axios.get<any>(
+                `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${this.token}`,
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                },
+            );
+
+            const { data } = result;
+
+            const firstList = data.items.map((item: any) => item);
+
+            initialPlaylist = [...firstList];
+
+            console.info('Mais informações dessa Playlist', result.data);
+
+            let nextPageToken = result.data.nextPageToken;
+
+            if (nextPageToken) {
+                do {
+                    const playlist = await axios.get<any>(
+                        `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&pageToken=${nextPageToken}&playlistId=${playlistId}&key=${API_KEY}`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${this.token}`,
+                                Accept: 'application/json',
+                                'Content-Type': 'application/json',
+                            },
+                        },
+                    );
+
+                    const playlistData = playlist.data;
+
+                    nextPageToken = playlistData.nextPageToken;
+
+                    playlistData.items.map((item: any) => initialPlaylist.push(item));
+
+                    if (!playlistData.nextPageToken) nextPageToken = undefined;
+                } while (nextPageToken !== undefined);
+            }
+
+            const filteredPlaylist = this._removeItemsDuplicated(initialPlaylist);
+
+            console.info(
+                'OLHA A DESCREPÂNCIA:\n',
+                'Items na playlist nova:',
+                filteredPlaylist.length,
+                '\n',
+                'Items na playlist original:',
+                initialPlaylist.length,
+            );
+
+            return res.status(200).json({
+                mensagem: 'DEU BOM CARAAALHO!',
+                resultado: filteredPlaylist,
+            });
+        } catch (e) {
+            console.error('Error daqueles', e);
+
+            return res.status(400).json({ messagem: 'deu merda no get heein' });
+        }
+    }
+
+    async removeItemsById(items: string[]) {
+        const requests = items.map(async (itemId: string) => {
             await axios.delete(`https://youtube.googleapis.com/youtube/v3/playlistItems?id=${itemId}&key=${API_KEY}`, {
                 headers: {
                     Authorization: `Bearer ${this.token}`,
@@ -94,4 +156,28 @@ export class YoutubeService {
 
         return result;
     }
+
+    private async _getCredentials() {
+        const { token } = await getToken('bearerToken');
+
+        if (!token || typeof token === 'undefined') {
+            console.info('DEU MERDA AQUI NA PORRA DO TOKEN DO YOUTOBA HEIN PQP!');
+            return undefined;
+        }
+        this.token = token;
+        return null;
+    }
+
+    private _removeItemsDuplicated = (list: any[]) => {
+        const newList = [] as any[];
+
+        list.forEach((item) => {
+            const videoId = item.contentDetails.videoId;
+            if (!newList.some((i) => i.contentDetails.videoId === videoId)) {
+                newList.push(item);
+            }
+        });
+
+        return newList;
+    };
 }
