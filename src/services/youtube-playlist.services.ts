@@ -53,6 +53,32 @@ export class YoutubeService {
         }
     }
 
+    async getPlaylistDetailsById (playlistId: string) {
+
+    try {
+        const playlistInfo: any = await axios.get(
+            `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${this.token}`,
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            },
+        );
+
+        const { totalResults } = playlistInfo.data.pageInfo;
+
+        return {
+            mensagem: 'OLHA ESSA PLAYLIST:\n',
+            totalPages: totalResults,
+        };
+    } catch (e) {
+        console.error('Error daqueles:', e);
+        throw new Error('deu merda no get heein');
+    }
+};
+
     async removeDuplicatedItems(itemsToRemove: string[]) {
         const requests = itemsToRemove.map(async (itemId: string) => {
             await axios.delete(`https://youtube.googleapis.com/youtube/v3/playlistItems?id=${itemId}&key=${API_KEY}`, {
@@ -66,6 +92,7 @@ export class YoutubeService {
         const result = await Promise.all(requests).catch((e: any) =>
             console.error('Fudeo pra excluir os videos!\n', e),
         );
+
         return result;
     }
 }
