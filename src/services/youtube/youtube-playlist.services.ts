@@ -2,7 +2,7 @@ require('dotenv').config();
 
 import axios from 'axios';
 import type { Request, Response } from 'express';
-import { getToken } from '../utils/repository/user.repository';
+import { getToken } from '../../utils/repository/user.repository';
 
 const { API_KEY } = process.env;
 
