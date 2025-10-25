@@ -7,6 +7,7 @@ import axios from 'axios';
 const { API_KEY } = process.env;
 
 import { getToken } from '../utils/repository/user.repository';
+import { YoutubeService } from '../services/youtube-playlist.services';
 
 export const getAllPlaylists = async (_req: Request, res: Response) => {
     // const decode = jwt.verify(token, JWT_SECRET);
@@ -18,7 +19,7 @@ export const getAllPlaylists = async (_req: Request, res: Response) => {
 
     try {
         // const decoded = jwt.verify(bearerToken, JWT_SECRET);
-        console.warn('=============================== #GET_ALL_PLAYLISTS ==================================');
+        console.warn('#GET_ALL_PLAYLISTS');
         // console.log("decode: ", decoded)
         console.log('BEAR TOKEN: ', bearerToken.token);
         console.log('MSG TOKEN: ', bearerToken.message);
@@ -68,7 +69,7 @@ export const getPlaylistInfoById = async (playlistId: any) => {
         const { totalResults } = playlistInfo.data.pageInfo;
 
         return {
-            mensagem: '========================OLHA ESSA PLAYLIST==============================\n',
+            mensagem: 'OLHA ESSA PLAYLIST:\n',
             totalPages: totalResults,
         };
     } catch (e) {
@@ -133,10 +134,10 @@ export const getPlaylistItems = async (req: Request, res: Response) => {
             } while (nextPageToken !== undefined);
         }
 
-        const filteredPlaylist = removeItemsDulicated(initialPlaylist);
+        const filteredPlaylist = removeItemsDuplicated(initialPlaylist);
 
         console.info(
-            '======================== OLHA A DESCREPÂNCIA: ==============================\n',
+            'OLHA A DESCREPÂNCIA:\n',
             'Items na playlist nova:',
             filteredPlaylist.length,
             '\n',
@@ -155,7 +156,7 @@ export const getPlaylistItems = async (req: Request, res: Response) => {
     }
 };
 
-export const removeItemsDulicated = (list: any[]) => {
+export const removeItemsDuplicated = (list: any[]) => {
     const newList = [] as any[];
 
     list.forEach((item) => {
@@ -164,6 +165,10 @@ export const removeItemsDulicated = (list: any[]) => {
             newList.push(item);
         }
     });
+
+    // // chamar classe do serviço para remover os duplicados da playlist no youtube
+    // const youtubeService = new YoutubeService();
+    // await youtubeService.removeDuplicatedItems(newList.map(item => item.id));
 
     return newList;
 };
