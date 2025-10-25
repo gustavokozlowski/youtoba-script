@@ -1,5 +1,7 @@
 require('dotenv').config();
+
 import axios from 'axios';
+
 const { YOUTUBE_BASE_UR } = process.env;
 
 export class YoutubeClient {
@@ -19,7 +21,6 @@ export class YoutubeClient {
             },
         });
     }
-
 
     public async getPlaylists(token: string) {
         try {
