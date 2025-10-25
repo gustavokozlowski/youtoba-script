@@ -13,7 +13,7 @@ export class YoutubeService {
         this._getCredentials();
     }
 
-    async getAllPlaylists(_req: Request, res: Response) {
+    async getPlaylists(_req: Request, res: Response) {
         // const decode = jwt.verify(token, JWT_SECRET);
         try {
             // const decoded = jwt.verify(bearerToken, JWT_SECRET);
