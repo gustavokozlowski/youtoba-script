@@ -28,7 +28,7 @@ export class YoutubeService {
         // const decode = jwt.verify(token, JWT_SECRET);
         try {
             // const decoded = jwt.verify(bearerToken, JWT_SECRET);
-            console.warn('=============================== #GET_ALL_PLAYLISTS ==================================');
+            console.warn('#GET_ALL_PLAYLISTS');
             // console.log("decode: ", decoded)
 
             const result = await axios.get(
