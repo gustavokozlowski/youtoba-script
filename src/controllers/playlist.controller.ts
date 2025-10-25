@@ -6,7 +6,7 @@ import axios from 'axios';
 
 const { API_KEY } = process.env;
 
-import { YoutubeService } from '../services/youtube-playlist.services';
+// import { YoutubeService } from '../services/youtube-playlist.services';
 import { getToken } from '../utils/repository/user.repository';
 
 export const getAllPlaylists = async (_req: Request, res: Response) => {
