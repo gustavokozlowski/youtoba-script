@@ -22,7 +22,7 @@ export class YoutubeClient {
         });
     }
 
-     async playlists() {
+    async playlists() {
         try {
             const response = await this.client.get(`playlists?part=contentDetails&mine=true&key=${this.apiKey}`);
             return response.data as GetPlaylistsResponse;

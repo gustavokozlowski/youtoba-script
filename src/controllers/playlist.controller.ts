@@ -6,16 +6,13 @@ import axios from 'axios';
 
 const { API_KEY } = process.env;
 
-import { getToken } from '../utils/repository/user.repository';
 import { YoutubeService } from '../services/youtube/youtube-playlist.services';
+import { getToken } from '../utils/repository/user.repository';
 
 const youtubeService = new YoutubeService();
 
 export const getAllPlaylists = async (_req: Request, res: Response) => {
-    // const decode = jwt.verify(token, JWT_SECRET);
     try {
-        // const decoded = jwt.verify(bearerToken, JWT_SECRET);
-        // console.log("decode: ", decoded)
         const result = await youtubeService.getPlaylists();
 
         return res.status(200).json({

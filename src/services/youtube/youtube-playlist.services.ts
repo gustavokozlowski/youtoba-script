@@ -2,8 +2,8 @@ require('dotenv').config();
 
 import axios from 'axios';
 import type { Request, Response } from 'express';
-import { YoutubeClient } from './client/youtube.client';
 import { getToken } from '../../utils/repository/user.repository';
+import { YoutubeClient } from './client/youtube.client';
 
 const { API_KEY } = process.env;
 
@@ -11,19 +11,16 @@ export class YoutubeService {
     token: string | undefined;
     client: YoutubeClient | undefined;
 
-    constructor() {
-    }
+    constructor() {}
 
     async getPlaylists() {
-     await this._getCredentials();
         // const decode = jwt.verify(token, JWT_SECRET);
-  
-            // const decoded = jwt.verify(bearerToken, JWT_SECRET);
-            console.warn('#GET_ALL_PLAYLISTS');
-            // console.log("decode: ", decoded)
-            const result = await this.client?.playlists();
-            console.info('Playlists encontradas:\n', result);
-            return result
+        // const decoded = jwt.verify(bearerToken, JWT_SECRET);
+        // console.log("decode: ", decoded)
+        await this._getCredentials();
+
+        const result = await this.client?.playlists();
+        return result;
     }
 
     async getPlaylistDetailsById(playlistId: string) {
