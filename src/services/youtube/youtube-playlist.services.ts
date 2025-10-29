@@ -11,8 +11,6 @@ export class YoutubeService {
     token: string | undefined;
     client: YoutubeClient | undefined;
 
-    constructor() {}
-
     async getPlaylists() {
         // const decode = jwt.verify(token, JWT_SECRET);
         // const decoded = jwt.verify(bearerToken, JWT_SECRET);
