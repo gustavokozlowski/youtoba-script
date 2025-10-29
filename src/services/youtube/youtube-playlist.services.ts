@@ -6,15 +6,11 @@ import { getToken } from '../../utils/repository/user.repository';
 import { YoutubeClient } from './client/youtube.client';
 
 const { API_KEY } = process.env;
-
 export class YoutubeService {
     token: string | undefined;
     client: YoutubeClient | undefined;
 
     async getPlaylists() {
-        // const decode = jwt.verify(token, JWT_SECRET);
-        // const decoded = jwt.verify(bearerToken, JWT_SECRET);
-        // console.log("decode: ", decoded)
         await this._getCredentials();
 
         const result = await this.client?.playlists();
@@ -51,7 +47,6 @@ export class YoutubeService {
         const { playlistId } = req.params;
 
         try {
-            // const decoded = jwt.verify(token, JWT_SECRET);
 
             const result = await axios.get<any>(
                 `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,
