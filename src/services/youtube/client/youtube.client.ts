@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 import axios from 'axios';
-import type { YoutubeClientConfig } from './client.types';
+import type { GetPlaylistsResponse, YoutubeClientConfig } from './client.types';
 
 const { YOUTUBE_BASE_URL } = process.env;
 
@@ -22,10 +22,10 @@ export class YoutubeClient {
         });
     }
 
-     async getPlaylists() {
+     async playlists() {
         try {
             const response = await this.client.get(`playlists?part=contentDetails&mine=true&key=${this.apiKey}`);
-            return response.data;
+            return response.data as GetPlaylistsResponse;
         } catch (error: any) {
             console.error('Error fetching playlists:', error);
             throw error;

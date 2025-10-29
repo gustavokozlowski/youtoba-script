@@ -6,37 +6,21 @@ import axios from 'axios';
 
 const { API_KEY } = process.env;
 
-// import { YoutubeService } from '../services/youtube-playlist.services';
 import { getToken } from '../utils/repository/user.repository';
+import { YoutubeService } from '../services/youtube/youtube-playlist.services';
+
+const youtubeService = new YoutubeService();
 
 export const getAllPlaylists = async (_req: Request, res: Response) => {
     // const decode = jwt.verify(token, JWT_SECRET);
-    const bearerToken = await getToken('bearerToken');
-
-    if (!bearerToken) {
-        return res.send('Token inválido! Por favor, faça o login novamente!');
-    }
-
     try {
         // const decoded = jwt.verify(bearerToken, JWT_SECRET);
-        console.warn('#GET_ALL_PLAYLISTS');
         // console.log("decode: ", decoded)
-        console.log('BEAR TOKEN: ', bearerToken.token);
-        console.log('MSG TOKEN: ', bearerToken.message);
-        const result = await axios.get(
-            `https://youtube.googleapis.com/youtube/v3/playlists?part=contentDetails&mine=true&key=${API_KEY}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${bearerToken.token}`,
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            },
-        );
+        const result = await youtubeService.getPlaylists();
 
         return res.status(200).json({
             mensagem: 'DEU BOM CARAAALHO!',
-            resultado: result.data,
+            resultado: result,
         });
     } catch (e: any) {
         console.error('Error daqueles', e.response);

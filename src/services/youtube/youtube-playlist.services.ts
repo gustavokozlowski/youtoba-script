@@ -2,44 +2,28 @@ require('dotenv').config();
 
 import axios from 'axios';
 import type { Request, Response } from 'express';
+import { YoutubeClient } from './client/youtube.client';
 import { getToken } from '../../utils/repository/user.repository';
 
 const { API_KEY } = process.env;
 
 export class YoutubeService {
     token: string | undefined;
+    client: YoutubeClient | undefined;
 
     constructor() {
-        this._getCredentials();
     }
 
-    async getPlaylists(_req: Request, res: Response) {
+    async getPlaylists() {
+     await this._getCredentials();
         // const decode = jwt.verify(token, JWT_SECRET);
-        try {
+  
             // const decoded = jwt.verify(bearerToken, JWT_SECRET);
             console.warn('#GET_ALL_PLAYLISTS');
             // console.log("decode: ", decoded)
-
-            const result = await axios.get(
-                `https://youtube.googleapis.com/youtube/v3/playlists?part=contentDetails&mine=true&key=${API_KEY}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${this.token}`,
-                        Accept: 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                },
-            );
-
-            return res.status(200).json({
-                mensagem: 'DEU BOM CARAAALHO!',
-                resultado: result.data,
-            });
-        } catch (e: any) {
-            console.error('Error daqueles', e.response);
-
-            return res.status(400).json({ messagem: 'deu merda no get heein' });
-        }
+            const result = await this.client?.playlists();
+            console.info('Playlists encontradas:\n', result);
+            return result
     }
 
     async getPlaylistDetailsById(playlistId: string) {
@@ -158,13 +142,15 @@ export class YoutubeService {
     }
 
     private async _getCredentials() {
+        const apiKey = API_KEY;
         const { token } = await getToken('bearerToken');
 
-        if (!token || typeof token === 'undefined') {
+        if (!token || typeof token === 'undefined' || !apiKey) {
             console.info('DEU MERDA AQUI NA PORRA DO TOKEN DO YOUTOBA HEIN PQP!');
             return undefined;
         }
         this.token = token;
+        this.client = new YoutubeClient({ apiKey, token: this.token });
         return null;
     }
 
