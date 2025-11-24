@@ -12,8 +12,12 @@ export class YoutubeService {
 
     async getPlaylists() {
         await this._getCredentials();
-
         const result = await this.client?.playlists();
+
+        if (!result) {
+            return null
+        }
+
         return result;
     }
 
