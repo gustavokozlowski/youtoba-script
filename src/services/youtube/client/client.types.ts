@@ -65,7 +65,7 @@ export interface PlaylistLocalization {
 }
 
 export interface Playlist {
-    kind: 'youtube#playlist';
+    kind: string;
     etag: string;
     id: string;
     snippet?: PlaylistSnippet;
@@ -76,7 +76,7 @@ export interface Playlist {
 }
 
 export interface GetPlaylistsResponse {
-    kind: 'youtube#playlistListResponse';
+    kind: string;
     etag: string;
     nextPageToken?: string;
     prevPageToken?: string;
@@ -119,7 +119,7 @@ export interface PlaylistItemStatus {
 }
 
 export interface PlaylistItem {
-    kind: 'youtube#playlistItem';
+    kind: string;
     etag: string;
     id: string; // Playlist Item ID (importante para deletar!)
     snippet?: PlaylistItemSnippet;
@@ -128,7 +128,7 @@ export interface PlaylistItem {
 }
 
 export interface PlaylistItemListResponse {
-    kind: 'youtube#playlistItemListResponse';
+    kind: string;
     etag: string;
     nextPageToken?: string;
     prevPageToken?: string;
