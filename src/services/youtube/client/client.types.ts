@@ -75,7 +75,7 @@ export interface Playlist {
     localizations?: Record<string, PlaylistLocalization>;
 }
 
-export interface GetPlaylistsResponse {
+export interface PlaylistsResponse {
     kind: string;
     etag: string;
     nextPageToken?: string;
@@ -127,7 +127,7 @@ export interface PlaylistItem {
     status?: PlaylistItemStatus;
 }
 
-export interface PlaylistItemListResponse {
+export interface PlaylistDetailsResponse {
     kind: string;
     etag: string;
     nextPageToken?: string;
