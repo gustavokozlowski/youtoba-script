@@ -80,11 +80,9 @@ export class YoutubeService {
             const filteredLength = `Items na playlist filtrada: ${filteredPlaylist.length}`;
 
             console.info(originalLength, '\n', filteredLength);
-
             return filteredPlaylist;
         } catch (e) {
             console.error('Error daqueles', e);
-
             return null;
         }
     }
