@@ -42,8 +42,6 @@ export class YoutubeService {
 
     async getPlaylistItems(playlistId: string) {
         let initialPlaylist: PlaylistItem[] = [];
-
-        try {
             await this._getCredentials();
             const result = await this.client?.playlist(playlistId);
 
@@ -81,10 +79,7 @@ export class YoutubeService {
 
             console.info(originalLength, '\n', filteredLength);
             return filteredPlaylist;
-        } catch (e) {
-            console.error('Error daqueles', e);
-            return null;
-        }
+      
     }
 
     async removeItemsById(items: string[]) {
