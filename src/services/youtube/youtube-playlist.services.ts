@@ -26,13 +26,13 @@ export class YoutubeService {
         const playlistInfo = await this.client?.playlistDetails(playlistId);
 
         if (!playlistInfo) {
-            throw new Error('deu merda no get heein');
+            return null;
         }
 
         const { totalResults } = playlistInfo.pageInfo;
 
         return {
-            mensagem: 'OLHA O TAMANHO DESSA PLAYLIST:\n',
+            mensagem: 'OLHA SÓ OS DETALHES DA PLAYLIST AQUI!',
             totalPages: totalResults,
         };
     }
