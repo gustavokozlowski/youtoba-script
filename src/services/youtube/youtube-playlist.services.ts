@@ -3,8 +3,8 @@ require('dotenv').config();
 import axios from 'axios';
 import type { Request, Response } from 'express';
 import { getToken } from '../../utils/repository/user.repository';
+import type { PlaylistsResponse } from './client/client.types';
 import { YoutubeClient } from './client/youtube.client';
-import { PlaylistsResponse } from './client/client.types';
 
 const { API_KEY } = process.env;
 export class YoutubeService {
@@ -23,18 +23,18 @@ export class YoutubeService {
     }
 
     async getPlaylistDetailsById(playlistId: string) {
-            const playlistInfo = await this.client?.playlistDetails(playlistId);
+        const playlistInfo = await this.client?.playlistDetails(playlistId);
 
-            if (!playlistInfo) {
-                throw new Error('deu merda no get heein');
-            }
+        if (!playlistInfo) {
+            throw new Error('deu merda no get heein');
+        }
 
-            const { totalResults } = playlistInfo.pageInfo;
+        const { totalResults } = playlistInfo.pageInfo;
 
-            return {
-                mensagem: 'OLHA O TAMANHO DESSA PLAYLIST:\n',
-                totalPages: totalResults,
-            };
+        return {
+            mensagem: 'OLHA O TAMANHO DESSA PLAYLIST:\n',
+            totalPages: totalResults,
+        };
     }
 
     async getPlaylistItems(req: Request, res: Response) {

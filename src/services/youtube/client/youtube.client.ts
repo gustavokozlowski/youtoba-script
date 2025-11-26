@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 import axios from 'axios';
-import type { PlaylistsResponse, YoutubeClientConfig, PlaylistDetailsResponse } from './client.types';
+import type { PlaylistDetailsResponse, PlaylistsResponse, YoutubeClientConfig } from './client.types';
 
 const { YOUTUBE_BASE_URL, API_KEY } = process.env;
 
@@ -34,16 +34,14 @@ export class YoutubeClient {
 
     async playlistDetails(playlistId: string) {
         try {
-               const playlistInfo = await this.client.get(
-                `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`);
+            const playlistInfo = await this.client.get(
+                `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,
+            );
 
             return playlistInfo.data as PlaylistDetailsResponse;
-            
         } catch (error: any) {
             console.error(`Deu merda para obter os detalhes da playlist: ${playlistId}`, error);
             return null;
         }
-     }
-
-
+    }
 }
