@@ -4,46 +4,37 @@ import axios from 'axios';
 import type { Request, Response } from 'express';
 import { getToken } from '../../utils/repository/user.repository';
 import { YoutubeClient } from './client/youtube.client';
+import { PlaylistsResponse } from './client/client.types';
 
 const { API_KEY } = process.env;
 export class YoutubeService {
     token: string | undefined;
     client: YoutubeClient | undefined;
 
-    async getPlaylists() {
+    async getPlaylists(): Promise<PlaylistsResponse | null> {
         await this._getCredentials();
         const result = await this.client?.playlists();
 
         if (!result) {
-            return null
+            return null;
         }
 
         return result;
     }
 
     async getPlaylistDetailsById(playlistId: string) {
-        try {
-            const playlistInfo: any = await axios.get(
-                `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${this.token}`,
-                        Accept: 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                },
-            );
+            const playlistInfo = await this.client?.playlistDetails(playlistId);
 
-            const { totalResults } = playlistInfo.data.pageInfo;
+            if (!playlistInfo) {
+                throw new Error('deu merda no get heein');
+            }
+
+            const { totalResults } = playlistInfo.pageInfo;
 
             return {
-                mensagem: 'OLHA ESSA PLAYLIST:\n',
+                mensagem: 'OLHA O TAMANHO DESSA PLAYLIST:\n',
                 totalPages: totalResults,
             };
-        } catch (e) {
-            console.error('Error daqueles:', e);
-            throw new Error('deu merda no get heein');
-        }
     }
 
     async getPlaylistItems(req: Request, res: Response) {
@@ -51,7 +42,6 @@ export class YoutubeService {
         const { playlistId } = req.params;
 
         try {
-
             const result = await axios.get<any>(
                 `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,
                 {
