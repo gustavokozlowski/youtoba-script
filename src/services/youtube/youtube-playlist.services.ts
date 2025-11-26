@@ -1,9 +1,8 @@
 require('dotenv').config();
 
 import axios from 'axios';
-import type { Request, Response } from 'express';
 import { getToken } from '../../utils/repository/user.repository';
-import type { PlaylistItem, PlaylistResponse, PlaylistsResponse } from './client/client.types';
+import type { PlaylistItem, PlaylistsResponse } from './client/client.types';
 import { YoutubeClient } from './client/youtube.client';
 
 const { API_KEY } = process.env;
@@ -62,10 +61,10 @@ export class YoutubeService {
             while (nextPageTokenVar) {
                 const nextPage = await this.client?.nextPlaylistPage(playlistId, nextPageTokenVar);
 
-                if (nextPage && nextPage.items) {
+                if (nextPage?.items) {
                     const playlistData = nextPage;
 
-                    playlistData.items.forEach((item: PlaylistItem) => initialPlaylist.push(item));
+                    playlistData.items.map((item: PlaylistItem) => initialPlaylist.push(item));
 
                     if (playlistData.nextPageToken) {
                         nextPageTokenVar = playlistData?.nextPageToken;

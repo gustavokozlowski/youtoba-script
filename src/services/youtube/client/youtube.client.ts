@@ -61,7 +61,7 @@ export class YoutubeClient {
         try {
             const nextPage = await this.client.get(
                 `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&pageToken=${nextPageToken}&playlistId=${playlistId}&key=${API_KEY}`,
-             );
+            );
 
             return nextPage.data as PlaylistResponse;
         } catch (error: any) {
