@@ -6,7 +6,6 @@ import type { PlaylistDetailsResponse, PlaylistsResponse, YoutubeClientConfig } 
 const { YOUTUBE_BASE_URL, API_KEY } = process.env;
 
 export class YoutubeClient {
-    // Youtube client methods and properties here
     private client;
     private apiKey: string;
 
