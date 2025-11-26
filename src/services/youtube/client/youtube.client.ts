@@ -23,8 +23,8 @@ export class YoutubeClient {
 
     async playlists(): Promise<PlaylistsResponse | null> {
         try {
-            const response = await this.client.get(`playlists?part=contentDetails&mine=true&key=${this.apiKey}`);
-            return response.data as PlaylistsResponse;
+            const playlists = await this.client.get(`playlists?part=contentDetails&mine=true&key=${this.apiKey}`);
+            return playlists.data as PlaylistsResponse;
         } catch (error: any) {
             console.error('Erro ao obter playlists:', error);
             return null;
@@ -53,6 +53,19 @@ export class YoutubeClient {
             return playlist.data as PlaylistResponse;
         } catch (error: any) {
             console.error(`Deu merda para obter os detalhes da playlist: ${playlistId}`, error);
+            return null;
+        }
+    }
+
+    async nextPlaylistPage(playlistId: string, nextPageToken: string): Promise<PlaylistResponse | null> {
+        try {
+            const nextPage = await this.client.get(
+                `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&pageToken=${nextPageToken}&playlistId=${playlistId}&key=${API_KEY}`,
+             );
+
+            return nextPage.data as PlaylistResponse;
+        } catch (error: any) {
+            console.error(`Erro ao obter a próxima página da playlist: ${playlistId}`, error);
             return null;
         }
     }
