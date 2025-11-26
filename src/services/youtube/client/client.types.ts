@@ -136,6 +136,8 @@ export interface PlaylistDetailsResponse {
     items: PlaylistItem[];
 }
 
+export interface PlaylistResponse extends PlaylistDetailsResponse {}
+
 // API Error Types
 // ============================================
 
