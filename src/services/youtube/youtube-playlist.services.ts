@@ -42,44 +42,43 @@ export class YoutubeService {
 
     async getPlaylistItems(playlistId: string) {
         let initialPlaylist: PlaylistItem[] = [];
-            await this._getCredentials();
-            const result = await this.client?.playlist(playlistId);
+        await this._getCredentials();
+        const result = await this.client?.playlist(playlistId);
 
-            if (!result) {
-                return null;
-            }
+        if (!result) {
+            return null;
+        }
 
-            const { items, nextPageToken } = result;
-            const firstList = items.map((item: PlaylistItem) => item);
+        const { items, nextPageToken } = result;
+        const firstList = items.map((item: PlaylistItem) => item);
 
-            initialPlaylist = [...firstList];
+        initialPlaylist = [...firstList];
 
-            let nextPageTokenVar = nextPageToken;
+        let nextPageTokenVar = nextPageToken;
 
-            while (nextPageTokenVar) {
-                const nextPage = await this.client?.nextPlaylistPage(playlistId, nextPageTokenVar);
+        while (nextPageTokenVar) {
+            const nextPage = await this.client?.nextPlaylistPage(playlistId, nextPageTokenVar);
 
-                if (nextPage?.items) {
-                    const playlistData = nextPage;
+            if (nextPage?.items) {
+                const playlistData = nextPage;
 
-                    playlistData.items.map((item: PlaylistItem) => initialPlaylist.push(item));
+                playlistData.items.map((item: PlaylistItem) => initialPlaylist.push(item));
 
-                    if (playlistData.nextPageToken) {
-                        nextPageTokenVar = playlistData?.nextPageToken;
-                    } else {
-                        break;
-                    }
-                } else break;
-            }
+                if (playlistData.nextPageToken) {
+                    nextPageTokenVar = playlistData?.nextPageToken;
+                } else {
+                    break;
+                }
+            } else break;
+        }
 
-            const filteredPlaylist = this._removeItemsDuplicated(initialPlaylist);
+        const filteredPlaylist = this._removeItemsDuplicated(initialPlaylist);
 
-            const originalLength = `Items na playlist original: ${initialPlaylist.length}`;
-            const filteredLength = `Items na playlist filtrada: ${filteredPlaylist.length}`;
+        const originalLength = `Items na playlist original: ${initialPlaylist.length}`;
+        const filteredLength = `Items na playlist filtrada: ${filteredPlaylist.length}`;
 
-            console.info(originalLength, '\n', filteredLength);
-            return filteredPlaylist;
-      
+        console.info(originalLength, '\n', filteredLength);
+        return filteredPlaylist;
     }
 
     async removeItemsById(items: string[]) {
