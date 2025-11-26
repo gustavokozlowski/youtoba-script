@@ -9,11 +9,9 @@ export class YoutubeClient {
     // Youtube client methods and properties here
     private client;
     private apiKey: string;
-    private token: string;
 
     constructor({ apiKey, token }: YoutubeClientConfig) {
         this.apiKey = apiKey;
-        this.token = token;
         this.client = axios.create({
             baseURL: YOUTUBE_BASE_URL,
             headers: {
