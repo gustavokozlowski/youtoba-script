@@ -72,6 +72,7 @@ export class YoutubeClient {
 
     async deleteItemsById(items: string[]): Promise<boolean | null> {
         try {
+
             switch (items.length) {
                 case 0:
                     console.info('Nenhum item para deletar.');
