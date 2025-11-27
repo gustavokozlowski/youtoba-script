@@ -91,10 +91,10 @@ export class YoutubeClient {
                 );
             });
 
-            const result = await Promise.all(requests).catch((e: any) =>
-                console.error('Fudeo pra excluir os videos!\n', e),
-            );
-
+            const result = await Promise.all(requests)
+            //  .catch((e: any) =>
+            //     console.error('Fudeo pra excluir os videos!\n', e),
+            // );
             console.info('Itens deletados com sucesso:', result);
 
             return true;
