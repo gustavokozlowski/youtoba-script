@@ -72,7 +72,7 @@ export class YoutubeService {
             } else break;
         }
 
-        const filteredPlaylist = this._removeItemsDuplicated(initialPlaylist);
+        const filteredPlaylist = this._filterDuplicatedItemsById(initialPlaylist);
 
         const originalLength = `Items na playlist original: ${initialPlaylist.length}`;
         const filteredLength = `Items na playlist filtrada: ${filteredPlaylist.length}`;
@@ -98,13 +98,13 @@ export class YoutubeService {
         return result;
     }
 
-    private _removeItemsDuplicated = (list: any[]) => {
-        const newList = [] as any[];
+    private _filterDuplicatedItemsById = (list: PlaylistItem[]) => {
+        const newList: string[] = [];
 
         list.forEach((item) => {
-            const videoId = item.contentDetails.videoId;
-            if (!newList.some((i) => i.contentDetails.videoId === videoId)) {
-                newList.push(item);
+            const videoId = item.id;
+            if (!newList.some((i: string) => i === videoId)) {
+                newList.push(videoId);
             }
         });
 
