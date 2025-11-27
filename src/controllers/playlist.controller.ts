@@ -145,12 +145,6 @@ export const removeItemsDuplicated = (list: any[]) => {
         !filteredList.some((i) => i.contentDetails.videoId === videoId)
             ? filteredList.push(item)
             : duplicatedItemsList.push(item);
-        // if (newList.some((i) => i.contentDetails.videoId !== videoId)) {
-        //     newList.push(item);
-        // }
-        // else {
-        //     duplicatedItemsList.push(item);
-        // }
     });
 
     // // chamar classe do serviço para remover os duplicados da playlist no youtube
