@@ -72,13 +72,13 @@ export class YoutubeService {
             } else break;
         }
 
-        const filteredPlaylist = this._filterDuplicatedItemsById(initialPlaylist);
+        // const filteredPlaylist = this._filterDuplicatedItemsById(initialPlaylist);
 
-        const originalLength = `Items na playlist original: ${initialPlaylist.length}`;
-        const filteredLength = `Items na playlist filtrada: ${filteredPlaylist.length}`;
+        // const originalLength = `Items na playlist original: ${initialPlaylist.length}`;
+        // const filteredLength = `Items na playlist filtrada: ${filteredPlaylist.length}`;
 
-        console.info(originalLength, '\n', filteredLength);
-        return filteredPlaylist;
+        // console.info(originalLength, '\n', filteredLength);
+        return initialPlaylist;
     }
 
     async removeItemsById(items: string[]) {
