@@ -73,19 +73,21 @@ export class YoutubeClient {
     async deleteItemsById(items: string[]): Promise<boolean | null> {
         try {
             const requests = items.map(async (itemId: string) => {
-            await axios.delete(`https://youtube.googleapis.com/youtube/v3/playlistItems?id=${itemId}&key=${API_KEY}`);
-        });
+                await axios.delete(
+                    `https://youtube.googleapis.com/youtube/v3/playlistItems?id=${itemId}&key=${API_KEY}`,
+                );
+            });
 
-        const result = await Promise.all(requests).catch((e: any) =>
-            console.error('Fudeo pra excluir os videos!\n', e)
-        );
+            const result = await Promise.all(requests).catch((e: any) =>
+                console.error('Fudeo pra excluir os videos!\n', e),
+            );
 
-        console.info('Itens deletados com sucesso:', result);
+            console.info('Itens deletados com sucesso:', result);
 
-        return true;
+            return true;
         } catch (error: any) {
             console.error(`Erro ao deletar o item da playlist: ${items}`, error);
-            return null
+            return null;
         }
     }
 }
