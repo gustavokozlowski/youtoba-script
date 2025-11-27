@@ -40,7 +40,7 @@ export class YoutubeService {
     // ESTAMOS FAZENDO AGORA A IMPLEMENTAÇÃO DA PAGINAÇÃO!!
     // PRECISAMOS PEGAS TODOS OS IDS REPETIDOS E RETORNAR A LISTA SOMENTE COM ELES.
 
-    async getPlaylistItems(playlistId: string) {
+    async getPlaylistDuplicateItems(playlistId: string) {
         let initialPlaylist: PlaylistItem[] = [];
         await this._getCredentials();
         const result = await this.client?.playlist(playlistId);
@@ -72,30 +72,39 @@ export class YoutubeService {
             } else break;
         }
 
-        // const filteredPlaylist = this._filterDuplicatedItemsById(initialPlaylist);
+        const filteredPlaylist = this._filterDuplicatedItemsById(initialPlaylist);
 
         // const originalLength = `Items na playlist original: ${initialPlaylist.length}`;
         // const filteredLength = `Items na playlist filtrada: ${filteredPlaylist.length}`;
 
         // console.info(originalLength, '\n', filteredLength);
-        return initialPlaylist;
+        return filteredPlaylist;
     }
 
-    async removeItemsById(items: string[]) {
-        const requests = items.map(async (itemId: string) => {
-            await axios.delete(`https://youtube.googleapis.com/youtube/v3/playlistItems?id=${itemId}&key=${API_KEY}`, {
-                headers: {
-                    Authorization: `Bearer ${this.token}`,
-                    Accept: 'application/json',
-                },
-            });
-        });
+    async removeDuplicateVideos(playlistId: string) {
+        await this._getCredentials();
+        const duplicatedVideos = await this.getPlaylistDuplicateItems(playlistId);
 
-        const result = await Promise.all(requests).catch((e: any) =>
-            console.error('Fudeo pra excluir os videos!\n', e),
-        );
+        if (!duplicatedVideos || duplicatedVideos.length === 0) {
+            return {
+                mensagem: 'Nenhum item duplicado encontrado na playlist!',
+                resultado: [],
+            };
+        }
+        const itemsToDelete = duplicatedVideos.map((item) => item.id);
+        const result = await this.client?.deleteItemsById(itemsToDelete);
 
-        return result;
+        if (result) {
+            return {
+                mensagem: 'Itens deletados com sucesso!',
+                resultado: result,
+            };
+        }
+
+        return {
+            mensagem: 'Erro ao deletar os itens da playlist!',
+            resultado: result,
+        };
     }
 
     private _filterDuplicatedItemsById = (list: PlaylistItem[]) => {
