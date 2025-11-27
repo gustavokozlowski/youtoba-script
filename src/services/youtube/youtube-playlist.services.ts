@@ -99,16 +99,17 @@ export class YoutubeService {
     }
 
     private _filterDuplicatedItemsById = (list: PlaylistItem[]) => {
-        const newList: string[] = [];
+        const filteredList: PlaylistItem[] = [];
+        const duplicatedItemsList: PlaylistItem[] = [];
 
         list.forEach((item) => {
-            const videoId = item.id;
-            if (!newList.some((i: string) => i === videoId)) {
-                newList.push(videoId);
-            }
+           const videoId = item?.contentDetails?.videoId;
+        !filteredList.some((i) => i.contentDetails?.videoId === videoId)
+            ? filteredList.push(item)
+            : duplicatedItemsList.push(item);
         });
 
-        return newList;
+        return duplicatedItemsList;
     };
 
     private async _getCredentials() {
