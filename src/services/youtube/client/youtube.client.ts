@@ -72,6 +72,18 @@ export class YoutubeClient {
 
     async deleteItemsById(items: string[]): Promise<boolean | null> {
         try {
+            switch (items.length) {
+                case 0:
+                    console.info('Nenhum item para deletar.');
+                    return true;
+                case 1:
+                    await axios.delete(
+                        `https://youtube.googleapis.com/youtube/v3/playlistItems?id=${items[0]}&key=${API_KEY}`,
+                    );
+                    console.info('Item deletado com sucesso:', items[0]);
+                    return true;
+            }
+
             const requests = items.map(async (itemId: string) => {
                 await axios.delete(
                     `https://youtube.googleapis.com/youtube/v3/playlistItems?id=${itemId}&key=${API_KEY}`,
