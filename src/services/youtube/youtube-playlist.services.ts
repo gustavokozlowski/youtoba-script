@@ -1,6 +1,5 @@
 require('dotenv').config();
 
-import axios from 'axios';
 import { getToken } from '../../utils/repository/user.repository';
 import type { PlaylistItem, PlaylistsResponse } from './client/client.types';
 import { YoutubeClient } from './client/youtube.client';
