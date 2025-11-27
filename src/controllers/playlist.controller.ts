@@ -137,18 +137,25 @@ export const getPlaylistItems = async (req: Request, res: Response) => {
 
 // REFATORAR EM BREVE!
 export const removeItemsDuplicated = (list: any[]) => {
-    const newList = [] as any[];
+    const filteredList = [] as any[];
+    const duplicatedItemsList = [] as any[];
 
     list.forEach((item) => {
         const videoId = item.contentDetails.videoId;
-        if (!newList.some((i) => i.contentDetails.videoId === videoId)) {
-            newList.push(item);
-        }
+        !filteredList.some((i) => i.contentDetails.videoId === videoId) ?  filteredList.push(item) : duplicatedItemsList.push(item);
+        // if (newList.some((i) => i.contentDetails.videoId !== videoId)) {
+        //     newList.push(item);
+        // }
+        // else {
+        //     duplicatedItemsList.push(item);
+        // }
     });
 
     // // chamar classe do serviço para remover os duplicados da playlist no youtube
     // const youtubeService = new YoutubeService();
     // await youtubeService.removeDuplicatedItems(newList.map(item => item.id));
 
-    return newList;
+    console.info('Itens duplicados encontrados:\n', duplicatedItemsList);
+
+    return filteredList;
 };
