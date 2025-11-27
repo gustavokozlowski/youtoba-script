@@ -103,10 +103,10 @@ export class YoutubeService {
         const duplicatedItemsList: PlaylistItem[] = [];
 
         list.forEach((item) => {
-           const videoId = item?.contentDetails?.videoId;
-        !filteredList.some((i) => i.contentDetails?.videoId === videoId)
-            ? filteredList.push(item)
-            : duplicatedItemsList.push(item);
+            const videoId = item?.contentDetails?.videoId;
+            !filteredList.some((i) => i.contentDetails?.videoId === videoId)
+                ? filteredList.push(item)
+                : duplicatedItemsList.push(item);
         });
 
         return duplicatedItemsList;

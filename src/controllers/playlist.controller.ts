@@ -142,7 +142,9 @@ export const removeItemsDuplicated = (list: any[]) => {
 
     list.forEach((item) => {
         const videoId = item.contentDetails.videoId;
-        !filteredList.some((i) => i.contentDetails.videoId === videoId) ?  filteredList.push(item) : duplicatedItemsList.push(item);
+        !filteredList.some((i) => i.contentDetails.videoId === videoId)
+            ? filteredList.push(item)
+            : duplicatedItemsList.push(item);
         // if (newList.some((i) => i.contentDetails.videoId !== videoId)) {
         //     newList.push(item);
         // }
