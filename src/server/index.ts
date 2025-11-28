@@ -2,7 +2,6 @@ require('dotenv').config();
 
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-// import { authenticate } from '../middlewares/auth.middlewares'
 import express from 'express';
 import { routes } from '../routes';
 
