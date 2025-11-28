@@ -1,7 +1,8 @@
 require('dotenv').config();
 
-import type { PlaylistDetailsResponse, PlaylistResponse, PlaylistsResponse, YoutubeClientConfig } from './client.types';
 import axios from 'axios';
+import type { PlaylistDetailsResponse, PlaylistResponse, PlaylistsResponse, YoutubeClientConfig } from './client.types';
+
 const { YOUTUBE_BASE_URL, API_KEY } = process.env;
 
 export class YoutubeClient {
@@ -10,7 +11,7 @@ export class YoutubeClient {
 
     constructor({ apiKey, token }: YoutubeClientConfig) {
         this.apiKey = apiKey;
-        this.client = axios .create({
+        this.client = axios.create({
             baseURL: YOUTUBE_BASE_URL,
             headers: {
                 Accept: 'application/json',
