@@ -4,30 +4,48 @@
   "main": "src/server/index.js",
   "type": "commonjs",
   "scripts": {
+    "build": "tsc",
+    "build:prev": "tsc -p .",
+    "start": "node dist/server/index.js",
+    "dev": "ts-node-dev --no-warnings --respawn --ignore-watch node_modules --transpile-only src/server/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon --env-file=.env src/server/index.js"
+    "biome:format": "npx @biomejs/biome format",
+    "biome:lint": "npx @biomejs/biome lint",
+    "biome:check": "npx @biomejs/biome check",
+    "biome:fix": "npx @biomejs/biome check --write"
   },
   "keywords": [],
   "author": "gustavo kozlowski",
   "license": "ISC",
-  "description": "",
+  "description": "Feito com amor <3",
   "dependencies": {
     "@googleapis/docs": "^3.3.0",
-    "axios": "^1.7.9",
-    "body-parse": "^0.1.0",
     "body-parser": "^1.20.3",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "crypto": "^1.0.1",
-    "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-session": "^1.18.1",
     "google-auth-library": "^9.15.0",
     "googleapis": "^144.0.0",
-    "query-string": "^9.1.1",
-    "request": "^2.88.2",
+    "jsonwebtoken": "^9.0.2",
+    "node-cache": "^5.1.2",
     "url-parse": "^1.5.10"
   },
   "devDependencies": {
-    "nodemon": "^3.1.9"
+    "@biomejs/biome": "2.2.6",
+    "@types/axios": "^0.9.36",
+    "@types/cookie-parser": "^1.4.9",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/express-session": "^1.18.2",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^24.8.1",
+    "@types/url-parse": "^1.4.11",
+    "axios": "^1.12.2",
+    "dotenv": "^16.4.7",
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.9.3"
   }
 }
