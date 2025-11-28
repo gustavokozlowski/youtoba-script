@@ -39,7 +39,6 @@ export const getAuthorizationToken = async (
     res: Response,
     _next: NextFunction,
 ): Promise<GetAuthorizationTokenResponse> => {
- 
     const queryURL = new urlParse(req.url);
     const query = queryString.decode(queryURL.query);
     const code = query.code as string;
