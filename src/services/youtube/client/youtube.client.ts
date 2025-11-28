@@ -1,6 +1,5 @@
 require('dotenv').config();
 
-import axios from 'axios';
 import type { PlaylistDetailsResponse, PlaylistResponse, PlaylistsResponse, YoutubeClientConfig } from './client.types';
 
 const { YOUTUBE_BASE_URL, API_KEY } = process.env;
@@ -72,13 +71,12 @@ export class YoutubeClient {
 
     async deleteItemsById(items: string[]): Promise<boolean | null> {
         try {
-
             switch (items.length) {
                 case 0:
                     console.info('Nenhum item para deletar.');
                     return true;
                 case 1:
-                    await axios.delete(
+                    await this.client.delete(
                         `https://youtube.googleapis.com/youtube/v3/playlistItems?id=${items[0]}&key=${API_KEY}`,
                     );
                     console.info('Item deletado com sucesso:', items[0]);
@@ -86,15 +84,13 @@ export class YoutubeClient {
             }
 
             const requests = items.map(async (itemId: string) => {
-                await axios.delete(
+                await this.client.delete(
                     `https://youtube.googleapis.com/youtube/v3/playlistItems?id=${itemId}&key=${API_KEY}`,
                 );
             });
 
-            const result = await Promise.all(requests)
-            //  .catch((e: any) =>
-            //     console.error('Fudeo pra excluir os videos!\n', e),
-            // );
+            const result = await Promise.all(requests);
+
             console.info('Itens deletados com sucesso:', result);
 
             return true;
