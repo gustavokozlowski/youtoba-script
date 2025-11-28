@@ -4,7 +4,7 @@ import { getAllPlaylists, getPlaylistInfoById, removeDuplicatedItems } from '../
 const playlistRouter = Router();
 
 playlistRouter.route('/get-all').get(getAllPlaylists);
-playlistRouter.route('/:playlistId').get(getPlaylistInfoById);
+playlistRouter.route('/:playlistId/items').get(getPlaylistInfoById);
 playlistRouter.route('/:playlistId/remove-duplicates').delete(removeDuplicatedItems);
 
 export { playlistRouter };
