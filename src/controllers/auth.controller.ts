@@ -39,7 +39,7 @@ export const getAuthorizationToken = async (
     res: Response,
     _next: NextFunction,
 ): Promise<GetAuthorizationTokenResponse> => {
-    console.warn('#GET_AUTHORIZATION_TOKEN');
+ 
     const queryURL = new urlParse(req.url);
     const query = queryString.decode(queryURL.query);
     const code = query.code as string;
@@ -48,9 +48,7 @@ export const getAuthorizationToken = async (
     const bearerToken = data.tokens.access_token;
 
     if (typeof bearerToken === 'string') {
-        // const token = jwt.sign({ bearerToken }, JWT_SECRET, { expiresIn: '12h' });
         const success = saveToken('bearerToken', bearerToken);
-        // ADICIONAR JWT AO RESPONSE NO FUTURO
         const response: GetAuthorizationTokenResponse = { success, bearerToken };
         res.json(response);
         return response;
