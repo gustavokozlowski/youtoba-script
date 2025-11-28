@@ -44,15 +44,14 @@ export const removeDuplicatedItems = async (req: Request, res: Response) => {
         const result = await youtubeService.removeDuplicateVideos(playlistId);
 
         if (!result) {
-            return res.status(400).json({ mensagem: 'Não foi possível remover os duplicados.' });
+            return res.status(400).json({ mensagem: 'Não foi possível remover os videos duplicados.' });
         }
 
         return res.status(200).json({
-            mensagem: 'Duplicados removidos com sucesso!',
             resultado: result,
         });
     } catch (e: any) {
-        console.error('Error ao remover duplicados:', e);
-        return res.status(400).json({ mensagem: 'Deu merda ao remover duplicados!' });
+        console.error('Error ao remover os videos duplicados:', e);
+        return res.status(400).json({ mensagem: 'Deu merda ao remover os videos duplicados!' });
     }
 };
