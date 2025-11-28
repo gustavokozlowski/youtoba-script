@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 import type { PlaylistDetailsResponse, PlaylistResponse, PlaylistsResponse, YoutubeClientConfig } from './client.types';
-
+import axios from 'axios';
 const { YOUTUBE_BASE_URL, API_KEY } = process.env;
 
 export class YoutubeClient {
@@ -10,7 +10,7 @@ export class YoutubeClient {
 
     constructor({ apiKey, token }: YoutubeClientConfig) {
         this.apiKey = apiKey;
-        this.client = axios.create({
+        this.client = axios .create({
             baseURL: YOUTUBE_BASE_URL,
             headers: {
                 Accept: 'application/json',
@@ -69,33 +69,29 @@ export class YoutubeClient {
         }
     }
 
-    async deleteItemsById(items: string[]): Promise<boolean | null> {
+    async deleteItemsById(videosIds: string[]): Promise<boolean | null> {
         try {
-            switch (items.length) {
+            switch (videosIds.length) {
                 case 0:
-                    console.info('Nenhum item para deletar.');
+                    console.info('Nenhum item para deletar');
                     return true;
                 case 1:
                     await this.client.delete(
-                        `https://youtube.googleapis.com/youtube/v3/playlistItems?id=${items[0]}&key=${API_KEY}`,
+                        `https://youtube.googleapis.com/youtube/v3/playlistItems?id=${videosIds[0]}&key=${API_KEY}`,
                     );
-                    console.info('Item deletado com sucesso:', items[0]);
+                    console.info('Video deletado com sucesso:', videosIds[0]);
                     return true;
             }
 
-            const requests = items.map(async (itemId: string) => {
+            videosIds.map(async (videoId: string) => {
                 await this.client.delete(
-                    `https://youtube.googleapis.com/youtube/v3/playlistItems?id=${itemId}&key=${API_KEY}`,
+                    `https://youtube.googleapis.com/youtube/v3/playlistItems?id=${videoId}&key=${API_KEY}`,
                 );
             });
 
-            const result = await Promise.all(requests);
-
-            console.info('Itens deletados com sucesso:', result);
-
             return true;
         } catch (error: any) {
-            console.error(`Erro ao deletar o item da playlist: ${items}`, error);
+            console.error(`Erro ao deletar o item da playlist: ${videosIds}`, error);
             return null;
         }
     }
