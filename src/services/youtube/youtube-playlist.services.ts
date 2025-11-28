@@ -78,7 +78,6 @@ export class YoutubeService {
         if (!duplicatedVideos || duplicatedVideos.length === 0) {
             return {
                 mensagem: 'Nenhum item duplicado encontrado na playlist!',
-                resultado: [],
             };
         }
         const itemsToDelete = duplicatedVideos.map((item) => item.id);
