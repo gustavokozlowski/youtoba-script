@@ -9,7 +9,7 @@ export class YoutubeService {
     token: string | undefined;
     client: YoutubeClient | undefined;
 
-    async getPlaylists(): Promise<PlaylistsResponse | null> {
+    async playlists(): Promise<PlaylistsResponse | null> {
         await this._getCredentials();
         const result = await this.client?.playlists();
 
@@ -20,7 +20,7 @@ export class YoutubeService {
         return result;
     }
 
-    async getPlaylistDetailsById(playlistId: string) {
+    async playlistDetailsById(playlistId: string) {
         await this._getCredentials();
         const playlistInfo = await this.client?.playlistDetails(playlistId);
 
@@ -36,10 +36,7 @@ export class YoutubeService {
         };
     }
 
-    // ESTAMOS FAZENDO AGORA A IMPLEMENTAÇÃO DA PAGINAÇÃO!!
-    // PRECISAMOS PEGAS TODOS OS IDS REPETIDOS E RETORNAR A LISTA SOMENTE COM ELES.
-
-    async getPlaylistDuplicateItems(playlistId: string) {
+    async _playlistDuplicateItems(playlistId: string) {
         let initialPlaylist: PlaylistItem[] = [];
         await this._getCredentials();
         const result = await this.client?.playlist(playlistId);
@@ -72,18 +69,12 @@ export class YoutubeService {
         }
 
         const filteredPlaylist = this._filterDuplicatedItemsById(initialPlaylist);
-
-        // const originalLength = `Items na playlist original: ${initialPlaylist.length}`;
-        // const filteredLength = `Items na playlist filtrada: ${filteredPlaylist.length}`;
-
-        // console.info(originalLength, '\n', filteredLength);
         return filteredPlaylist;
     }
 
     async removeDuplicateVideos(playlistId: string) {
         await this._getCredentials();
-        const duplicatedVideos = await this.getPlaylistDuplicateItems(playlistId);
-
+        const duplicatedVideos = await this._playlistDuplicateItems(playlistId);
         if (!duplicatedVideos || duplicatedVideos.length === 0) {
             return {
                 mensagem: 'Nenhum item duplicado encontrado na playlist!',
