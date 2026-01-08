@@ -1,16 +1,17 @@
-require('dotenv').config();
-
-import { getToken } from '../../utils/repository/user.repository';
+import { validateDuplicateItems } from '../../utils/helpers';
 import type { PlaylistItem, PlaylistsResponse } from './client/client.types';
-import { YoutubeClient } from './client/youtube.client';
+import type { YoutubeClient } from './client/youtube.client';
+import type { FormattedPlaylistItem } from './types';
 
-const { API_KEY } = process.env;
 export class YoutubeService {
-    token: string | undefined;
-    client: YoutubeClient | undefined;
+    client: YoutubeClient;
+
+    constructor(client: YoutubeClient) {
+        this.client = client;
+    }
 
     async playlists(): Promise<PlaylistsResponse | null> {
-        await this._getCredentials();
+      
         const result = await this.client?.playlists();
 
         if (!result) {
@@ -21,7 +22,7 @@ export class YoutubeService {
     }
 
     async playlistDetailsById(playlistId: string) {
-        await this._getCredentials();
+  
         const playlistInfo = await this.client?.playlistDetails(playlistId);
 
         if (!playlistInfo) {
@@ -29,16 +30,18 @@ export class YoutubeService {
         }
 
         const { totalResults } = playlistInfo.pageInfo;
+        const items = this._normalizePlaylistItems(playlistInfo.items);
 
         return {
             mensagem: 'OLHA SÓ OS DETALHES DA PLAYLIST AQUI!',
             totalPages: totalResults,
+            items,
         };
     }
 
     async _playlistDuplicateItems(playlistId: string) {
-        let initialPlaylist: PlaylistItem[] = [];
-        await this._getCredentials();
+        let initialPlaylist: FormattedPlaylistItem[] = [];
+
         const result = await this.client?.playlist(playlistId);
 
         if (!result) {
@@ -46,7 +49,7 @@ export class YoutubeService {
         }
 
         const { items, nextPageToken } = result;
-        const firstList = items.map((item: PlaylistItem) => item);
+        const firstList = this._normalizePlaylistItems(items);
 
         initialPlaylist = [...firstList];
 
@@ -58,7 +61,8 @@ export class YoutubeService {
             if (nextPage?.items) {
                 const playlistData = nextPage;
 
-                playlistData.items.map((item: PlaylistItem) => initialPlaylist.push(item));
+                const normalizedItems = this._normalizePlaylistItems(playlistData.items);
+                initialPlaylist = [...initialPlaylist, ...normalizedItems];
 
                 if (playlistData.nextPageToken) {
                     nextPageTokenVar = playlistData?.nextPageToken;
@@ -73,53 +77,39 @@ export class YoutubeService {
     }
 
     async removeDuplicateVideos(playlistId: string) {
-        await this._getCredentials();
+
         const duplicatedVideos = await this._playlistDuplicateItems(playlistId);
         if (!duplicatedVideos || duplicatedVideos.length === 0) {
             return {
                 mensagem: 'Nenhum item duplicado encontrado na playlist!',
             };
         }
-        const itemsToDelete = duplicatedVideos.map((item) => item.id);
+        const itemsToDelete = duplicatedVideos.map((item) => item.videoId);
         const result = await this.client?.deleteItemsById(itemsToDelete);
 
         if (result) {
             return {
                 mensagem: 'Itens deletados com sucesso!',
-                resultado: result,
             };
         }
 
         return {
             mensagem: 'Erro ao deletar os itens da playlist!',
-            resultado: result,
         };
     }
 
-    private _filterDuplicatedItemsById = (list: PlaylistItem[]) => {
-        const filteredList: PlaylistItem[] = [];
-        const duplicatedItemsList: PlaylistItem[] = [];
-
-        list.forEach((item) => {
-            const videoId = item?.contentDetails?.videoId;
-            !filteredList.some((i) => i.contentDetails?.videoId === videoId)
-                ? filteredList.push(item)
-                : duplicatedItemsList.push(item);
-        });
-
-        return duplicatedItemsList;
+    private _filterDuplicatedItemsById = (list: FormattedPlaylistItem[]) => {
+        const { duplicateItems} = validateDuplicateItems(list);
+        return duplicateItems;
     };
 
-    private async _getCredentials() {
-        const apiKey = API_KEY;
-        const { token } = await getToken('bearerToken');
+    private _normalizePlaylistItems = (items: PlaylistItem[]): FormattedPlaylistItem[] => {
 
-        if (!token || typeof token === 'undefined' || !apiKey) {
-            console.info('DEU MERDA AQUI NA PORRA DO TOKEN DO YOUTOBA HEIN PQP!');
-            return undefined;
-        }
-        this.token = token;
-        this.client = new YoutubeClient({ apiKey, token: this.token });
-        return null;
+        return items.map((item) => ({
+            playlistItemId: item.id,
+            title: item.snippet?.title,
+            videoId: item.contentDetails?.videoId,
+            videoOwnerChannelTitle: item.snippet?.videoOwnerChannelTitle,
+        }));
     }
 }
