@@ -1,5 +1,5 @@
-// auth.middleware.ts
-import { Request, Response, NextFunction } from 'express';
+
+import type { Request, Response, NextFunction } from 'express';
 import { getToken } from '../utils/repository/user.repository';
 import { authRouter } from '../routes/auth.routes';
 
@@ -19,5 +19,5 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
     }
 };
 
-// Depois nas rotas:
+
 authRouter.use(authMiddleware);
