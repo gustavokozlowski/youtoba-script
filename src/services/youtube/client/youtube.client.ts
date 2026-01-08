@@ -18,12 +18,13 @@ export class YoutubeClient {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${token}`,
             },
+            timeout: 120000 // 120 segundos          
         });
     }
 
     async playlists(): Promise<PlaylistsResponse | null> {
         try {
-            const playlists = await this.client.get(`playlists?part=contentDetails&mine=true&key=${this.apiKey}`);
+            const playlists = await this.client.get(`playlists?part=snippet,contentDetails&mine=true&key=${this.apiKey}&maxResults=50`);
             return playlists.data as PlaylistsResponse;
         } catch (error: any) {
             console.error('Erro ao obter playlists:', error);
@@ -34,7 +35,7 @@ export class YoutubeClient {
     async playlistDetails(playlistId: string): Promise<PlaylistDetailsResponse | null> {
         try {
             const playlistInfo = await this.client.get(
-                `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,
+                `https://youtube.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${playlistId}&key=${API_KEY}&maxResults=50`,
             );
 
             return playlistInfo.data as PlaylistDetailsResponse;
@@ -47,7 +48,7 @@ export class YoutubeClient {
     async playlist(playlistId: string): Promise<PlaylistResponse | null> {
         try {
             const playlist = await this.client.get(
-                `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,
+                `https://youtube.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${playlistId}&key=${API_KEY}&maxResults=50`,
             );
 
             return playlist.data as PlaylistResponse;
@@ -60,7 +61,7 @@ export class YoutubeClient {
     async nextPlaylistPage(playlistId: string, nextPageToken: string): Promise<PlaylistResponse | null> {
         try {
             const nextPage = await this.client.get(
-                `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&pageToken=${nextPageToken}&playlistId=${playlistId}&key=${API_KEY}`,
+                `https://youtube.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&pageToken=${nextPageToken}&playlistId=${playlistId}&key=${API_KEY}&maxResults=50`,
             );
 
             return nextPage.data as PlaylistResponse;
@@ -72,27 +73,28 @@ export class YoutubeClient {
 
     async deleteItemsById(videosIds: string[]): Promise<boolean | null> {
         try {
-            switch (videosIds.length) {
-                case 0:
-                    console.info('Nenhum item para deletar');
-                    return true;
-                case 1:
-                    await this.client.delete(
-                        `https://youtube.googleapis.com/youtube/v3/playlistItems?id=${videosIds[0]}&key=${API_KEY}`,
-                    );
-                    console.info('Video deletado com sucesso:', videosIds[0]);
-                    return true;
+            if (videosIds.length === 0) {
+                console.info('Nenhum item para deletar');
+                return true;
             }
 
-            videosIds.map(async (videoId: string) => {
-                await this.client.delete(
-                    `https://youtube.googleapis.com/youtube/v3/playlistItems?id=${videoId}&key=${API_KEY}`,
-                );
-            });
+            for (const videoId of videosIds) {
+                try {
+                    await this.client.delete(
+                        `https://youtube.googleapis.com/youtube/v3/playlistItems?id=${videoId}&key=${API_KEY}`,
+                    );
+                    console.info('Video deletado com sucesso:', videoId);
+                    // Aguarda 1 segundo entre requisições para evitar rate limiting
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                } catch (error: any) {
+                    console.error(`Erro ao deletar o video ${videoId}:`, error.response?.status, error.message);
+                    // Continua deletando outros vídeos mesmo que um falhe
+                }
+            }
 
             return true;
         } catch (error: any) {
-            console.error(`Erro ao deletar o item da playlist: ${videosIds}`, error);
+            console.error(`Erro ao deletar itens da playlist: ${videosIds}`, error);
             return null;
         }
     }
