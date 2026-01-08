@@ -15,6 +15,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         (req as any).token = tokenResponse.token;
         next();
     } catch (error) {
+        console.error('Erro no middleware de autenticação:', error);
         return res.status(401).redirect('/login');
     }
 };
