@@ -18,7 +18,7 @@ export class YoutubeClient {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${token}`,
             },
-            timeout: 120000, // 120 segundos
+            timeout: 120000 // 120 segundos
         });
     }
 

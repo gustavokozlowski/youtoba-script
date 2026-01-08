@@ -7,7 +7,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         const tokenResponse = getToken('bearerToken');
 
         if (!tokenResponse.token) {
-            return res.status(401).redirect('/login');
+            return res.status(401).redirect('/auth/login');
         }
 
         // Armazena o token no request para usar depois
@@ -15,7 +15,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         next();
     } catch (error) {
         console.error('Erro no middleware de autenticação:', error);
-        return res.status(401).redirect('/login');
+        return res.status(401).redirect('/auth/login');
     }
 };
 
