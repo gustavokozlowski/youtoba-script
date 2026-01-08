@@ -11,7 +11,6 @@ export class YoutubeService {
     }
 
     async playlists(): Promise<PlaylistsResponse | null> {
-      
         const result = await this.client?.playlists();
 
         if (!result) {
@@ -22,7 +21,6 @@ export class YoutubeService {
     }
 
     async playlistDetailsById(playlistId: string) {
-  
         const playlistInfo = await this.client?.playlistDetails(playlistId);
 
         if (!playlistInfo) {
@@ -77,7 +75,6 @@ export class YoutubeService {
     }
 
     async removeDuplicateVideos(playlistId: string) {
-
         const duplicatedVideos = await this._playlistDuplicateItems(playlistId);
         if (!duplicatedVideos || duplicatedVideos.length === 0) {
             return {
@@ -99,17 +96,16 @@ export class YoutubeService {
     }
 
     private _filterDuplicatedItemsById = (list: FormattedPlaylistItem[]) => {
-        const { duplicateItems} = validateDuplicateItems(list);
+        const { duplicateItems } = validateDuplicateItems(list);
         return duplicateItems;
     };
 
     private _normalizePlaylistItems = (items: PlaylistItem[]): FormattedPlaylistItem[] => {
-
         return items.map((item) => ({
             playlistItemId: item.id,
             title: item.snippet?.title,
             videoId: item.contentDetails?.videoId,
             videoOwnerChannelTitle: item.snippet?.videoOwnerChannelTitle,
         }));
-    }
+    };
 }

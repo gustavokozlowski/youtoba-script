@@ -1,7 +1,7 @@
 import { Router } from 'express';
+import { authMiddleware } from '../middlewares/auth.middleware';
 import { authRouter } from '../routes/auth.routes';
 import { playlistRouter } from '../routes/playlist.routes';
-import { authMiddleware } from '../middlewares/auth.middleware';
 
 const routes = Router();
 

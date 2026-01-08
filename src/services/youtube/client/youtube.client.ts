@@ -18,13 +18,15 @@ export class YoutubeClient {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${token}`,
             },
-            timeout: 120000 // 120 segundos          
+            timeout: 120000, // 120 segundos
         });
     }
 
     async playlists(): Promise<PlaylistsResponse | null> {
         try {
-            const playlists = await this.client.get(`playlists?part=snippet,contentDetails&mine=true&key=${this.apiKey}&maxResults=50`);
+            const playlists = await this.client.get(
+                `playlists?part=snippet,contentDetails&mine=true&key=${this.apiKey}&maxResults=50`,
+            );
             return playlists.data as PlaylistsResponse;
         } catch (error: any) {
             console.error('Erro ao obter playlists:', error);

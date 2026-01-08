@@ -1,7 +1,6 @@
-
-import type { Request, Response, NextFunction } from 'express';
-import { getToken } from '../utils/repository/user.repository';
+import type { NextFunction, Request, Response } from 'express';
 import { authRouter } from '../routes/auth.routes';
+import { getToken } from '../utils/repository/user.repository';
 
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -19,6 +18,5 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         return res.status(401).redirect('/login');
     }
 };
-
 
 authRouter.use(authMiddleware);

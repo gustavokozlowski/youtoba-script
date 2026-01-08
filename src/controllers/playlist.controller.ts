@@ -1,18 +1,19 @@
 import type { Request, Response } from 'express';
 
 import { YoutubeService } from '../services/youtube/youtube-playlist.services';
+
 const { API_KEY } = process.env;
 
-import { YoutubeClient } from '../services/youtube/client/youtube.client';
 import type { YoutubeClientConfig } from '../services/youtube/client/client.types';
+import { YoutubeClient } from '../services/youtube/client/youtube.client';
 import { getToken } from '../utils/repository/user.repository';
 
 const { token } = getToken('bearerToken');
 
 const youtubeConfig: YoutubeClientConfig = {
     apiKey: API_KEY as string,
-    token: token as string
-}
+    token: token as string,
+};
 
 const youtubeClient = new YoutubeClient(youtubeConfig);
 const youtubeService = new YoutubeService(youtubeClient);
@@ -27,7 +28,7 @@ export const getAllPlaylists = async (_req: Request, res: Response) => {
 
         return res.status(200).json({
             mensagem: 'DEU BOM CARAAALHO!',
-            resultado: result
+            resultado: result,
         });
     } catch (e: any) {
         console.error('Error ao obter playlists:', e);
@@ -61,7 +62,7 @@ export const removeDuplicatedItems = async (req: Request, res: Response) => {
         }
 
         return res.status(200).json({
-            resultado: result
+            resultado: result,
         });
     } catch (e: any) {
         console.error('Error ao remover os videos duplicados:', e);

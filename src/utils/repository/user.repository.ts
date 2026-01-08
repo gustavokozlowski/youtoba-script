@@ -33,7 +33,7 @@ export function saveToken(name: string, value: string) {
     return true;
 }
 
-export  function getToken(name: string): AccessToken {
+export function getToken(name: string): AccessToken {
     const config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
     const token = config[name];
     if (token === undefined || !token) {
