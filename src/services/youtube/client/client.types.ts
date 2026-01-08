@@ -122,8 +122,8 @@ export interface PlaylistItem {
     kind: string;
     etag: string;
     id: string; // Playlist Item ID (importante para deletar!)
-    snippet?: PlaylistItemSnippet;
-    contentDetails?: PlaylistItemContentDetails;
+    snippet: PlaylistItemSnippet;
+    contentDetails: PlaylistItemContentDetails;
     status?: PlaylistItemStatus;
 }
 
