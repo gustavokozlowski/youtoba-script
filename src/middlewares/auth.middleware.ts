@@ -1,8 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
-import { authRouter } from '../routes/auth.routes';
 import { getToken } from '../utils/repository/user.repository';
 
-export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+export const authMiddleware =  (req: Request, res: Response, next: NextFunction) => {
     try {
         const tokenResponse = getToken('bearerToken');
 
@@ -10,6 +9,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
             return res.status(401).redirect('/auth/login');
         }
 
+        console.info('Token de autenticação encontrado no middleware.');
         // Armazena o token no request para usar depois
         (req as any).token = tokenResponse.token;
         next();
@@ -18,5 +18,3 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         return res.status(401).redirect('/auth/login');
     }
 };
-
-authRouter.use(authMiddleware);
