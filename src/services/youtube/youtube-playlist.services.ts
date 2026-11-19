@@ -188,6 +188,10 @@ export class YoutubeService {
         return this.jobs.get(jobId);
     }
 
+    allJobs(): RemovalJob[] {
+        return this.jobs.list();
+    }
+
     private buildPreview(playlistId: string, entries: PlaylistEntry[]): DuplicatesPreview {
         const { unique, duplicates } = findDuplicates(entries);
         const today = this.tracker().snapshot();

@@ -141,7 +141,7 @@ Depois do primeiro login, o refresh token fica salvo **cifrado** (AES-256-GCM) e
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | `GET` | `/auth/login` | Redireciona para o login do Google |
-| `GET` | `/auth` | Callback do OAuth2 (salva o login e mostra a confirmação) |
+| `GET` | `/auth` | Callback do OAuth2: salva o login e volta para a interface (`WEB_URL`, padrão `/`) |
 | `GET` | `/auth/status` | Diz se há uma conta conectada (`{ "connected": true }`) |
 | `POST` | `/auth/logout` | Revoga o acesso no Google e apaga o login salvo |
 
@@ -160,7 +160,8 @@ Depois do primeiro login, o refresh token fica salvo **cifrado** (AES-256-GCM) e
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `GET` | `/jobs/:jobId` | Progresso da remoção: `"12 de 75 itens apagados"`, percentual, último item, falhas e, se parou, o motivo e quando tentar de novo |
+| `GET` | `/jobs` | Remoções desde que o servidor subiu, a mais recente primeiro (resumo) |
+| `GET` | `/jobs/:jobId` | Progresso da remoção (inclui `itens`, cada um com seu `estado`: `apagado`, `falhou` ou `pendente`): `"12 de 75 itens apagados"`, percentual, último item, falhas e, se parou, o motivo e quando tentar de novo |
 | `GET` | `/quota` | Quota do dia: usado, limite, restante, quantas remoções ainda cabem e quando zera |
 
 **Duplicado** é o mesmo vídeo (`videoId`) aparecendo mais de uma vez. Fica sempre a primeira ocorrência pela posição na playlist. Vídeos diferentes com o mesmo título não são tocados.

@@ -16,6 +16,11 @@ export class RemovalJobs {
         return this.jobs.get(id);
     }
 
+    /** Todas as remoções desde que o servidor subiu, a mais recente primeiro. */
+    list(): RemovalJob[] {
+        return [...this.jobs.values()].reverse();
+    }
+
     runningFor(playlistId: string): RemovalJob | undefined {
         return [...this.jobs.values()].find((job) => job.playlistId === playlistId && job.status === 'running');
     }
@@ -37,6 +42,7 @@ export class RemovalJobs {
             playlistId: params.playlistId,
             status: 'running',
             total: params.duplicates.length,
+            items: params.duplicates,
             processed: 0,
             removed: [],
             failed: [],

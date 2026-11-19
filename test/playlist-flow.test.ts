@@ -121,7 +121,7 @@ beforeEach(async () => {
     nock(GOOGLE_OAUTH)
         .post('/token')
         .reply(200, { access_token: 'at-1', refresh_token: 'rt-1', token_type: 'Bearer', expires_in: 3599 });
-    await request(app).get('/auth?code=codigo-valido').expect(200);
+    await request(app).get('/auth?code=codigo-valido').expect(302);
 });
 
 afterEach(() => {
@@ -295,6 +295,11 @@ describe('progresso e quota da remoção', () => {
             falhas: [],
         });
         expect(job.proximoPasso).toContain('quota do dia acabou');
+        expect(job.itens.map((i: any) => [i.posicao, i.estado])).toEqual([
+            [50, 'apagado'],
+            [700, 'apagado'],
+            [999, 'pendente'],
+        ]);
         expect((await request(app).get('/quota')).body).toMatchObject({ usado: 120, restante: 5 });
     });
 
@@ -328,6 +333,7 @@ describe('progresso e quota da remoção', () => {
             progresso: '1 de 3 itens apagados',
         });
         expect(job.falhas).toEqual([{ id: 'item-700', status: 403, reason: 'quotaExceeded' }]);
+        expect(job.itens.map((i: any) => i.estado)).toEqual(['apagado', 'falhou', 'pendente']);
         expect(job.pendentes).toBe(1);
         expect((await request(app).get('/quota')).body.restante).toBe(0);
     });
@@ -342,6 +348,47 @@ describe('progresso e quota da remoção', () => {
         expect(second.status).toBe(409);
         expect(second.body).toMatchObject({ erro: 'already_running', jobId: first.body.jobId });
         await waitForJob(first.body.jobId);
+    });
+
+    it('o job traz cada item com título, posição, primeira ocorrência e estado, para a interface', async () => {
+        mockListing();
+        for (const position of [50, 700, 999]) mockDelete(position, undefined, 150);
+
+        const start = await request(app).delete(`/playlist/${PLAYLIST}/remove-duplicates?confirm=3`);
+        expect(start.body.itens).toHaveLength(3);
+        expect(start.body.itens[0]).toEqual({
+            playlistItemId: 'item-50',
+            posicao: 50,
+            titulo: 'Vídeo v2',
+            canal: 'Canal',
+            videoId: 'v2',
+            primeiraOcorrencia: 2,
+            estado: 'pendente',
+        });
+
+        const job = await waitForJob(start.body.jobId);
+        expect(job.itens.map((i: any) => i.estado)).toEqual(['apagado', 'apagado', 'apagado']);
+    });
+
+    it('GET /jobs lista as remoções desta sessão do servidor, a mais recente primeiro, sem os itens', async () => {
+        expect((await request(app).get('/jobs')).body).toEqual({ remocoes: [] });
+
+        mockListing();
+        for (const position of [50, 700, 999]) mockDelete(position);
+        const start = await request(app).delete(`/playlist/${PLAYLIST}/remove-duplicates?confirm=3`);
+        await waitForJob(start.body.jobId);
+
+        const res = await request(app).get('/jobs');
+        expect(res.status).toBe(200);
+        expect(res.body.remocoes).toHaveLength(1);
+        expect(res.body.remocoes[0]).toMatchObject({
+            jobId: start.body.jobId,
+            playlistId: PLAYLIST,
+            status: 'done',
+            removidos: 3,
+            total: 3,
+        });
+        expect(res.body.remocoes[0].itens).toBeUndefined();
     });
 
     it('job inexistente → 404', async () => {

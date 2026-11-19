@@ -2,7 +2,14 @@ import type { Request, Response } from 'express';
 import { quotaTracker } from '../services/youtube/quota-tracker';
 import type { ReadFailure } from '../services/youtube/youtube.types';
 import { YoutubeService } from '../services/youtube/youtube-playlist.services';
-import { formatEntry, formatJob, formatOverview, formatPreview, formatQuotaSnapshot } from './formatters';
+import {
+    formatEntry,
+    formatJob,
+    formatJobSummary,
+    formatOverview,
+    formatPreview,
+    formatQuotaSnapshot,
+} from './formatters';
 
 const youtubeService = new YoutubeService();
 
@@ -171,6 +178,10 @@ export const getRemovalJob = (req: Request, res: Response) => {
         });
     }
     return res.status(200).json(formatJob(job, quotaTracker().snapshot()));
+};
+
+export const listRemovalJobs = (_req: Request, res: Response) => {
+    res.status(200).json({ remocoes: youtubeService.allJobs().map(formatJobSummary) });
 };
 
 export const getQuota = (_req: Request, res: Response) => {

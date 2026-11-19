@@ -21,7 +21,7 @@ ${body}
 </body>
 </html>`;
 
-const retryLink = '<p><a href="/auth/login">Tentar de novo</a></p>';
+const retryLink = '<p><a href="/auth/login">Tentar de novo</a> · <a href="/">Voltar ao youtoba</a></p>';
 
 export const authUserGetUrl = (_req: Request, res: Response) => {
     res.redirect(googleAuth().authUrl());
@@ -51,14 +51,8 @@ ${retryLink}`,
 
     try {
         await googleAuth().connect(code);
-        res.send(
-            renderPage(
-                'Conectado ao YouTube',
-                `<p>Login salvo. Você não precisa logar de novo quando o servidor reiniciar.</p>
-<p>Com o app em modo <em>Testing</em>, o Google pede um novo login a cada 7 dias.</p>
-<p><a href="/playlist/get-all">Ver minhas playlists</a></p>`,
-            ),
-        );
+        // Volta para a interface. WEB_URL só é preciso quando ela roda no Vite (outra porta).
+        res.redirect(process.env.WEB_URL ?? '/');
     } catch (err) {
         if (err instanceof MissingRefreshTokenError) {
             res.status(502).send(

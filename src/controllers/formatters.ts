@@ -69,6 +69,34 @@ const STATUS_TEXT: Record<RemovalJob['status'], string> = {
     failed: 'interrompida por erro',
 };
 
+type ItemState = 'apagado' | 'falhou' | 'pendente';
+
+/** Estado de cada item para a interface. Pulado por falta de saldo conta como pendente: sai na próxima rodada. */
+function itemStates(job: RemovalJob) {
+    const removed = new Set(job.removed);
+    const failed = new Set(job.failed.filter((f) => !isSkip(f.reason)).map((f) => f.id));
+    return job.items.map((entry) => {
+        const estado: ItemState = removed.has(entry.playlistItemId)
+            ? 'apagado'
+            : failed.has(entry.playlistItemId)
+              ? 'falhou'
+              : 'pendente';
+        return { ...formatDuplicate(entry), estado };
+    });
+}
+
+/** Resumo para a lista de remoções (sem os itens). */
+export const formatJobSummary = (job: RemovalJob) => ({
+    jobId: job.id,
+    playlistId: job.playlistId,
+    status: job.status,
+    situacao: STATUS_TEXT[job.status],
+    removidos: job.removed.length,
+    total: job.total,
+    iniciadoEm: job.startedAt,
+    terminadoEm: job.finishedAt,
+});
+
 export function formatJob(job: RemovalJob, quota: QuotaSnapshot) {
     const errors = job.failed.filter((f) => !isSkip(f.reason));
     const pending = job.total - job.removed.length - errors.length;
@@ -100,6 +128,7 @@ export function formatJob(job: RemovalJob, quota: QuotaSnapshot) {
         terminadoEm: job.finishedAt,
         backup: job.backupFile,
         restaurar: `npm run restore:playlist -- ${job.backupFile}`,
+        itens: itemStates(job),
         quotaHoje: formatQuotaSnapshot(quota),
     };
 }

@@ -85,6 +85,8 @@ export interface RemovalJob {
     /** Por que parou antes de terminar: saldo do dia (parada nossa) ou quotaExceeded do Google. */
     stopReason?: 'daily_budget' | 'quota_exceeded';
     total: number;
+    /** Os duplicados que esta remoção vai apagar, na ordem em que são tentados. */
+    items: DuplicateEntry[];
     /** Itens já tentados (removidos ou com falha). */
     processed: number;
     removed: string[];
