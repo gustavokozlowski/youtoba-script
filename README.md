@@ -172,6 +172,15 @@ Depois do primeiro login, o refresh token fica salvo **cifrado** (AES-256-GCM) e
 |--------|------|-----------|
 | `POST` | `/dev/seed-test-playlist` | Cria a playlist privada `youtoba-teste` com 7 itens (3 duplicados) para validação manual. Só existe com `ENABLE_DEV_ROUTES=true`. |
 
+## 🖥️ Interface
+
+```bash
+npm run build:web   # uma vez (e depois de atualizar o código)
+npm run dev
+```
+
+Abra `http://localhost:3000`, entre com o Google e o youtoba mostra suas playlists com vídeos repetidos. Para mexer na interface com recarga automática, rode também `npm run dev:web` e abra `http://localhost:5173` (com `WEB_URL=http://localhost:5173/` no `.env`, o login volta para lá).
+
 ## 📝 Exemplo de Uso
 
 ### 1. Conectar a conta do YouTube

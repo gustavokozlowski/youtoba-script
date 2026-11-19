@@ -1,0 +1,52 @@
+/* Mundo: asfalto à noite (escuro) e concreto (claro). A cor forte vem do logo; o rosa do spray marca o que sai. */
+:root {
+    color-scheme: light;
+    --bg: #ecebe6;
+    --surface: #ffffff;
+    --surface-2: #f4f3ef;
+    --line: #d6d4cc;
+    --fg: #131318;
+    --muted: #5c5d68;
+    --accent: #c70f62;
+    --accent-hover: #a90c53;
+    --accent-fg: #ffffff;
+    --spray: #e4167a;
+    --ok: #157a4c;
+    --warn: #7a4f00;
+    --warn-soft: #ffc83d33;
+    --danger: #b3261e;
+    --danger-soft: #b3261e14;
+    --shadow: 0 12px 32px -18px rgb(0 0 0 / 0.35);
+    --noise-opacity: 0.05;
+
+    --display: "Big Shoulders Display", "Arial Narrow", system-ui, sans-serif;
+    --ui: "Geist Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "Geist Mono Variable", ui-monospace, "SFMono-Regular", monospace;
+
+    --radius: 10px;
+    --gutter: max(16px, env(safe-area-inset-left, 0px));
+    --gutter-r: max(16px, env(safe-area-inset-right, 0px));
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        color-scheme: dark;
+        --bg: #0e0f13;
+        --surface: #16171d;
+        --surface-2: #1d1f27;
+        --line: #2a2c36;
+        --fg: #f2f0ea;
+        --muted: #a2a4b0;
+        --accent: #ff3d93;
+        --accent-hover: #ff62a8;
+        --accent-fg: #14060d;
+        --spray: #ff3d93;
+        --ok: #43d69b;
+        --warn: #ffc83d;
+        --warn-soft: #ffc83d1f;
+        --danger: #ff6b6b;
+        --danger-soft: #ff6b6b1a;
+        --shadow: 0 12px 32px -18px rgb(0 0 0 / 0.8);
+        --noise-opacity: 0.07;
+    }
+}
