@@ -212,6 +212,10 @@ npm run restore:playlist -- backups/PLxxxxxx-2026-11-19T10-00-00-000Z.json
 
 A restauração devolve os itens removidos às posições originais e pode ser rodada mais de uma vez sem duplicar nada.
 
+### Só local
+
+O servidor só atende `localhost`/`127.0.0.1` e recusa pedidos disparados por outros sites abertos no navegador (sem CORS, `Origin` conferido nas escritas, `Sec-Fetch-Site` conferido nas leituras). `curl` e scripts locais funcionam normalmente.
+
 ### Quota da API
 
 Cada projeto do Google Cloud tem 10.000 unidades por dia, que zeram à meia-noite no horário do Pacífico (5h em Brasília no inverno do hemisfério norte). Ler a playlist custa 1 unidade a cada 50 itens; cada remoção custa 50.
