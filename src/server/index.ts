@@ -16,5 +16,6 @@ app.use(cookieParser());
 app.use('/', routes);
 
 app.listen(PORT, () => {
-    console.log(`Servidor rodando liso na porta ${PORT}`);
+    console.log(`Servidor rodando na porta ${PORT}`);
+    console.log(`Para conectar sua conta do YouTube, abra: http://localhost:${PORT}/auth/login`);
 });
