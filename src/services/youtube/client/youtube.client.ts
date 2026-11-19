@@ -1,5 +1,7 @@
 require('dotenv').config();
 
+import axios from 'axios';
+
 import type { PlaylistDetailsResponse, PlaylistResponse, PlaylistsResponse, YoutubeClientConfig } from './client.types';
 
 const { YOUTUBE_BASE_URL, API_KEY } = process.env;

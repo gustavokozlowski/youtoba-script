@@ -68,8 +68,8 @@ script/
 
 1. **Clone o repositório**
    ```bash
-   git clone https://github.com/seu-usuario/script.git
-   cd script
+   git clone git@github.com:gustavokozlowski/youtoba-script.git
+   cd youtoba-script
    ```
 
 2. **Instale as dependências**
@@ -99,7 +99,7 @@ PORT=3000
 API_KEY=sua_api_key_aqui
 CLIENT_ID=seu_client_id_aqui
 CLIENT_SECRET_KEY=seu_client_secret_aqui
-REDIRECT_URL=http://localhost:3000/auth/callback
+REDIRECT_URL=http://localhost:3000/auth
 
 # URLs
 YOUTUBE_BASE_URL=https://youtube.googleapis.com/youtube/v3/
@@ -134,40 +134,36 @@ JWT_SECRET=seu_jwt_secret_aqui
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `POST` | `/auth/get-url` | Obtém URL de autenticação OAuth2 |
-| `GET` | `/auth/callback` | Callback do OAuth2 (recebe o token) |
+| `GET` | `/auth/login` | Obtém URL de autenticação OAuth2 |
+| `GET` | `/auth` | Callback do OAuth2 (recebe o token) |
 
 ### Playlists
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `GET` | `/playlist` | Lista todas as playlists do usuário |
-| `GET` | `/playlist/:id` | Obtém detalhes de uma playlist |
-| `GET` | `/playlist/:id/items` | Lista itens de uma playlist |
-| `DELETE` | `/playlist/:id/duplicates` | Remove vídeos duplicados |
+| `GET` | `/playlist/get-all` | Lista todas as playlists do usuário |
+| `GET` | `/playlist/:playlistId` | Obtém detalhes de uma playlist |
+| `DELETE` | `/playlist/:playlistId/remove-duplicates` | Remove vídeos duplicados |
 
 ## 📝 Exemplo de Uso
 
 ### 1. Obter URL de autenticação
 
 ```bash
-curl -X POST http://localhost:3000/auth/get-url \
-  -H "Content-Type: application/json" \
-  -d '{"callbackUrl": "http://localhost:3000", "userid": "123"}'
+curl http://localhost:3000/auth/login
+# abra a URL retornada no navegador e autorize; o Google redireciona para /auth
 ```
 
 ### 2. Listar playlists
 
 ```bash
-curl -X GET http://localhost:3000/playlist \
-  -H "Authorization: Bearer seu_token_aqui"
+curl http://localhost:3000/playlist/get-all
 ```
 
 ### 3. Remover duplicatas
 
 ```bash
-curl -X DELETE http://localhost:3000/playlist/PLxxxxxx/duplicates \
-  -H "Authorization: Bearer seu_token_aqui"
+curl -X DELETE http://localhost:3000/playlist/PLxxxxxx/remove-duplicates
 ```
 
 ## 👨‍💻 Autor
