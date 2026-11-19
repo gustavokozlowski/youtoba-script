@@ -1,12 +1,12 @@
 import { type Request, type Response, Router } from 'express';
 import { EXPECTED, seedTestPlaylist } from '../dev/test-playlist.seed';
+import { googleAuth } from '../services/google';
 import { YoutubeClient } from '../services/youtube/client/youtube.client';
-import { getToken } from '../utils/repository/user.repository';
 
 const devRouter = Router();
 
 devRouter.post('/seed-test-playlist', async (_req: Request, res: Response) => {
-    const { token } = await getToken('bearerToken');
+    const token = await googleAuth().getAccessToken();
     const apiKey = process.env.API_KEY;
 
     if (!token || !apiKey) {

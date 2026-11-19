@@ -104,9 +104,14 @@ REDIRECT_URL=http://localhost:3000/auth
 # URLs
 YOUTUBE_BASE_URL=https://youtube.googleapis.com/youtube/v3/
 
-# JWT (opcional)
-JWT_SECRET=seu_jwt_secret_aqui
+# Chave para cifrar o refresh token salvo em disco (32 bytes em base64)
+# node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"
+TOKEN_ENCRYPTION_KEY=sua_chave_aqui
 ```
+
+### Login persistente
+
+Depois do primeiro login, o refresh token fica salvo **cifrado** (AES-256-GCM) em `data/youtoba.db`, e o access token é renovado automaticamente. Reiniciar o servidor não exige novo login. Com o app em modo *Testing* no Google Cloud, o Google invalida o refresh token após 7 dias; aí a API responde 401 e basta abrir `/auth/login` de novo.
 
 ### Obtendo credenciais do Google
 
@@ -123,6 +128,7 @@ JWT_SECRET=seu_jwt_secret_aqui
 | `npm run dev` | Inicia o servidor em modo desenvolvimento |
 | `npm run build` | Compila o TypeScript para JavaScript |
 | `npm start` | Inicia o servidor em produção |
+| `npm test` | Roda os testes (Vitest) |
 | `npm run biome:format` | Formata o código |
 | `npm run biome:lint` | Executa o linter |
 | `npm run biome:check` | Verifica formatação e lint |
@@ -135,7 +141,9 @@ JWT_SECRET=seu_jwt_secret_aqui
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | `GET` | `/auth/login` | Redireciona para o login do Google |
-| `GET` | `/auth` | Callback do OAuth2 (salva o token e mostra a confirmação) |
+| `GET` | `/auth` | Callback do OAuth2 (salva o login e mostra a confirmação) |
+| `GET` | `/auth/status` | Diz se há uma conta conectada (`{ "connected": true }`) |
+| `POST` | `/auth/logout` | Revoga o acesso no Google e apaga o login salvo |
 
 ### Playlists
 
