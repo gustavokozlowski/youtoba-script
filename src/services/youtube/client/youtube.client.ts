@@ -1,34 +1,44 @@
 require('dotenv').config();
 
-import axios from 'axios';
-
+import axios, { type AxiosInstance } from 'axios';
 import type {
+    ApiFailure,
+    DeleteItemsResult,
     Playlist,
-    PlaylistDetailsResponse,
     PlaylistItem,
     PlaylistResponse,
     PlaylistsResponse,
     YoutubeClientConfig,
 } from './client.types';
 
-const { YOUTUBE_BASE_URL, API_KEY } = process.env;
+const { YOUTUBE_BASE_URL } = process.env;
 
-export type DeleteItemsResult = {
-    removed: string[];
-    failed: { id: string; status?: number; reason?: string }[];
-};
+// A API devolve no máximo 50 itens por página.
+export const PAGE_SIZE = 50;
 
 const RETRYABLE_STATUS = new Set([409, 429, 500, 503]);
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export class YoutubeClient {
-    private client;
-    private apiKey: string;
+// Extrai só o que importa do erro do axios. O objeto inteiro carrega o header Authorization.
+export const apiFailure = (error: any): ApiFailure => ({
+    status: error?.response?.status,
+    reason: error?.response?.data?.error?.errors?.[0]?.reason,
+    message: error?.response?.data?.error?.message ?? error?.message,
+});
 
-    constructor({ apiKey, token }: YoutubeClientConfig) {
+export class YoutubeClient {
+    private readonly client: AxiosInstance;
+    private readonly apiKey: string;
+    private readonly retries: number;
+    private readonly baseDelayMs: number;
+
+    constructor({ apiKey, token }: YoutubeClientConfig, { retries = 3, baseDelayMs = 1000 } = {}) {
         this.apiKey = apiKey;
+        this.retries = retries;
+        this.baseDelayMs = baseDelayMs;
         this.client = axios.create({
             baseURL: YOUTUBE_BASE_URL,
+            timeout: 15_000,
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
@@ -39,121 +49,131 @@ export class YoutubeClient {
 
     async playlists(): Promise<PlaylistsResponse | null> {
         try {
-            const playlists = await this.client.get(
-                `playlists?part=snippet,contentDetails&mine=true&maxResults=50&key=${this.apiKey}`,
-            );
-            return playlists.data as PlaylistsResponse;
-        } catch (error: any) {
-            console.error('Erro ao obter playlists:', error);
+            const { data } = await this.client.get<PlaylistsResponse>('playlists', {
+                params: { part: 'snippet,contentDetails', mine: true, maxResults: PAGE_SIZE, key: this.apiKey },
+            });
+            return data;
+        } catch (error) {
+            const { status, reason } = apiFailure(error);
+            console.error(`Erro ao obter playlists: HTTP ${status ?? '?'} ${reason ?? ''}`);
             return null;
         }
     }
 
-    async playlistDetails(playlistId: string): Promise<PlaylistDetailsResponse | null> {
-        try {
-            const playlistInfo = await this.client.get(
-                `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,
-            );
-
-            return playlistInfo.data as PlaylistDetailsResponse;
-        } catch (error: any) {
-            console.error(`Deu merda para obter os detalhes da playlist: ${playlistId}`, error);
-            return null;
-        }
+    /** Total de itens da playlist, numa única chamada (1 unidade de quota). */
+    async playlistItemCount(playlistId: string): Promise<number> {
+        const { data } = await this.client.get<PlaylistResponse>('playlistItems', {
+            params: { part: 'id', playlistId, maxResults: 1, key: this.apiKey },
+        });
+        return data.pageInfo.totalResults;
     }
 
-    async playlist(playlistId: string): Promise<PlaylistResponse | null> {
-        try {
-            const playlist = await this.client.get(
-                `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&key=${API_KEY}`,
-            );
+    /** Todos os itens da playlist, em páginas de 50 (1 unidade de quota por página). Lança em caso de erro. */
+    async listPlaylistItems(playlistId: string): Promise<PlaylistItem[]> {
+        const items: PlaylistItem[] = [];
+        let pageToken: string | undefined;
 
-            return playlist.data as PlaylistResponse;
-        } catch (error: any) {
-            console.error(`Deu merda para obter os detalhes da playlist: ${playlistId}`, error);
-            return null;
-        }
+        do {
+            const { data } = await this.withRetry(() =>
+                this.client.get<PlaylistResponse>('playlistItems', {
+                    params: {
+                        part: 'snippet,contentDetails',
+                        playlistId,
+                        maxResults: PAGE_SIZE,
+                        pageToken,
+                        key: this.apiKey,
+                    },
+                }),
+            );
+            items.push(...data.items);
+            pageToken = data.nextPageToken;
+        } while (pageToken);
+
+        return items;
     }
 
-    async nextPlaylistPage(playlistId: string, nextPageToken: string): Promise<PlaylistResponse | null> {
-        try {
-            const nextPage = await this.client.get(
-                `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&pageToken=${nextPageToken}&playlistId=${playlistId}&key=${API_KEY}`,
-            );
-
-            return nextPage.data as PlaylistResponse;
-        } catch (error: any) {
-            console.error(`Erro ao obter a próxima página da playlist: ${playlistId}`, error);
-            return null;
-        }
+    async createPrivatePlaylist(title: string, description: string): Promise<Playlist> {
+        const { data } = await this.client.post<Playlist>(
+            'playlists',
+            { snippet: { title, description }, status: { privacyStatus: 'private' } },
+            { params: { part: 'snippet,status', key: this.apiKey } },
+        );
+        return data;
     }
 
-    async deleteItemsById(
-        itemIds: string[],
-        { retries = 3, baseDelayMs = 1000 }: { retries?: number; baseDelayMs?: number } = {},
-    ): Promise<DeleteItemsResult> {
+    async addVideoToPlaylist(playlistId: string, videoId: string, position?: number): Promise<PlaylistItem> {
+        const { data } = await this.withRetry(() =>
+            this.client.post<PlaylistItem>(
+                'playlistItems',
+                {
+                    snippet: {
+                        playlistId,
+                        resourceId: { kind: 'youtube#video', videoId },
+                        ...(position === undefined ? {} : { position }),
+                    },
+                },
+                { params: { part: 'snippet', key: this.apiKey } },
+            ),
+        );
+        return data;
+    }
+
+    /** Ids de vídeos públicos para montar playlists de teste (search.list custa 100 unidades). */
+    async searchVideoIds(query: string, max = PAGE_SIZE): Promise<string[]> {
+        const { data } = await this.client.get<{ items: { id: { videoId?: string } }[] }>('search', {
+            params: {
+                part: 'id',
+                type: 'video',
+                safeSearch: 'strict',
+                maxResults: max,
+                q: query,
+                key: this.apiKey,
+            },
+        });
+        return data.items.map((item) => item.id.videoId).filter((id): id is string => Boolean(id));
+    }
+
+    async deleteItemsById(itemIds: string[]): Promise<DeleteItemsResult> {
         const result: DeleteItemsResult = { removed: [], failed: [] };
 
         // Sequencial de propósito: a API responde 409 a alterações simultâneas na mesma playlist.
         for (const [index, itemId] of itemIds.entries()) {
-            const outcome = await this.deleteWithRetry(itemId, retries, baseDelayMs);
-
-            if (outcome === 'removed') {
+            try {
+                await this.withRetry(() =>
+                    this.client.delete('playlistItems', { params: { id: itemId, key: this.apiKey } }),
+                );
                 result.removed.push(itemId);
-                continue;
-            }
+            } catch (error) {
+                const { status, reason, message } = apiFailure(error);
+                console.error(`Falha ao remover o item ${itemId}: HTTP ${status ?? '?'} ${reason ?? message ?? ''}`);
+                result.failed.push({ id: itemId, status, reason });
 
-            result.failed.push({ id: itemId, ...outcome });
-
-            if (outcome.reason === 'quotaExceeded') {
-                // Sem quota, as próximas tentativas também falhariam: interrompe e reporta o restante.
-                for (const skipped of itemIds.slice(index + 1)) {
-                    result.failed.push({ id: skipped, reason: 'skipped_quota_exceeded' });
+                if (reason === 'quotaExceeded') {
+                    // Sem quota, as próximas tentativas também falhariam: interrompe e reporta o restante.
+                    for (const skipped of itemIds.slice(index + 1)) {
+                        result.failed.push({ id: skipped, reason: 'skipped_quota_exceeded' });
+                    }
+                    break;
                 }
-                break;
             }
         }
 
         return result;
     }
 
-    private async deleteWithRetry(
-        itemId: string,
-        retries: number,
-        baseDelayMs: number,
-    ): Promise<'removed' | { status?: number; reason?: string }> {
+    // Repete em conflito e instabilidade, com espera exponencial (1 s, 2 s, 4 s por padrão).
+    private async withRetry<T>(request: () => Promise<T>): Promise<T> {
         for (let attempt = 0; ; attempt++) {
             try {
-                await this.client.delete(`playlistItems?id=${encodeURIComponent(itemId)}&key=${this.apiKey}`);
-                return 'removed';
-            } catch (error: any) {
-                const status: number | undefined = error?.response?.status;
-                const reason: string | undefined = error?.response?.data?.error?.errors?.[0]?.reason;
-
-                if (status !== undefined && RETRYABLE_STATUS.has(status) && attempt < retries) {
-                    await wait(baseDelayMs * 2 ** attempt);
+                return await request();
+            } catch (error) {
+                const { status } = apiFailure(error);
+                if (status !== undefined && RETRYABLE_STATUS.has(status) && attempt < this.retries) {
+                    await wait(this.baseDelayMs * 2 ** attempt);
                     continue;
                 }
-
-                // Loga só status e motivo: o objeto de erro do axios carrega o header Authorization.
-                console.error(`Falha ao remover o item ${itemId}: HTTP ${status ?? '?'} ${reason ?? error?.message}`);
-                return { status, reason };
+                throw error;
             }
         }
-    }
-
-    async createPrivatePlaylist(title: string, description: string): Promise<Playlist> {
-        const response = await this.client.post(`playlists?part=snippet,status&key=${this.apiKey}`, {
-            snippet: { title, description },
-            status: { privacyStatus: 'private' },
-        });
-        return response.data as Playlist;
-    }
-
-    async addVideoToPlaylist(playlistId: string, videoId: string): Promise<PlaylistItem> {
-        const response = await this.client.post(`playlistItems?part=snippet&key=${this.apiKey}`, {
-            snippet: { playlistId, resourceId: { kind: 'youtube#video', videoId } },
-        });
-        return response.data as PlaylistItem;
     }
 }

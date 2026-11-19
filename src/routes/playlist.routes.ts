@@ -1,10 +1,18 @@
 import { Router } from 'express';
-import { getAllPlaylists, getPlaylistInfoById, removeDuplicatedItems } from '../controllers/playlist.controller';
+import {
+    getAllPlaylists,
+    getPlaylistInfoById,
+    listPlaylistItems,
+    previewDuplicates,
+    removeDuplicatedItems,
+} from '../controllers/playlist.controller';
 
 const playlistRouter = Router();
 
-playlistRouter.route('/get-all').get(getAllPlaylists);
-playlistRouter.route('/:playlistId').get(getPlaylistInfoById);
-playlistRouter.route('/:playlistId/remove-duplicates').delete(removeDuplicatedItems);
+playlistRouter.get('/get-all', getAllPlaylists);
+playlistRouter.get('/:playlistId', getPlaylistInfoById);
+playlistRouter.get('/:playlistId/items', listPlaylistItems);
+playlistRouter.get('/:playlistId/duplicates', previewDuplicates);
+playlistRouter.delete('/:playlistId/remove-duplicates', removeDuplicatedItems);
 
 export { playlistRouter };

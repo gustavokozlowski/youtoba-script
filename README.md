@@ -149,9 +149,13 @@ Depois do primeiro login, o refresh token fica salvo **cifrado** (AES-256-GCM) e
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `GET` | `/playlist/get-all` | Lista todas as playlists do usuário |
-| `GET` | `/playlist/:playlistId` | Obtém detalhes de uma playlist |
-| `DELETE` | `/playlist/:playlistId/remove-duplicates` | Remove vídeos duplicados |
+| `GET` | `/playlist/get-all` | Lista as playlists do usuário |
+| `GET` | `/playlist/:playlistId` | Total de itens da playlist (1 chamada) |
+| `GET` | `/playlist/:playlistId/items` | Todos os itens, com posição, título e `videoId` |
+| `GET` | `/playlist/:playlistId/duplicates` | **Dry-run**: o que seria removido e quanto de quota custaria. Não apaga nada. |
+| `DELETE` | `/playlist/:playlistId/remove-duplicates?confirm=N` | Remove os duplicados. Exige `confirm` igual ao número de duplicados encontrados; grava um backup antes. |
+
+**Duplicado** é o mesmo vídeo (`videoId`) aparecendo mais de uma vez. Fica sempre a primeira ocorrência pela posição na playlist. Vídeos diferentes com o mesmo título não são tocados.
 
 ### Desenvolvimento (desligado por padrão)
 
@@ -177,11 +181,27 @@ Você é levado ao login do Google e, depois de autorizar, volta para uma págin
 curl http://localhost:3000/playlist/get-all
 ```
 
-### 3. Remover duplicatas
+### 3. Remover duplicados com segurança
 
 ```bash
-curl -X DELETE http://localhost:3000/playlist/PLxxxxxx/remove-duplicates
+# 1. Veja o que seria removido (não apaga nada)
+curl http://localhost:3000/playlist/PLxxxxxx/duplicates
+
+# 2. Confirme com o número de duplicados mostrado no passo 1
+curl -X DELETE "http://localhost:3000/playlist/PLxxxxxx/remove-duplicates?confirm=3"
 ```
+
+Antes de apagar, a playlist inteira é salva em `backups/<playlistId>-<data>.json`. O YouTube não tem lixeira; para desfazer uma remoção:
+
+```bash
+npm run restore:playlist -- backups/PLxxxxxx-2026-11-19T10-00-00-000Z.json
+```
+
+A restauração devolve os itens removidos às posições originais e pode ser rodada mais de uma vez sem duplicar nada.
+
+### Quota da API
+
+Cada projeto do Google Cloud tem 10.000 unidades por dia. Ler a playlist custa 1 unidade a cada 50 itens; cada remoção custa 50. Na prática, cerca de 190 remoções por dia. O dry-run mostra a estimativa. Se a quota acabar no meio, a remoção para, reporta o que ficou pendente, e basta rodar de novo no dia seguinte.
 
 ## 👨‍💻 Autor
 

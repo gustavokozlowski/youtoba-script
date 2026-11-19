@@ -1,130 +1,101 @@
-require('dotenv').config();
-
 import { googleAuth } from '../google';
-import type { PlaylistItem, PlaylistsResponse } from './client/client.types';
-import { type DeleteItemsResult, YoutubeClient } from './client/youtube.client';
+import { recordRemoval, writeBackup } from './backup';
+import type { PlaylistsResponse } from './client/client.types';
+import { apiFailure, YoutubeClient } from './client/youtube.client';
+import { findDuplicates, toEntries } from './duplicates';
+import { estimateRemovalQuota } from './quota';
+import type {
+    ClientFactory,
+    DuplicatesPreview,
+    PlaylistEntry,
+    ReadFailure,
+    RemoveDuplicatesResult,
+} from './youtube.types';
 
-export type RemoveDuplicatesResult =
-    | { status: 'not_connected' }
-    | { status: 'fetch_failed' }
-    | { status: 'no_duplicates' }
-    | ({ status: 'done'; found: number } & DeleteItemsResult);
+// Um client por chamada: o service não guarda token nem client entre requisições.
+const defaultClientFactory: ClientFactory = async () => {
+    const apiKey = process.env.API_KEY;
+    const token = await googleAuth().getAccessToken();
+    return token && apiKey ? new YoutubeClient({ apiKey, token }) : undefined;
+};
 
-const { API_KEY } = process.env;
+function readFailure(error: unknown): ReadFailure {
+    const { status, reason } = apiFailure(error);
+    if (status === 404 || reason === 'playlistNotFound') return { status: 'not_found' };
+    if (reason === 'quotaExceeded') return { status: 'quota_exceeded' };
+    console.error(`Falha ao ler a playlist: HTTP ${status ?? '?'} ${reason ?? ''}`);
+    return { status: 'fetch_failed' };
+}
+
 export class YoutubeService {
-    token: string | undefined;
-    client: YoutubeClient | undefined;
+    constructor(private readonly createClient: ClientFactory = defaultClientFactory) {}
 
     async playlists(): Promise<PlaylistsResponse | null> {
-        await this._getCredentials();
-        const result = await this.client?.playlists();
-
-        if (!result) {
-            return null;
-        }
-
-        return result;
+        const client = await this.createClient();
+        return client ? client.playlists() : null;
     }
 
-    async playlistDetailsById(playlistId: string) {
-        await this._getCredentials();
-        const playlistInfo = await this.client?.playlistDetails(playlistId);
-
-        if (!playlistInfo) {
-            return null;
+    async itemCount(playlistId: string): Promise<ReadFailure | { status: 'ok'; itemCount: number }> {
+        const client = await this.createClient();
+        if (!client) return { status: 'not_connected' };
+        try {
+            return { status: 'ok', itemCount: await client.playlistItemCount(playlistId) };
+        } catch (error) {
+            return readFailure(error);
         }
-
-        const { totalResults } = playlistInfo.pageInfo;
-
-        return {
-            mensagem: 'OLHA SÓ OS DETALHES DA PLAYLIST AQUI!',
-            totalPages: totalResults,
-        };
     }
 
-    async _playlistDuplicateItems(playlistId: string) {
-        let initialPlaylist: PlaylistItem[] = [];
-        await this._getCredentials();
-        const result = await this.client?.playlist(playlistId);
-
-        if (!result) {
-            return null;
+    async listItems(playlistId: string): Promise<ReadFailure | { status: 'ok'; items: PlaylistEntry[] }> {
+        const client = await this.createClient();
+        if (!client) return { status: 'not_connected' };
+        try {
+            return { status: 'ok', items: toEntries(await client.listPlaylistItems(playlistId)) };
+        } catch (error) {
+            return readFailure(error);
         }
-
-        const { items, nextPageToken } = result;
-        const firstList = items.map((item: PlaylistItem) => item);
-
-        initialPlaylist = [...firstList];
-
-        let nextPageTokenVar = nextPageToken;
-
-        while (nextPageTokenVar) {
-            const nextPage = await this.client?.nextPlaylistPage(playlistId, nextPageTokenVar);
-
-            if (nextPage?.items) {
-                const playlistData = nextPage;
-
-                playlistData.items.map((item: PlaylistItem) => initialPlaylist.push(item));
-
-                if (playlistData.nextPageToken) {
-                    nextPageTokenVar = playlistData?.nextPageToken;
-                } else {
-                    break;
-                }
-            } else break;
-        }
-
-        const filteredPlaylist = this._filterDuplicatedItemsById(initialPlaylist);
-        return filteredPlaylist;
     }
 
-    async removeDuplicateVideos(playlistId: string): Promise<RemoveDuplicatesResult> {
-        await this._getCredentials();
-
-        if (!this.client) {
-            return { status: 'not_connected' };
-        }
-
-        const duplicatedVideos = await this._playlistDuplicateItems(playlistId);
-
-        if (duplicatedVideos === null) {
-            return { status: 'fetch_failed' };
-        }
-
-        if (duplicatedVideos.length === 0) {
-            return { status: 'no_duplicates' };
-        }
-
-        const { removed, failed } = await this.client.deleteItemsById(duplicatedVideos.map((item) => item.id));
-        return { status: 'done', found: duplicatedVideos.length, removed, failed };
+    /** Dry-run: mostra o que seria removido e quanto custaria, sem apagar nada. */
+    async previewDuplicates(playlistId: string): Promise<ReadFailure | ({ status: 'ok' } & DuplicatesPreview)> {
+        const listed = await this.listItems(playlistId);
+        if (listed.status !== 'ok') return listed;
+        return { status: 'ok', ...buildPreview(playlistId, listed.items) };
     }
 
-    private _filterDuplicatedItemsById = (list: PlaylistItem[]) => {
-        const filteredList: PlaylistItem[] = [];
-        const duplicatedItemsList: PlaylistItem[] = [];
+    /**
+     * Remove os duplicados só se `confirm` for igual ao número de duplicados encontrados agora
+     * (o mesmo que o dry-run mostrou). Antes de apagar, grava um backup da playlist inteira.
+     */
+    async removeDuplicates(playlistId: string, confirm: number | undefined): Promise<RemoveDuplicatesResult> {
+        const client = await this.createClient();
+        if (!client) return { status: 'not_connected' };
 
-        list.forEach((item) => {
-            const videoId = item?.contentDetails?.videoId;
-            !filteredList.some((i) => i.contentDetails?.videoId === videoId)
-                ? filteredList.push(item)
-                : duplicatedItemsList.push(item);
-        });
+        let entries: PlaylistEntry[];
+        try {
+            entries = toEntries(await client.listPlaylistItems(playlistId));
+        } catch (error) {
+            return readFailure(error);
+        }
 
-        return duplicatedItemsList;
+        const preview = buildPreview(playlistId, entries);
+        if (preview.duplicates.length === 0) return { status: 'no_duplicates', ...preview };
+        if (confirm !== preview.duplicates.length) return { status: 'confirmation_required', ...preview };
+
+        const backupFile = writeBackup(playlistId, entries);
+        const result = await client.deleteItemsById(preview.duplicates.map((item) => item.playlistItemId));
+        recordRemoval(backupFile, result);
+
+        return { status: 'done', backupFile, ...preview, ...result };
+    }
+}
+
+function buildPreview(playlistId: string, entries: PlaylistEntry[]): DuplicatesPreview {
+    const { unique, duplicates } = findDuplicates(entries);
+    return {
+        playlistId,
+        itemCount: entries.length,
+        unique: unique.length,
+        duplicates,
+        quota: estimateRemovalQuota(entries.length, duplicates.length),
     };
-
-    private async _getCredentials() {
-        const apiKey = API_KEY;
-        const token = await googleAuth().getAccessToken();
-
-        if (!token || !apiKey) {
-            // Sem login (ou login expirado): não reaproveita um cliente de uma chamada anterior.
-            this.token = undefined;
-            this.client = undefined;
-            return;
-        }
-
-        this.token = token;
-        this.client = new YoutubeClient({ apiKey, token });
-    }
 }

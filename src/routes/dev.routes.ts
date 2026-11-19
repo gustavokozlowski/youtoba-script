@@ -1,11 +1,20 @@
 import { type Request, type Response, Router } from 'express';
-import { EXPECTED, seedTestPlaylist } from '../dev/test-playlist.seed';
+import {
+    expectedFor,
+    LARGE_TEST_PLAYLIST_TITLE,
+    largeTestSequence,
+    seedPlaylist,
+    TEST_PLAYLIST_SEQUENCE,
+    TEST_PLAYLIST_TITLE,
+} from '../dev/test-playlist.seed';
 import { googleAuth } from '../services/google';
-import { YoutubeClient } from '../services/youtube/client/youtube.client';
+import { apiFailure, YoutubeClient } from '../services/youtube/client/youtube.client';
 
 const devRouter = Router();
 
-devRouter.post('/seed-test-playlist', async (_req: Request, res: Response) => {
+// POST /dev/seed-test-playlist          → youtoba-teste (7 itens, ~400 unidades de quota)
+// POST /dev/seed-test-playlist?size=large → youtoba-teste-grande (56 itens, ~2.900 unidades)
+devRouter.post('/seed-test-playlist', async (req: Request, res: Response) => {
     const token = await googleAuth().getAccessToken();
     const apiKey = process.env.API_KEY;
 
@@ -14,17 +23,24 @@ devRouter.post('/seed-test-playlist', async (_req: Request, res: Response) => {
         return;
     }
 
+    const client = new YoutubeClient({ apiKey, token });
+    const large = req.query.size === 'large';
+
     try {
-        const result = await seedTestPlaylist(new YoutubeClient({ apiKey, token }));
+        const sequence = large ? await largeTestSequence(client) : TEST_PLAYLIST_SEQUENCE;
+        const title = large ? LARGE_TEST_PLAYLIST_TITLE : TEST_PLAYLIST_TITLE;
+        const result = await seedPlaylist(client, title, sequence);
         const status = result.status === 'exists' ? 409 : result.failed.length > 0 ? 207 : 201;
         res.status(status).json({
+            title,
             ...result,
             url: `https://www.youtube.com/playlist?list=${result.playlistId}`,
-            expected: EXPECTED,
+            expected: expectedFor(sequence),
         });
-    } catch (error: any) {
-        console.error('Erro ao criar a playlist de teste:', error?.response?.status, error?.message);
-        res.status(502).json({ error: 'seed_failed', detail: error?.response?.data?.error?.message });
+    } catch (error) {
+        const { status, reason, message } = apiFailure(error);
+        console.error(`Erro ao criar a playlist de teste: HTTP ${status ?? '?'} ${reason ?? message ?? ''}`);
+        res.status(502).json({ error: 'seed_failed', reason, detail: message });
     }
 });
 
