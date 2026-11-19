@@ -76,16 +76,29 @@ describe('login com Google', () => {
         tokenResponse({ access_token: 'at-1', refresh_token: 'rt-1' });
 
         const callback = await request(app).get('/auth?code=codigo-valido');
-        expect(callback.status).toBe(200);
-        expect(callback.text).toContain('Conectado ao YouTube');
-        expect(callback.text).not.toContain('at-1');
-        expect(callback.text).not.toContain('rt-1');
+        // Volta para a interface; nenhum token vai na resposta.
+        expect(callback.status).toBe(302);
+        expect(callback.headers.location).toBe('/');
+        expect(JSON.stringify(callback.headers)).not.toMatch(/at-1|rt-1/);
+        expect(callback.text).not.toMatch(/at-1|rt-1/);
 
         expect((await request(app).get('/auth/status')).body).toEqual({ connected: true });
         expect(fs.readFileSync(dbPath).includes('rt-1')).toBe(false);
 
         playlistsCalledWith('at-1');
         expect((await request(app).get('/playlist/get-all')).status).toBe(200);
+    });
+
+    it('com WEB_URL definido (interface no Vite), o callback volta para lá', async () => {
+        process.env.WEB_URL = 'http://localhost:5173/';
+        try {
+            const app = await bootApp();
+            tokenResponse({ access_token: 'at-1', refresh_token: 'rt-1' });
+            const callback = await request(app).get('/auth?code=codigo-valido');
+            expect(callback.headers.location).toBe('http://localhost:5173/');
+        } finally {
+            delete process.env.WEB_URL;
+        }
     });
 
     it('continua conectado depois de reiniciar o servidor, renovando o access token sozinho', async () => {

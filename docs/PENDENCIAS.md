@@ -2,7 +2,7 @@
 
 O que falta para dar o projeto por encerrado, em ordem de prioridade. Atualize este arquivo no mesmo PR que resolver um item: risque o item e anote o número do PR.
 
-Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 77 testes passando.
+Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 80 testes passando.
 
 ## 1. Segurança (fazer primeiro)
 
@@ -42,3 +42,4 @@ Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com 
 | #10 | Quota diária contada; remoção em segundo plano com progresso |
 | #11, #12 | `GET /playlist/with-duplicates` |
 | #14 | Servidor só aceita pedidos da própria máquina e da própria interface (`localOnly`, sem CORS) |
+| #15 | Base para a interface: itens com estado no job, `GET /jobs`, login volta para a interface |
