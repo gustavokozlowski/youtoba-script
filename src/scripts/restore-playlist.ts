@@ -2,7 +2,7 @@ require('dotenv').config();
 
 import { googleAuth } from '../services/google';
 import { readBackup } from '../services/youtube/backup';
-import { YoutubeClient } from '../services/youtube/client/youtube.client';
+import { createTrackedClient } from '../services/youtube/client/tracked-client';
 import { restoreRemoved } from '../services/youtube/restore';
 
 // Uso: npm run restore:playlist -- backups/<arquivo>.json
@@ -33,7 +33,7 @@ async function main() {
         process.exit(1);
     }
 
-    const result = await restoreRemoved(new YoutubeClient({ apiKey, token }), backup);
+    const result = await restoreRemoved(createTrackedClient({ apiKey, token }), backup);
     console.log(
         `Restaurados: ${result.restored.length} (fora da posição original: ${result.restored.filter((r) => !r.atOriginalPosition).length})`,
     );

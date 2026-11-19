@@ -63,13 +63,11 @@ beforeAll(() => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'youtoba-playlist-'));
     Object.assign(process.env, {
         TOKEN_ENCRYPTION_KEY: randomBytes(32).toString('base64'),
-        TOKEN_DB_PATH: path.join(dir, 'tokens.db'),
         CLIENT_ID: 'test-client.apps.googleusercontent.com',
         CLIENT_SECRET_KEY: 'test-secret',
         REDIRECT_URL: 'http://localhost:3000/auth',
         API_KEY: 'test-api-key',
         YOUTUBE_BASE_URL: `${YOUTUBE}/youtube/v3/`,
-        YOUTUBE_DAILY_QUOTA: '10000',
     });
     nock.disableNetConnect();
     nock.enableNetConnect('127.0.0.1');
@@ -80,15 +78,46 @@ beforeAll(() => {
     });
 });
 
-beforeEach(async () => {
-    backupDir = path.join(dir, `backups-${Date.now()}-${Math.random()}`);
-    process.env.BACKUP_DIR = backupDir;
-    unmatched = [];
-
+async function boot({ dailyQuota = 10_000 }: { dailyQuota?: number } = {}) {
+    process.env.YOUTUBE_DAILY_QUOTA = String(dailyQuota);
     vi.resetModules();
     const { createApp } = await import('../src/server/app');
     app = createApp();
+}
 
+/** Reinicia o app com outro limite de quota. O login continua salvo; o access token é renovado no Google. */
+async function rebootWithQuota(dailyQuota: number) {
+    await boot({ dailyQuota });
+    nock(GOOGLE_OAUTH)
+        .post('/token', (body) => body.grant_type === 'refresh_token')
+        .reply(200, { access_token: 'at-2', token_type: 'Bearer', expires_in: 3599 });
+}
+
+/** Consulta o job até ele sair de "running". */
+async function waitForJob(jobId: string) {
+    for (let i = 0; i < 250; i++) {
+        const res = await request(app).get(`/jobs/${jobId}`);
+        if (res.body.status !== 'running') return res.body;
+        await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+    throw new Error(`job ${jobId} não terminou`);
+}
+
+const mockDelete = (position: number, reply: () => [number, unknown] = () => [204, ''], delayMs = 0) =>
+    nock(YOUTUBE)
+        .delete('/youtube/v3/playlistItems')
+        .query((q) => q.id === `item-${position}`)
+        .delay(delayMs)
+        .reply(reply);
+
+beforeEach(async () => {
+    const run = `${Date.now()}-${Math.random()}`;
+    backupDir = path.join(dir, `backups-${run}`);
+    process.env.BACKUP_DIR = backupDir;
+    process.env.TOKEN_DB_PATH = path.join(dir, `db-${run}.db`);
+    unmatched = [];
+
+    await boot();
     nock(GOOGLE_OAUTH)
         .post('/token')
         .reply(200, { access_token: 'at-1', refresh_token: 'rt-1', token_type: 'Bearer', expires_in: 3599 });
@@ -123,6 +152,8 @@ describe('dry-run de duplicados', () => {
         ]);
         expect(res.body.quota).toMatchObject({ unidadesLeitura: 20, unidadesRemocao: 150, cabeEmUmDia: true });
         expect(res.body.paraRemover).toContain('confirm=3');
+        expect(res.body.quotaHoje).toMatchObject({ usado: 20, restante: 9_980, limite: 10_000 });
+        expect(res.body.cabemHoje).toBe(3);
         expect(backups()).toEqual([]);
     });
 });
@@ -143,29 +174,37 @@ describe('remoção de duplicados', () => {
         expect(backups()).toEqual([]);
     });
 
-    it('confirmada: grava o backup completo antes e apaga só os duplicados, um por vez', async () => {
+    it('confirmada: responde na hora com o job, grava o backup antes e apaga só os duplicados', async () => {
         mockListing();
         const backupExistedBeforeDelete: boolean[] = [];
         for (const position of [50, 700, 999]) {
-            nock(YOUTUBE)
-                .delete('/youtube/v3/playlistItems')
-                .query((q) => q.id === `item-${position}`)
-                .reply(() => {
-                    backupExistedBeforeDelete.push(backups().length === 1);
-                    return [204, ''];
-                });
+            mockDelete(position, () => {
+                backupExistedBeforeDelete.push(backups().length === 1);
+                return [204, ''];
+            });
         }
 
         const res = await request(app).delete(`/playlist/${PLAYLIST}/remove-duplicates?confirm=3`);
+        expect(res.status).toBe(202);
+        expect(res.body).toMatchObject({ total: 3, cabemHoje: 3, acompanhar: `/jobs/${res.body.jobId}` });
 
-        expect(res.status).toBe(200);
-        expect(res.body).toMatchObject({ encontrados: 3, removidos: 3, falhas: [] });
+        const job = await waitForJob(res.body.jobId);
+        expect(job).toMatchObject({
+            status: 'done',
+            progresso: '3 de 3 itens apagados',
+            percentual: 100,
+            pendentes: 0,
+        });
+        expect(job.ultimoItem).toMatchObject({ posicao: 999, resultado: 'apagado' });
         expect(backupExistedBeforeDelete).toEqual([true, true, true]);
 
-        const backup = JSON.parse(fs.readFileSync(res.body.backup, 'utf8')) as PlaylistBackup;
+        const backup = JSON.parse(fs.readFileSync(job.backup, 'utf8')) as PlaylistBackup;
         expect(backup.items).toHaveLength(1_000);
         expect(backup.removal?.removed).toEqual(['item-50', 'item-700', 'item-999']);
-        expect(res.body.restaurar).toContain('npm run restore:playlist');
+        expect(backup.removal?.finishedAt).toBeDefined();
+
+        // 20 páginas lidas (1 cada) + 3 remoções (50 cada)
+        expect((await request(app).get('/quota')).body).toMatchObject({ usado: 170, restante: 9_830 });
     });
 
     it('sem duplicados, não grava backup nem apaga nada', async () => {
@@ -216,5 +255,104 @@ describe('leitura da playlist', () => {
         const res = await request(app).get(`/playlist/${PLAYLIST}/duplicates`);
         expect(res.status).toBe(429);
         expect(res.body.erro).toBe('quota_exceeded');
+    });
+});
+
+describe('progresso e quota da remoção', () => {
+    it('mostra o progresso enquanto apaga ("1 de 3 itens apagados")', async () => {
+        mockListing();
+        for (const position of [50, 700, 999]) mockDelete(position, undefined, 150);
+
+        const start = await request(app).delete(`/playlist/${PLAYLIST}/remove-duplicates?confirm=3`);
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        const during = (await request(app).get(`/jobs/${start.body.jobId}`)).body;
+
+        expect(during.status).toBe('running');
+        expect(during.situacao).toBe('em andamento');
+        expect(during.progresso).toMatch(/^[0-2] de 3 itens apagados$/);
+
+        const done = await waitForJob(start.body.jobId);
+        expect(done.progresso).toBe('3 de 3 itens apagados');
+    });
+
+    it('apaga só o que cabe no saldo do dia e para antes de o Google recusar', async () => {
+        await rebootWithQuota(125); // 20 da leitura + 2 remoções (100) = 120; a terceira não cabe
+        mockListing();
+        mockDelete(50);
+        mockDelete(700);
+
+        const start = await request(app).delete(`/playlist/${PLAYLIST}/remove-duplicates?confirm=3`);
+        expect(start.status).toBe(202);
+        expect(start.body.cabemHoje).toBe(2);
+        expect(start.body.mensagem).toContain('cobre 2 de 3');
+
+        const job = await waitForJob(start.body.jobId);
+        expect(job).toMatchObject({
+            status: 'partial',
+            motivoParada: 'daily_budget',
+            progresso: '2 de 3 itens apagados',
+            pendentes: 1,
+            falhas: [],
+        });
+        expect(job.proximoPasso).toContain('quota do dia acabou');
+        expect((await request(app).get('/quota')).body).toMatchObject({ usado: 120, restante: 5 });
+    });
+
+    it('sem saldo para nenhuma remoção, não grava backup nem começa', async () => {
+        await rebootWithQuota(30);
+        mockListing();
+        const res = await request(app).delete(`/playlist/${PLAYLIST}/remove-duplicates?confirm=3`);
+        expect(res.status).toBe(429);
+        expect(res.body.erro).toBe('daily_budget_exhausted');
+        expect(backups()).toEqual([]);
+    });
+
+    it('sem saldo nem para ler a playlist, recusa sem chamar o YouTube', async () => {
+        await boot({ dailyQuota: 0 });
+        const res = await request(app).delete(`/playlist/${PLAYLIST}/remove-duplicates?confirm=3`);
+        expect(res.status).toBe(429);
+        expect(res.body.quotaHoje).toMatchObject({ restante: 0 });
+    });
+
+    it('quando o Google responde quotaExceeded, para, marca o saldo como zerado e diz quando tentar de novo', async () => {
+        mockListing();
+        mockDelete(50);
+        mockDelete(700, () => [403, { error: { errors: [{ reason: 'quotaExceeded' }], message: 'quota' } }]);
+
+        const start = await request(app).delete(`/playlist/${PLAYLIST}/remove-duplicates?confirm=3`);
+        const job = await waitForJob(start.body.jobId);
+
+        expect(job).toMatchObject({
+            status: 'partial',
+            motivoParada: 'quota_exceeded',
+            progresso: '1 de 3 itens apagados',
+        });
+        expect(job.falhas).toEqual([{ id: 'item-700', status: 403, reason: 'quotaExceeded' }]);
+        expect(job.pendentes).toBe(1);
+        expect((await request(app).get('/quota')).body.restante).toBe(0);
+    });
+
+    it('não deixa começar uma segunda remoção na mesma playlist enquanto a primeira roda', async () => {
+        mockListing();
+        for (const position of [50, 700, 999]) mockDelete(position, undefined, 100);
+
+        const first = await request(app).delete(`/playlist/${PLAYLIST}/remove-duplicates?confirm=3`);
+        const second = await request(app).delete(`/playlist/${PLAYLIST}/remove-duplicates?confirm=3`);
+
+        expect(second.status).toBe(409);
+        expect(second.body).toMatchObject({ erro: 'already_running', jobId: first.body.jobId });
+        await waitForJob(first.body.jobId);
+    });
+
+    it('job inexistente → 404', async () => {
+        const res = await request(app).get('/jobs/nao-existe');
+        expect(res.status).toBe(404);
+    });
+
+    it('GET /quota mostra o uso do dia e quando zera', async () => {
+        const res = await request(app).get('/quota');
+        expect(res.status).toBe(200);
+        expect(res.body).toMatchObject({ usado: 0, limite: 10_000, restante: 10_000, remocoesPossiveis: 200 });
+        expect(new Date(res.body.zeraEm).getTime()).toBeGreaterThan(Date.now());
     });
 });

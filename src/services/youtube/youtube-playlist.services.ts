@@ -1,14 +1,19 @@
 import { googleAuth } from '../google';
-import { recordRemoval, writeBackup } from './backup';
+import { writeBackup } from './backup';
 import type { PlaylistsResponse } from './client/client.types';
-import { apiFailure, YoutubeClient } from './client/youtube.client';
+import { createTrackedClient } from './client/tracked-client';
+import { apiFailure } from './client/youtube.client';
 import { findDuplicates, toEntries } from './duplicates';
 import { estimateRemovalQuota } from './quota';
+import { type QuotaTracker, quotaTracker } from './quota-tracker';
+import { type RemovalJobs, removalJobs } from './removal-jobs';
+import { QUOTA_COST } from './youtube.constants';
 import type {
     ClientFactory,
     DuplicatesPreview,
     PlaylistEntry,
     ReadFailure,
+    RemovalJob,
     RemoveDuplicatesResult,
 } from './youtube.types';
 
@@ -16,7 +21,7 @@ import type {
 const defaultClientFactory: ClientFactory = async () => {
     const apiKey = process.env.API_KEY;
     const token = await googleAuth().getAccessToken();
-    return token && apiKey ? new YoutubeClient({ apiKey, token }) : undefined;
+    return token && apiKey ? createTrackedClient({ apiKey, token }) : undefined;
 };
 
 function readFailure(error: unknown): ReadFailure {
@@ -28,7 +33,11 @@ function readFailure(error: unknown): ReadFailure {
 }
 
 export class YoutubeService {
-    constructor(private readonly createClient: ClientFactory = defaultClientFactory) {}
+    constructor(
+        private readonly createClient: ClientFactory = defaultClientFactory,
+        private readonly tracker: () => QuotaTracker = quotaTracker,
+        private readonly jobs: RemovalJobs = removalJobs,
+    ) {}
 
     async playlists(): Promise<PlaylistsResponse | null> {
         const client = await this.createClient();
@@ -59,14 +68,20 @@ export class YoutubeService {
     async previewDuplicates(playlistId: string): Promise<ReadFailure | ({ status: 'ok' } & DuplicatesPreview)> {
         const listed = await this.listItems(playlistId);
         if (listed.status !== 'ok') return listed;
-        return { status: 'ok', ...buildPreview(playlistId, listed.items) };
+        return { status: 'ok', ...this.buildPreview(playlistId, listed.items) };
     }
 
     /**
-     * Remove os duplicados só se `confirm` for igual ao número de duplicados encontrados agora
-     * (o mesmo que o dry-run mostrou). Antes de apagar, grava um backup da playlist inteira.
+     * Inicia a remoção em segundo plano. Só começa se `confirm` for igual ao número de duplicados encontrados
+     * agora e se houver saldo de quota para ao menos um item. Antes de apagar, grava o backup da playlist inteira.
      */
     async removeDuplicates(playlistId: string, confirm: number | undefined): Promise<RemoveDuplicatesResult> {
+        const running = this.jobs.runningFor(playlistId);
+        if (running) return { status: 'already_running', job: running };
+
+        const tracker = this.tracker();
+        if (!tracker.canSpend(QUOTA_COST.list)) return { status: 'budget_exhausted', quota: tracker.snapshot() };
+
         const client = await this.createClient();
         if (!client) return { status: 'not_connected' };
 
@@ -77,25 +92,36 @@ export class YoutubeService {
             return readFailure(error);
         }
 
-        const preview = buildPreview(playlistId, entries);
+        const preview = this.buildPreview(playlistId, entries);
         if (preview.duplicates.length === 0) return { status: 'no_duplicates', ...preview };
         if (confirm !== preview.duplicates.length) return { status: 'confirmation_required', ...preview };
+        if (preview.quotaToday.deletesPossible === 0) return { status: 'budget_exhausted', quota: tracker.snapshot() };
 
         const backupFile = writeBackup(playlistId, entries);
-        const result = await client.deleteItemsById(preview.duplicates.map((item) => item.playlistItemId));
-        recordRemoval(backupFile, result);
+        const job = this.jobs.start({ playlistId, duplicates: preview.duplicates, backupFile, client, tracker });
 
-        return { status: 'done', backupFile, ...preview, ...result };
+        return {
+            status: 'started',
+            job,
+            fitToday: Math.min(preview.duplicates.length, preview.quotaToday.deletesPossible),
+            ...preview,
+        };
     }
-}
 
-function buildPreview(playlistId: string, entries: PlaylistEntry[]): DuplicatesPreview {
-    const { unique, duplicates } = findDuplicates(entries);
-    return {
-        playlistId,
-        itemCount: entries.length,
-        unique: unique.length,
-        duplicates,
-        quota: estimateRemovalQuota(entries.length, duplicates.length),
-    };
+    job(jobId: string): RemovalJob | undefined {
+        return this.jobs.get(jobId);
+    }
+
+    private buildPreview(playlistId: string, entries: PlaylistEntry[]): DuplicatesPreview {
+        const { unique, duplicates } = findDuplicates(entries);
+        const today = this.tracker().snapshot();
+        return {
+            playlistId,
+            itemCount: entries.length,
+            unique: unique.length,
+            duplicates,
+            quota: estimateRemovalQuota(entries.length, duplicates.length),
+            quotaToday: { ...today, deletesPossible: Math.floor(today.remaining / QUOTA_COST.delete) },
+        };
+    }
 }

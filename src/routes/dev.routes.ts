@@ -8,7 +8,8 @@ import {
     TEST_PLAYLIST_TITLE,
 } from '../dev/test-playlist.seed';
 import { googleAuth } from '../services/google';
-import { apiFailure, YoutubeClient } from '../services/youtube/client/youtube.client';
+import { createTrackedClient } from '../services/youtube/client/tracked-client';
+import { apiFailure } from '../services/youtube/client/youtube.client';
 
 const devRouter = Router();
 
@@ -23,7 +24,7 @@ devRouter.post('/seed-test-playlist', async (req: Request, res: Response) => {
         return;
     }
 
-    const client = new YoutubeClient({ apiKey, token });
+    const client = createTrackedClient({ apiKey, token });
     const large = req.query.size === 'large';
 
     try {

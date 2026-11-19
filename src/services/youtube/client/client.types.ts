@@ -217,3 +217,28 @@ export type DeleteItemsResult = {
 };
 
 export type ApiFailure = { status?: number; reason?: string; message?: string };
+
+export interface YoutubeClientOptions {
+    retries?: number;
+    baseDelayMs?: number;
+    /** Chamado a cada chamada que chega ao Google, com o custo dela em unidades de quota. */
+    onCost?: (units: number) => void;
+    /** Chamado quando o Google responde quotaExceeded. */
+    onQuotaExceeded?: () => void;
+}
+
+export interface DeleteProgressEvent {
+    /** Índice do item na lista (0 = primeiro). */
+    index: number;
+    total: number;
+    itemId: string;
+    outcome: 'removed' | 'failed';
+    status?: number;
+    reason?: string;
+}
+
+export interface DeleteOptions {
+    /** Diz se ainda dá para gastar `units` hoje. Sem isso, apaga até o Google recusar. */
+    canSpend?: (units: number) => boolean;
+    onProgress?: (event: DeleteProgressEvent) => void;
+}

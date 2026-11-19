@@ -1,12 +1,9 @@
-import { PAGE_SIZE } from './client/youtube.client';
+import { PAGE_SIZE, QUOTA_COST } from './youtube.constants';
 import type { RemovalQuotaEstimate } from './youtube.types';
-
-// Custos da YouTube Data API v3: https://developers.google.com/youtube/v3/determine_quota_cost
-export const QUOTA_COST = { list: 1, delete: 50, insert: 50 } as const;
 
 export const dailyQuotaLimit = () => Number(process.env.YOUTUBE_DAILY_QUOTA ?? 10_000);
 
-/** Estima o custo de ler a playlist e remover os duplicados. Não sabe quanto da quota de hoje já foi gasto. */
+/** Estima o custo de ler a playlist e remover os duplicados, sem considerar o que já foi gasto hoje. */
 export function estimateRemovalQuota(
     itemCount: number,
     duplicateCount: number,
