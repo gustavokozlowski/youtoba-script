@@ -1,17 +1,5 @@
 import type { PlaylistItem } from './client/client.types';
-
-export interface PlaylistEntry {
-    playlistItemId: string;
-    videoId: string;
-    title: string;
-    position: number;
-    channel?: string;
-}
-
-export interface DuplicateEntry extends PlaylistEntry {
-    /** Posição da primeira ocorrência do mesmo vídeo, que é a que fica. */
-    firstPosition: number;
-}
+import type { DuplicateEntry, PlaylistEntry } from './youtube.types';
 
 export function toEntry(item: PlaylistItem, fallbackPosition: number): PlaylistEntry | undefined {
     const videoId = item.contentDetails?.videoId ?? item.snippet?.resourceId?.videoId;

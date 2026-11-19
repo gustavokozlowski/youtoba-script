@@ -210,3 +210,10 @@ export interface PlaylistItemsUpdateParams {
         };
     };
 }
+
+export type DeleteItemsResult = {
+    removed: string[];
+    failed: { id: string; status?: number; reason?: string }[];
+};
+
+export type ApiFailure = { status?: number; reason?: string; message?: string };

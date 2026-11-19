@@ -1,12 +1,6 @@
-import type { PlaylistBackup } from './backup';
 import { apiFailure, type YoutubeClient } from './client/youtube.client';
 import { toEntries } from './duplicates';
-
-export interface RestoreResult {
-    restored: { videoId: string; position: number; atOriginalPosition: boolean }[];
-    skipped: { videoId: string; position: number; reason: 'already_present' }[];
-    failed: { videoId: string; position: number; status?: number; reason?: string }[];
-}
+import type { PlaylistBackup, RestoreResult } from './youtube.types';
 
 /**
  * Devolve à playlist os itens que a remoção apagou, na posição original quando a playlist permite.

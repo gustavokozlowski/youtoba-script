@@ -1,16 +1,11 @@
 import { OAuth2Client } from 'google-auth-library';
-import type { TokenStore } from '../../utils/repository/token.store';
+import type { TokenStore } from '../../utils/repository/token-store.types';
+import type { GoogleAuthConfig } from './google-auth.types';
 
 export const DEFAULT_ACCOUNT = 'default';
 
 // force-ssl cobre leitura e escrita de playlists; os outros dois escopos eram redundantes.
 export const SCOPES = ['https://www.googleapis.com/auth/youtube.force-ssl'];
-
-export interface GoogleAuthConfig {
-    clientId: string;
-    clientSecret: string;
-    redirectUrl: string;
-}
 
 export class MissingRefreshTokenError extends Error {
     constructor() {

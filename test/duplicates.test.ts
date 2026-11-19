@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { findDuplicates, type PlaylistEntry, toEntries } from '../src/services/youtube/duplicates';
+import { findDuplicates, toEntries } from '../src/services/youtube/duplicates';
+import type { PlaylistEntry } from '../src/services/youtube/youtube.types';
 
 const entry = (position: number, videoId: string): PlaylistEntry => ({
     playlistItemId: `item-${position}`,

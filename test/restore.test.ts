@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { PlaylistBackup } from '../src/services/youtube/backup';
 import { restoreRemoved } from '../src/services/youtube/restore';
+import type { PlaylistBackup } from '../src/services/youtube/youtube.types';
 
 const apiItem = (videoId: string, position: number) => ({
     id: `now-${position}`,

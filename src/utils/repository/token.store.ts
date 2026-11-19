@@ -2,16 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Database from 'better-sqlite3';
 import { decrypt, encrypt } from '../crypto';
-
-export interface TokenStore {
-    save(account: string, refreshToken: string): void;
-    get(account: string): string | undefined;
-    delete(account: string): void;
-}
-
-export interface ClosableTokenStore extends TokenStore {
-    close(): void;
-}
+import type { ClosableTokenStore } from './token-store.types';
 
 // Guarda só o refresh token, cifrado com AES-256-GCM. O access token vive na memória do cliente OAuth.
 export function createSqliteTokenStore(dbPath: string, key: Buffer): ClosableTokenStore {

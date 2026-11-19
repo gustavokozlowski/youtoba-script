@@ -1,11 +1,12 @@
 import type { Request, Response } from 'express';
-import type { DuplicateEntry, PlaylistEntry } from '../services/youtube/duplicates';
-import type { RemovalQuotaEstimate } from '../services/youtube/quota';
-import {
-    type DuplicatesPreview,
-    type ReadFailure,
-    YoutubeService,
-} from '../services/youtube/youtube-playlist.services';
+import type {
+    DuplicateEntry,
+    DuplicatesPreview,
+    PlaylistEntry,
+    ReadFailure,
+    RemovalQuotaEstimate,
+} from '../services/youtube/youtube.types';
+import { YoutubeService } from '../services/youtube/youtube-playlist.services';
 
 const youtubeService = new YoutubeService();
 

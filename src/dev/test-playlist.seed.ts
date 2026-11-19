@@ -1,4 +1,5 @@
 import { apiFailure, PAGE_SIZE, type YoutubeClient } from '../services/youtube/client/youtube.client';
+import type { SeedResult } from './test-playlist.types';
 
 export const TEST_PLAYLIST_TITLE = 'youtoba-teste';
 export const LARGE_TEST_PLAYLIST_TITLE = 'youtoba-teste-grande';
@@ -33,15 +34,6 @@ export async function largeTestSequence(client: YoutubeClient): Promise<string[]
     }
     return [...base, VIDEO_B, distinct[10]];
 }
-
-export type SeedResult =
-    | { status: 'exists'; playlistId: string }
-    | {
-          status: 'created';
-          playlistId: string;
-          inserted: { position: number; videoId: string }[];
-          failed: { position: number; videoId: string; reason: string }[];
-      };
 
 export async function seedPlaylist(client: YoutubeClient, title: string, sequence: string[]): Promise<SeedResult> {
     const existing = await client.playlists();

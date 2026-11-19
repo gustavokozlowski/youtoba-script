@@ -1,20 +1,20 @@
 require('dotenv').config();
 
 import axios, { type AxiosInstance } from 'axios';
-
-import type { Playlist, PlaylistItem, PlaylistResponse, PlaylistsResponse, YoutubeClientConfig } from './client.types';
+import type {
+    ApiFailure,
+    DeleteItemsResult,
+    Playlist,
+    PlaylistItem,
+    PlaylistResponse,
+    PlaylistsResponse,
+    YoutubeClientConfig,
+} from './client.types';
 
 const { YOUTUBE_BASE_URL } = process.env;
 
 // A API devolve no máximo 50 itens por página.
 export const PAGE_SIZE = 50;
-
-export type DeleteItemsResult = {
-    removed: string[];
-    failed: { id: string; status?: number; reason?: string }[];
-};
-
-export type ApiFailure = { status?: number; reason?: string; message?: string };
 
 const RETRYABLE_STATUS = new Set([409, 429, 500, 503]);
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

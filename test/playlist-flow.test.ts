@@ -5,7 +5,7 @@ import path from 'node:path';
 import nock from 'nock';
 import request from 'supertest';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { PlaylistBackup } from '../src/services/youtube/backup';
+import type { PlaylistBackup } from '../src/services/youtube/youtube.types';
 
 const GOOGLE_OAUTH = 'https://oauth2.googleapis.com';
 const YOUTUBE = 'https://youtube.googleapis.com';

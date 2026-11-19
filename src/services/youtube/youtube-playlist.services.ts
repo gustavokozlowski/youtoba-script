@@ -1,31 +1,16 @@
 import { googleAuth } from '../google';
 import { recordRemoval, writeBackup } from './backup';
 import type { PlaylistsResponse } from './client/client.types';
-import { apiFailure, type DeleteItemsResult, YoutubeClient } from './client/youtube.client';
-import { type DuplicateEntry, findDuplicates, type PlaylistEntry, toEntries } from './duplicates';
-import { estimateRemovalQuota, type RemovalQuotaEstimate } from './quota';
-
-export type ReadFailure =
-    | { status: 'not_connected' }
-    | { status: 'not_found' }
-    | { status: 'quota_exceeded' }
-    | { status: 'fetch_failed' };
-
-export interface DuplicatesPreview {
-    playlistId: string;
-    itemCount: number;
-    unique: number;
-    duplicates: DuplicateEntry[];
-    quota: RemovalQuotaEstimate;
-}
-
-export type RemoveDuplicatesResult =
-    | ReadFailure
-    | ({ status: 'no_duplicates' } & DuplicatesPreview)
-    | ({ status: 'confirmation_required' } & DuplicatesPreview)
-    | ({ status: 'done'; backupFile: string } & DuplicatesPreview & DeleteItemsResult);
-
-type ClientFactory = () => Promise<YoutubeClient | undefined>;
+import { apiFailure, YoutubeClient } from './client/youtube.client';
+import { findDuplicates, toEntries } from './duplicates';
+import { estimateRemovalQuota } from './quota';
+import type {
+    ClientFactory,
+    DuplicatesPreview,
+    PlaylistEntry,
+    ReadFailure,
+    RemoveDuplicatesResult,
+} from './youtube.types';
 
 // Um client por chamada: o service não guarda token nem client entre requisições.
 const defaultClientFactory: ClientFactory = async () => {

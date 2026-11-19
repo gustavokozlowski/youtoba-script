@@ -1,16 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { DeleteItemsResult } from './client/youtube.client';
-import type { PlaylistEntry } from './duplicates';
-
-export interface PlaylistBackup {
-    version: 1;
-    playlistId: string;
-    createdAt: string;
-    itemCount: number;
-    items: PlaylistEntry[];
-    removal?: DeleteItemsResult & { finishedAt: string };
-}
+import type { DeleteItemsResult } from './client/client.types';
+import type { PlaylistBackup, PlaylistEntry } from './youtube.types';
 
 export const backupDir = () => process.env.BACKUP_DIR ?? 'backups';
 
