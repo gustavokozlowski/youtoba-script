@@ -1,17 +1,5 @@
-require('dotenv').config();
-const { CLIENT_ID, CLIENT_SECRET_KEY, REDIRECT_URL } = process.env;
-
 import type { NextFunction, Request, Response } from 'express';
-import { google } from 'googleapis';
-import { saveToken } from '../utils/repository/user.repository';
-
-const scopes = [
-    'https://www.googleapis.com/auth/youtube.readonly',
-    'https://www.googleapis.com/auth/youtube.force-ssl',
-    'https://www.googleapis.com/auth/youtube',
-];
-
-const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET_KEY, REDIRECT_URL);
+import { googleAuth, MissingRefreshTokenError } from '../services/google';
 
 const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
 
@@ -33,18 +21,10 @@ ${body}
 </body>
 </html>`;
 
-export const authUserGetUrl = (_req: Request, res: Response, _next: NextFunction) => {
-    const url = oauth2Client.generateAuthUrl({
-        access_type: 'offline',
-        scope: scopes,
-    });
+const retryLink = '<p><a href="/auth/login">Tentar de novo</a></p>';
 
-    if (!url) {
-        res.status(500).json({ error: 'auth_url_failed' });
-        return;
-    }
-
-    res.redirect(url);
+export const authUserGetUrl = (_req: Request, res: Response) => {
+    res.redirect(googleAuth().authUrl());
 };
 
 export const getAuthorizationToken = async (req: Request, res: Response, next: NextFunction) => {
@@ -56,7 +36,7 @@ export const getAuthorizationToken = async (req: Request, res: Response, next: N
                 'Login não concluído',
                 `<p>O Google respondeu: <code>${escapeHtml(error)}</code>.</p>
 <p>Se foi <code>access_denied</code>, confira se a conta está em <em>Usuários de teste</em> no Google Cloud.</p>
-<p><a href="/auth/login">Tentar de novo</a></p>`,
+${retryLink}`,
             ),
         );
         return;
@@ -64,36 +44,40 @@ export const getAuthorizationToken = async (req: Request, res: Response, next: N
 
     if (typeof code !== 'string' || code.length === 0) {
         res.status(400).send(
-            renderPage(
-                'Login não concluído',
-                '<p>O Google não enviou o código de autorização.</p><p><a href="/auth/login">Tentar de novo</a></p>',
-            ),
+            renderPage('Login não concluído', `<p>O Google não enviou o código de autorização.</p>${retryLink}`),
         );
         return;
     }
 
     try {
-        const { tokens } = await oauth2Client.getToken(code);
-        const bearerToken = tokens.access_token;
-
-        if (typeof bearerToken !== 'string') {
-            res.status(502).send(
-                renderPage(
-                    'Login não concluído',
-                    '<p>O Google não devolveu um token de acesso.</p><p><a href="/auth/login">Tentar de novo</a></p>',
-                ),
-            );
-            return;
-        }
-
-        saveToken('bearerToken', bearerToken);
+        await googleAuth().connect(code);
         res.send(
             renderPage(
                 'Conectado ao YouTube',
-                `<p>Login feito. A sessão vale por cerca de 1 hora.</p>
+                `<p>Login salvo. Você não precisa logar de novo quando o servidor reiniciar.</p>
+<p>Com o app em modo <em>Testing</em>, o Google pede um novo login a cada 7 dias.</p>
 <p><a href="/playlist/get-all">Ver minhas playlists</a></p>`,
             ),
         );
+    } catch (err) {
+        if (err instanceof MissingRefreshTokenError) {
+            res.status(502).send(
+                renderPage('Login não concluído', `<p>O Google não enviou o token de acesso contínuo.</p>${retryLink}`),
+            );
+            return;
+        }
+        next(err);
+    }
+};
+
+export const authStatus = (_req: Request, res: Response) => {
+    res.json({ connected: googleAuth().isConnected() });
+};
+
+export const logout = async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+        await googleAuth().disconnect();
+        res.json({ connected: false });
     } catch (err) {
         next(err);
     }

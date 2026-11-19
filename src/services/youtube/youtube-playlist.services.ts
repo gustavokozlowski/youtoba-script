@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-import { getToken } from '../../utils/repository/user.repository';
+import { googleAuth } from '../google';
 import type { PlaylistItem, PlaylistsResponse } from './client/client.types';
 import { type DeleteItemsResult, YoutubeClient } from './client/youtube.client';
 
@@ -115,14 +115,16 @@ export class YoutubeService {
 
     private async _getCredentials() {
         const apiKey = API_KEY;
-        const { token } = await getToken('bearerToken');
+        const token = await googleAuth().getAccessToken();
 
-        if (!token || typeof token === 'undefined' || !apiKey) {
-            console.info('DEU MERDA AQUI NA PORRA DO TOKEN DO YOUTOBA HEIN PQP!');
-            return undefined;
+        if (!token || !apiKey) {
+            // Sem login (ou login expirado): não reaproveita um cliente de uma chamada anterior.
+            this.token = undefined;
+            this.client = undefined;
+            return;
         }
+
         this.token = token;
-        this.client = new YoutubeClient({ apiKey, token: this.token });
-        return null;
+        this.client = new YoutubeClient({ apiKey, token });
     }
 }
