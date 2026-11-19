@@ -153,7 +153,14 @@ Depois do primeiro login, o refresh token fica salvo **cifrado** (AES-256-GCM) e
 | `GET` | `/playlist/:playlistId` | Total de itens da playlist (1 chamada) |
 | `GET` | `/playlist/:playlistId/items` | Todos os itens, com posição, título e `videoId` |
 | `GET` | `/playlist/:playlistId/duplicates` | **Dry-run**: o que seria removido e quanto de quota custaria. Não apaga nada. |
-| `DELETE` | `/playlist/:playlistId/remove-duplicates?confirm=N` | Remove os duplicados. Exige `confirm` igual ao número de duplicados encontrados; grava um backup antes. |
+| `DELETE` | `/playlist/:playlistId/remove-duplicates?confirm=N` | Inicia a remoção em segundo plano e responde na hora (`202`) com um `jobId`. Exige `confirm` igual ao número de duplicados encontrados; grava um backup antes. |
+
+### Acompanhamento e quota
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `GET` | `/jobs/:jobId` | Progresso da remoção: `"12 de 75 itens apagados"`, percentual, último item, falhas e, se parou, o motivo e quando tentar de novo |
+| `GET` | `/quota` | Quota do dia: usado, limite, restante, quantas remoções ainda cabem e quando zera |
 
 **Duplicado** é o mesmo vídeo (`videoId`) aparecendo mais de uma vez. Fica sempre a primeira ocorrência pela posição na playlist. Vídeos diferentes com o mesmo título não são tocados.
 
@@ -187,9 +194,14 @@ curl http://localhost:3000/playlist/get-all
 # 1. Veja o que seria removido (não apaga nada)
 curl http://localhost:3000/playlist/PLxxxxxx/duplicates
 
-# 2. Confirme com o número de duplicados mostrado no passo 1
+# 2. Confirme com o número de duplicados mostrado no passo 1 (responde na hora com o jobId)
 curl -X DELETE "http://localhost:3000/playlist/PLxxxxxx/remove-duplicates?confirm=3"
+
+# 3. Acompanhe o progresso
+curl http://localhost:3000/jobs/<jobId>
 ```
+
+O terminal do servidor também mostra uma linha por item: `[remoção 1a2b3c4d] 12 de 75 itens apagados · <título>`.
 
 Antes de apagar, a playlist inteira é salva em `backups/<playlistId>-<data>.json`. O YouTube não tem lixeira; para desfazer uma remoção:
 
@@ -201,7 +213,11 @@ A restauração devolve os itens removidos às posições originais e pode ser r
 
 ### Quota da API
 
-Cada projeto do Google Cloud tem 10.000 unidades por dia. Ler a playlist custa 1 unidade a cada 50 itens; cada remoção custa 50. Na prática, cerca de 190 remoções por dia. O dry-run mostra a estimativa. Se a quota acabar no meio, a remoção para, reporta o que ficou pendente, e basta rodar de novo no dia seguinte.
+Cada projeto do Google Cloud tem 10.000 unidades por dia, que zeram à meia-noite no horário do Pacífico (5h em Brasília no inverno do hemisfério norte). Ler a playlist custa 1 unidade a cada 50 itens; cada remoção custa 50.
+
+O servidor **conta o gasto de cada chamada** (no SQLite local) e, antes de cada remoção, confere o saldo do dia: apaga só o que cabe e para antes de o Google recusar. O dry-run e o `GET /quota` mostram quanto resta e quantas remoções ainda cabem hoje. Quando a remoção para por quota, o `GET /jobs/:jobId` diz a partir de quando dá para continuar — basta rodar o dry-run e a remoção de novo.
+
+A conta é local: gastos do mesmo projeto do Google Cloud feitos por outros programas não aparecem. Se o Google responder `quotaExceeded` mesmo assim, o saldo do dia é zerado na hora. Para um limite diferente, use `YOUTUBE_DAILY_QUOTA` no `.env`.
 
 ## 👨‍💻 Autor
 

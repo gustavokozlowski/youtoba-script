@@ -25,9 +25,20 @@ export function writeBackup(playlistId: string, items: PlaylistEntry[], now = ne
     return file;
 }
 
-export function recordRemoval(file: string, result: DeleteItemsResult, now = new Date()) {
+/** Registra no backup o que já foi removido. Chamado a cada item, para o arquivo valer mesmo se o processo cair. */
+export function recordRemoval(
+    file: string,
+    result: DeleteItemsResult,
+    { finished }: { finished: boolean },
+    now = new Date(),
+) {
     const backup = readBackup(file);
-    backup.removal = { ...result, finishedAt: now.toISOString() };
+    backup.removal = {
+        removed: result.removed,
+        failed: result.failed,
+        updatedAt: now.toISOString(),
+        ...(finished ? { finishedAt: now.toISOString() } : {}),
+    };
     fs.writeFileSync(file, JSON.stringify(backup, null, 2));
 }
 

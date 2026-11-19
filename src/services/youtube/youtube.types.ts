@@ -30,7 +30,8 @@ export interface PlaylistBackup {
     createdAt: string;
     itemCount: number;
     items: PlaylistEntry[];
-    removal?: DeleteItemsResult & { finishedAt: string };
+    /** Atualizado a cada item removido; `finishedAt` só aparece quando a remoção termina. */
+    removal?: DeleteItemsResult & { updatedAt?: string; finishedAt?: string };
 }
 
 export interface RestoreResult {
@@ -51,12 +52,46 @@ export interface DuplicatesPreview {
     unique: number;
     duplicates: DuplicateEntry[];
     quota: RemovalQuotaEstimate;
+    /** Saldo real de hoje (depois da leitura) e quantas remoções ainda cabem nele. */
+    quotaToday: QuotaSnapshot & { deletesPossible: number };
 }
 
 export type RemoveDuplicatesResult =
     | ReadFailure
+    | { status: 'already_running'; job: RemovalJob }
+    | { status: 'budget_exhausted'; quota: QuotaSnapshot }
     | ({ status: 'no_duplicates' } & DuplicatesPreview)
     | ({ status: 'confirmation_required' } & DuplicatesPreview)
-    | ({ status: 'done'; backupFile: string } & DuplicatesPreview & DeleteItemsResult);
+    | ({ status: 'started'; job: RemovalJob; fitToday: number } & DuplicatesPreview);
 
 export type ClientFactory = () => Promise<YoutubeClient | undefined>;
+
+export interface QuotaSnapshot {
+    /** Dia da quota, YYYY-MM-DD no horário do Pacífico. */
+    day: string;
+    used: number;
+    limit: number;
+    remaining: number;
+    /** Quando a quota zera (ISO, UTC). */
+    resetsAt: string;
+}
+
+export type RemovalJobStatus = 'running' | 'done' | 'partial' | 'failed';
+
+export interface RemovalJob {
+    id: string;
+    playlistId: string;
+    status: RemovalJobStatus;
+    /** Por que parou antes de terminar: saldo do dia (parada nossa) ou quotaExceeded do Google. */
+    stopReason?: 'daily_budget' | 'quota_exceeded';
+    total: number;
+    /** Itens já tentados (removidos ou com falha). */
+    processed: number;
+    removed: string[];
+    failed: DeleteItemsResult['failed'];
+    lastItem?: { title: string; position: number; outcome: 'removed' | 'failed' };
+    startedAt: string;
+    finishedAt?: string;
+    backupFile: string;
+    error?: string;
+}

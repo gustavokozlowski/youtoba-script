@@ -1,12 +1,8 @@
 import type { Request, Response } from 'express';
-import type {
-    DuplicateEntry,
-    DuplicatesPreview,
-    PlaylistEntry,
-    ReadFailure,
-    RemovalQuotaEstimate,
-} from '../services/youtube/youtube.types';
+import { quotaTracker } from '../services/youtube/quota-tracker';
+import type { ReadFailure } from '../services/youtube/youtube.types';
 import { YoutubeService } from '../services/youtube/youtube-playlist.services';
+import { formatEntry, formatJob, formatPreview, formatQuotaSnapshot } from './formatters';
 
 const youtubeService = new YoutubeService();
 
@@ -26,36 +22,6 @@ const sendReadFailure = (res: Response, failure: ReadFailure) => {
     const [status, body] = READ_FAILURES[failure.status];
     return res.status(status).json(body);
 };
-
-const formatEntry = (entry: PlaylistEntry) => ({
-    posicao: entry.position,
-    titulo: entry.title,
-    canal: entry.channel,
-    videoId: entry.videoId,
-    playlistItemId: entry.playlistItemId,
-});
-
-const formatDuplicate = (entry: DuplicateEntry) => ({ ...formatEntry(entry), primeiraOcorrencia: entry.firstPosition });
-
-const formatQuota = (quota: RemovalQuotaEstimate) => ({
-    unidadesLeitura: quota.listUnits,
-    unidadesRemocao: quota.deleteUnits,
-    total: quota.total,
-    limiteDiario: quota.dailyLimit,
-    cabeEmUmDia: quota.fitsInOneDay,
-    maxRemocoesPorDia: quota.maxDeletesPerDay,
-    diasNecessarios: quota.daysNeeded,
-    observacao: 'A estimativa não sabe quanto da quota de hoje já foi gasto.',
-});
-
-const formatPreview = (preview: DuplicatesPreview) => ({
-    playlistId: preview.playlistId,
-    totalItens: preview.itemCount,
-    ficam: preview.unique,
-    duplicados: preview.duplicates.length,
-    itensDuplicados: preview.duplicates.map(formatDuplicate),
-    quota: formatQuota(preview.quota),
-});
 
 const parseConfirm = (value: unknown): number | undefined =>
     typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : undefined;
@@ -127,40 +93,63 @@ export const removeDuplicatedItems = async (req: Request, res: Response) => {
 
         if (isReadFailure(result)) return sendReadFailure(res, result);
 
-        if (result.status === 'no_duplicates') {
-            return res
-                .status(200)
-                .json({ mensagem: 'Nenhum duplicado encontrado.', totalItens: result.itemCount, removidos: 0 });
+        switch (result.status) {
+            case 'already_running':
+                return res.status(409).json({
+                    erro: 'already_running',
+                    mensagem: 'Já existe uma remoção em andamento nesta playlist.',
+                    jobId: result.job.id,
+                    acompanhar: `/jobs/${result.job.id}`,
+                });
+            case 'budget_exhausted':
+                return res.status(429).json({
+                    erro: 'daily_budget_exhausted',
+                    mensagem: `A quota de hoje não tem saldo para remover. Tente depois de ${formatQuotaSnapshot(result.quota).zeraEmBrasilia} (horário de Brasília).`,
+                    quotaHoje: formatQuotaSnapshot(result.quota),
+                });
+            case 'no_duplicates':
+                return res
+                    .status(200)
+                    .json({ mensagem: 'Nenhum duplicado encontrado.', totalItens: result.itemCount, removidos: 0 });
+            case 'confirmation_required': {
+                const n = result.duplicates.length;
+                return res.status(409).json({
+                    erro: 'confirmation_required',
+                    mensagem: `Confira os ${n} duplicados abaixo e repita com ?confirm=${n}. Nada foi removido.`,
+                    ...formatPreview(result),
+                });
+            }
         }
 
-        if (result.status === 'confirmation_required') {
-            const n = result.duplicates.length;
-            return res.status(409).json({
-                erro: 'confirmation_required',
-                mensagem: `Confira os ${n} duplicados abaixo e repita com ?confirm=${n}. Nada foi removido.`,
-                ...formatPreview(result),
-            });
-        }
-
-        const { removed, failed, backupFile } = result;
-        const body = {
-            encontrados: result.duplicates.length,
-            removidos: removed.length,
-            falhas: failed,
-            backup: backupFile,
-            restaurar: `npm run restore:playlist -- ${backupFile}`,
-        };
-
-        if (failed.length === 0) {
-            return res.status(200).json({ mensagem: 'Duplicados removidos.', ...body });
-        }
-
-        // 207: remoção parcial; 502: nada foi removido.
-        return res.status(removed.length > 0 ? 207 : 502).json({
-            mensagem: removed.length > 0 ? 'Remoção parcial: alguns itens falharam.' : 'Nenhum item foi removido.',
-            ...body,
+        const { job, fitToday } = result;
+        const partialNote =
+            fitToday < job.total
+                ? ` A quota de hoje cobre ${fitToday} de ${job.total}; o resto fica para depois que ela zerar.`
+                : '';
+        return res.status(202).json({
+            mensagem: `Remoção iniciada.${partialNote}`,
+            total: job.total,
+            cabemHoje: fitToday,
+            acompanhar: `/jobs/${job.id}`,
+            ...formatJob(job, quotaTracker().snapshot()),
         });
     } catch (e) {
         return internalError(res, 'remover duplicados', e);
     }
+};
+
+export const getRemovalJob = (req: Request, res: Response) => {
+    const job = youtubeService.job(req.params.jobId);
+    if (!job) {
+        return res.status(404).json({
+            erro: 'job_not_found',
+            mensagem:
+                'Remoção não encontrada. Os jobs ficam em memória e somem quando o servidor reinicia; o backup guarda o que foi removido.',
+        });
+    }
+    return res.status(200).json(formatJob(job, quotaTracker().snapshot()));
+};
+
+export const getQuota = (_req: Request, res: Response) => {
+    res.status(200).json(formatQuotaSnapshot(quotaTracker().snapshot()));
 };
