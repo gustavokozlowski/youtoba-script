@@ -23,6 +23,8 @@ const sendReadFailure = (res: Response, failure: ReadFailure) => {
     return res.status(status).json(body);
 };
 
+const units = (n: number) => `${n} ${n === 1 ? 'unidade' : 'unidades'}`;
+
 const parseConfirm = (value: unknown): number | undefined =>
     typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : undefined;
 
@@ -51,7 +53,7 @@ export const getPlaylistsWithDuplicates = async (req: Request, res: Response) =>
             const quota = formatQuotaSnapshot(result.quota);
             return res.status(429).json({
                 erro: 'daily_budget_exhausted',
-                mensagem: `A análise custaria cerca de ${result.estimate} unidades e o saldo de hoje é ${quota.restante}. Tente depois de ${quota.zeraEmBrasilia} (horário de Brasília).`,
+                mensagem: `A análise custaria cerca de ${units(result.estimate)} e o saldo de hoje é de ${units(quota.restante)}. Tente depois de ${quota.zeraEmBrasilia} (horário de Brasília).`,
                 custoEstimado: result.estimate,
                 quotaHoje: quota,
             });
