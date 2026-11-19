@@ -89,3 +89,16 @@ describe('Playlists', () => {
         expect(screen.getByText(/custaria cerca de 14 unidades/)).toBeInTheDocument();
     });
 });
+
+describe('Playlists depois de uma remoção', () => {
+    it('com a análise marcada como desatualizada, mostra a antiga e analisa de novo sozinho', async () => {
+        sessionStorage.setItem(
+            'youtoba:overview',
+            JSON.stringify({ overview: overview(), savedAt: new Date().toISOString(), stale: true }),
+        );
+        fakeApi({ '/playlist/with-duplicates': { body: overview([]) }, '/quota': { body: quota } });
+        render(<Playlists />);
+        expect(screen.getByRole('link', { name: 'rap nacional 2000s' })).toBeInTheDocument();
+        expect(await screen.findByRole('heading', { name: /tudo limpo/i })).toBeInTheDocument();
+    });
+});

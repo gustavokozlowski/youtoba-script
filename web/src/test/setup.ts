@@ -4,6 +4,7 @@ import { afterEach } from 'vitest';
 
 // jsdom não implementa rolagem.
 window.scrollTo = () => undefined;
+Element.prototype.scrollIntoView = () => undefined;
 
 afterEach(() => {
     cleanup();
