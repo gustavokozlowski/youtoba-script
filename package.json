@@ -13,7 +13,8 @@
     "biome:lint": "npx @biomejs/biome lint",
     "biome:check": "npx @biomejs/biome check",
     "biome:fix": "npx @biomejs/biome check --write",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "restore:playlist": "ts-node --transpile-only src/scripts/restore-playlist.ts"
   },
   "keywords": [],
   "author": "gustavo kozlowski",

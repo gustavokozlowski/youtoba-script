@@ -7,3 +7,5 @@ dist/
 *.log
 # Banco local com o refresh token cifrado
 data/
+# Backups das playlists antes de remover duplicados
+backups/
