@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import { quotaTracker } from '../services/youtube/quota-tracker';
 import type { ReadFailure } from '../services/youtube/youtube.types';
 import { YoutubeService } from '../services/youtube/youtube-playlist.services';
-import { formatEntry, formatJob, formatPreview, formatQuotaSnapshot } from './formatters';
+import { formatEntry, formatJob, formatOverview, formatPreview, formatQuotaSnapshot } from './formatters';
 
 const youtubeService = new YoutubeService();
 
@@ -40,6 +40,27 @@ export const getAllPlaylists = async (_req: Request, res: Response) => {
         return res.status(200).json({ resultado: result });
     } catch (e) {
         return internalError(res, 'obter playlists', e);
+    }
+};
+
+export const getPlaylistsWithDuplicates = async (req: Request, res: Response) => {
+    try {
+        const result = await youtubeService.duplicatesOverview(req.query.todas === 'true');
+
+        if (result.status === 'budget_exhausted') {
+            const quota = formatQuotaSnapshot(result.quota);
+            return res.status(429).json({
+                erro: 'daily_budget_exhausted',
+                mensagem: `A análise custaria cerca de ${result.estimate} unidades e o saldo de hoje é ${quota.restante}. Tente depois de ${quota.zeraEmBrasilia} (horário de Brasília).`,
+                custoEstimado: result.estimate,
+                quotaHoje: quota,
+            });
+        }
+        if (result.status !== 'ok') return sendReadFailure(res, result);
+
+        return res.status(200).json(formatOverview(result));
+    } catch (e) {
+        return internalError(res, 'listar playlists com duplicados', e);
     }
 };
 

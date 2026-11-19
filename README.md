@@ -150,6 +150,7 @@ Depois do primeiro login, o refresh token fica salvo **cifrado** (AES-256-GCM) e
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | `GET` | `/playlist/get-all` | Lista as playlists do usuário |
+| `GET` | `/playlist/with-duplicates` | Analisa todas as suas playlists e lista as que têm duplicados, da mais suja para a mais limpa: id, título, capa, link, privacidade, total de vídeos, quantos ficam, duplicados, % duplicado, itens indisponíveis, vídeos mais repetidos, custo de quota para limpar e os comandos de dry-run e remoção. Com `?todas=true`, inclui as playlists sem duplicados. Estima o custo antes e recusa se não couber na quota do dia. |
 | `GET` | `/playlist/:playlistId` | Total de itens da playlist (1 chamada) |
 | `GET` | `/playlist/:playlistId/items` | Todos os itens, com posição, título e `videoId` |
 | `GET` | `/playlist/:playlistId/duplicates` | **Dry-run**: o que seria removido e quanto de quota custaria. Não apaga nada. |

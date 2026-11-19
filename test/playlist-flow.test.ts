@@ -356,3 +356,136 @@ describe('progresso e quota da remoção', () => {
         expect(new Date(res.body.zeraEm).getTime()).toBeGreaterThan(Date.now());
     });
 });
+
+describe('playlists com duplicados', () => {
+    const playlistMeta = (id: string, title: string, itemCount: number, cover?: string) => ({
+        kind: 'youtube#playlist',
+        etag: 'e',
+        id,
+        snippet: { title, thumbnails: cover ? { maxres: { url: cover, width: 1, height: 1 } } : {} },
+        contentDetails: { itemCount },
+        status: { privacyStatus: 'private' },
+    });
+
+    // Duas páginas de playlists: testa a paginação (1 unidade cada).
+    const mockMyPlaylists = () =>
+        nock(YOUTUBE)
+            .get('/youtube/v3/playlists')
+            .query((q) => q.mine === 'true' && q.part === 'snippet,contentDetails,status' && !q.pageToken)
+            .reply(200, {
+                pageInfo: { totalResults: 5, resultsPerPage: 50 },
+                items: [playlistMeta('PLa', 'Alfa', 3, 'capa-alfa'), playlistMeta('PLb', 'Beta', 5)],
+                nextPageToken: 'p2',
+            })
+            .get('/youtube/v3/playlists')
+            .query((q) => q.pageToken === 'p2')
+            .reply(200, {
+                pageInfo: { totalResults: 5, resultsPerPage: 50 },
+                items: [
+                    playlistMeta('PLc', 'Gama', 2),
+                    playlistMeta('PLd', 'Delta', 1),
+                    playlistMeta('PLe', 'Vazia', 0),
+                ],
+            });
+
+    const mockItems = (playlistId: string, videos: { id: string; title?: string; image?: string }[]) =>
+        nock(YOUTUBE)
+            .get('/youtube/v3/playlistItems')
+            .query((q) => q.playlistId === playlistId)
+            .reply(200, {
+                pageInfo: { totalResults: videos.length, resultsPerPage: 50 },
+                items: videos.map((v, position) => ({
+                    id: `${playlistId}-${position}`,
+                    snippet: {
+                        title: v.title ?? `Vídeo ${v.id}`,
+                        position,
+                        thumbnails: v.image ? { high: { url: v.image, width: 1, height: 1 } } : {},
+                    },
+                    contentDetails: { videoId: v.id },
+                })),
+            });
+
+    const mockAllItems = () => {
+        mockItems('PLa', [{ id: 'a' }, { id: 'b' }, { id: 'a' }]);
+        mockItems('PLb', [
+            { id: 'x', title: 'Deleted video' },
+            { id: 'v1', image: 'capa-v1' },
+            { id: 'v2' },
+            { id: 'v1' },
+            { id: 'v1' },
+        ]);
+        mockItems('PLc', [{ id: 'c1' }, { id: 'c2' }]);
+    };
+
+    it('lista só as playlists com duplicados, da mais suja para a mais limpa, com capa, contagens e link', async () => {
+        mockMyPlaylists();
+        mockAllItems();
+
+        const res = await request(app).get('/playlist/with-duplicates');
+
+        expect(res.status).toBe(200);
+        expect(res.body.playlists.map((p: any) => p.playlistId)).toEqual(['PLb', 'PLa']);
+        expect(res.body.playlists[0]).toMatchObject({
+            titulo: 'Beta',
+            capa: 'capa-v1',
+            origemCapa: 'primeiro_video',
+            link: 'https://www.youtube.com/playlist?list=PLb',
+            privacidade: 'privada',
+            totalVideos: 5,
+            aposRemocao: 3,
+            duplicados: 2,
+            percentualDuplicado: 40,
+            indisponiveis: 1,
+            maisRepetidos: [{ videoId: 'v1', titulo: 'Vídeo v1', copias: 3 }],
+            custoRemocao: { unidades: 100, cabeHoje: true },
+            comandos: { remover: 'DELETE /playlist/PLb/remove-duplicates?confirm=2' },
+        });
+        expect(res.body.playlists[1]).toMatchObject({ capa: 'capa-alfa', origemCapa: 'playlist', duplicados: 1 });
+        expect(res.body.resumo).toMatchObject({
+            playlistsAnalisadas: 3,
+            ignoradasComMenosDe2Itens: 2,
+            comDuplicados: 2,
+            totalDuplicados: 3,
+            custoTotalRemocao: 150,
+            custoDestaAnalise: 5, // 2 páginas de playlists + 3 playlists de 1 página
+        });
+        expect((await request(app).get('/quota')).body.usado).toBe(5);
+    });
+
+    it('com ?todas=true, mostra também as playlists sem duplicados', async () => {
+        mockMyPlaylists();
+        mockAllItems();
+
+        const res = await request(app).get('/playlist/with-duplicates?todas=true');
+
+        expect(res.body.playlists.map((p: any) => p.playlistId)).toEqual(['PLb', 'PLa', 'PLc']);
+        expect(res.body.playlists[2]).toMatchObject({ duplicados: 0, aposRemocao: 2, comandos: null });
+    });
+
+    it('se a análise não couber no saldo do dia, recusa antes de ler os itens', async () => {
+        await rebootWithQuota(4); // a lista de playlists gasta 2; ler os itens custaria mais 3
+        mockMyPlaylists();
+
+        const res = await request(app).get('/playlist/with-duplicates');
+
+        expect(res.status).toBe(429);
+        expect(res.body).toMatchObject({ erro: 'daily_budget_exhausted', custoEstimado: 3 });
+    });
+
+    it('se o Google recusar por quota no meio, devolve o que já analisou e avisa', async () => {
+        mockMyPlaylists();
+        mockItems('PLa', [{ id: 'a' }, { id: 'b' }, { id: 'a' }]);
+        nock(YOUTUBE)
+            .get('/youtube/v3/playlistItems')
+            .query((q) => q.playlistId === 'PLb')
+            .reply(403, { error: { errors: [{ reason: 'quotaExceeded' }], message: 'quota' } });
+
+        const res = await request(app).get('/playlist/with-duplicates');
+
+        expect(res.status).toBe(200);
+        expect(res.body.playlists.map((p: any) => p.playlistId)).toEqual(['PLa']);
+        expect(res.body.resumo.aviso).toContain('incompleta');
+        expect(res.body.resumo.falhas).toEqual([{ playlistId: 'PLb', titulo: 'Beta', motivo: 'quotaExceeded' }]);
+        expect((await request(app).get('/quota')).body.restante).toBe(0);
+    });
+});
