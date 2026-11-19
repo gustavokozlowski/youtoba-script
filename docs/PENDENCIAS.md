@@ -23,7 +23,7 @@ Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com 
 
 ## 3. Funcionalidades (opcionais)
 
-- [ ] **Interface com EJS (PR 4 do plano):** conectar, ver as playlists com duplicados, revisar o dry-run, marcar e remover, acompanhar o progresso. Formulários com CSRF, saída escapada, testes com Supertest. Seguir as skills de interface do `CLAUDE.md` global.
+- [ ] **Interface web** (em andamento: #16 entrada e playlists; falta revisão e remoção). Trocamos o EJS do plano por React + Vite (decisão do dono, 19/11).
 - [ ] **Validação real pela interface** na playlist de teste, antes de usar a interface em playlist real.
 - [ ] **Release v1.0.0 (PR 5):** `GET /health`, `engines` (Node ≥ 22), workflow de release por tag com changelog. Sem deploy e sem Docker (o projeto roda só localmente).
 - [ ] **Opção para limpar itens indisponíveis** ("Deleted video" / "Private video"), separada da remoção de duplicados.
@@ -43,3 +43,4 @@ Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com 
 | #11, #12 | `GET /playlist/with-duplicates` |
 | #14 | Servidor só aceita pedidos da própria máquina e da própria interface (`localOnly`, sem CORS) |
 | #15 | Base para a interface: itens com estado no job, `GET /jobs`, login volta para a interface |
+| #16 | Interface web (React + Vite): logo, entrada e lista de playlists com repetidos |
