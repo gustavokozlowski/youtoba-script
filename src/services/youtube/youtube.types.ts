@@ -95,3 +95,44 @@ export interface RemovalJob {
     backupFile: string;
     error?: string;
 }
+
+export interface PlaylistDuplicateSummary {
+    playlistId: string;
+    title: string;
+    link: string;
+    /** Capa da playlist ou, se ela não tiver, a do primeiro vídeo com imagem. */
+    cover?: string;
+    coverSource: 'playlist' | 'first_video' | 'none';
+    privacy?: string;
+    totalVideos: number;
+    afterRemoval: number;
+    duplicates: number;
+    duplicatePercent: number;
+    /** Itens "Deleted video" ou "Private video". */
+    unavailable: number;
+    mostRepeated: { videoId: string; title: string; copies: number }[];
+    /** Unidades de quota para remover os duplicados desta playlist. */
+    removalCost: number;
+}
+
+export interface DuplicatesOverview {
+    playlists: PlaylistDuplicateSummary[];
+    analyzed: number;
+    /** Playlists com menos de 2 itens: não podem ter duplicados e nem são lidas. */
+    skippedSmall: number;
+    withDuplicates: number;
+    totalDuplicates: number;
+    totalRemovalCost: number;
+    /** Unidades de quota gastas por esta análise. */
+    analysisCost: number;
+    failed: { playlistId: string; title: string; reason: string }[];
+    stoppedByQuota: boolean;
+    quotaToday: QuotaSnapshot;
+}
+
+export type DuplicatesOverviewResult =
+    | { status: 'not_connected' }
+    | { status: 'quota_exceeded' }
+    | { status: 'fetch_failed' }
+    | { status: 'budget_exhausted'; estimate: number; quota: QuotaSnapshot }
+    | ({ status: 'ok' } & DuplicatesOverview);

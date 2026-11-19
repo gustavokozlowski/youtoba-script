@@ -78,6 +78,30 @@ export class YoutubeClient {
         }
     }
 
+    /** Todas as playlists do usuário, com capa, contagem e privacidade (1 unidade a cada 50 playlists). Lança em erro. */
+    async listMyPlaylists(): Promise<Playlist[]> {
+        const playlists: Playlist[] = [];
+        let pageToken: string | undefined;
+
+        do {
+            const { data } = await this.withRetry(() =>
+                this.client.get<PlaylistsResponse>('playlists', {
+                    params: {
+                        part: 'snippet,contentDetails,status',
+                        mine: true,
+                        maxResults: PAGE_SIZE,
+                        pageToken,
+                        key: this.apiKey,
+                    },
+                }),
+            );
+            playlists.push(...data.items);
+            pageToken = data.nextPageToken;
+        } while (pageToken);
+
+        return playlists;
+    }
+
     /** Total de itens da playlist, numa única chamada (1 unidade de quota). */
     async playlistItemCount(playlistId: string): Promise<number> {
         const { data } = await this.client.get<PlaylistResponse>('playlistItems', {
