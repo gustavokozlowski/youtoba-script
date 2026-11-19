@@ -2,11 +2,11 @@
 
 O que falta para dar o projeto por encerrado, em ordem de prioridade. Atualize este arquivo no mesmo PR que resolver um item: risque o item e anote o número do PR.
 
-Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 66 testes passando.
+Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 77 testes passando.
 
 ## 1. Segurança (fazer primeiro)
 
-- [ ] **Restringir o CORS e proteger as rotas que alteram dados.** Hoje `cors()` aceita qualquer origem. Com o servidor rodando, uma página maliciosa aberta no navegador consegue chamar `localhost:3000`, ler os duplicados (inclusive o número que vai no `confirm`) e disparar `DELETE /playlist/:id/remove-duplicates`. Aceitar só a origem local e exigir um token (ou cookie de sessão + CSRF) nas rotas de escrita.
+- [x] ~~**Restringir o CORS e proteger as rotas que alteram dados.**~~ (#14) Sem `cors()`; o middleware `localOnly` aceita só Host local (barra DNS rebinding), exige `Origin` igual ao Host em POST/DELETE e recusa pedidos `Sec-Fetch-Site: cross-site` (exceto a volta do login e a página inicial). Escolhemos conferir o `Origin` em vez de um token: os navegadores sempre mandam esse header em escritas de outro site, e o curl continua funcionando sem passo extra.
 - [ ] **Excluir o cliente OAuth antigo no Google Cloud** (ação manual do dono da conta). O `client_secret` dele está no histórico público do git (commit `2113866`). Já existe um cliente novo em uso.
 - [ ] **`state` + PKCE no login** (`/auth/login` e callback), com `express-session`. Protege contra CSRF de login.
 - [ ] **`helmet`, rate limit em `/auth` e limite de tamanho do body.**
@@ -41,3 +41,4 @@ Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com 
 | #9 | Dry-run, confirmação, backup, restauração, páginas de 50; tipos em `*.types.ts` |
 | #10 | Quota diária contada; remoção em segundo plano com progresso |
 | #11, #12 | `GET /playlist/with-duplicates` |
+| #14 | Servidor só aceita pedidos da própria máquina e da própria interface (`localOnly`, sem CORS) |
