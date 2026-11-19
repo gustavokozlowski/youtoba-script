@@ -1,0 +1,852 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-19T15:39:25.099Z",
+  "title": "Design System: youtoba",
+  "extensions": {
+    "colorMeta": {
+      "bg": {
+        "role": "neutral",
+        "displayName": "Concreto",
+        "canonical": "#ecebe6",
+        "oklch": "oklch(93.9% 0.007 97.4)",
+        "cssVar": "--bg",
+        "theme": "light",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#252523",
+          "#43423f",
+          "#62615d",
+          "#83827e",
+          "#a6a5a2",
+          "#cac9c6",
+          "#efeeed"
+        ]
+      },
+      "bg-dark": {
+        "role": "neutral",
+        "displayName": "Asfalto",
+        "canonical": "#0e0f13",
+        "oklch": "oklch(16.9% 0.008 274.4)",
+        "cssVar": "--bg",
+        "theme": "dark",
+        "tonalRamp": [
+          "#0b0b0c",
+          "#242527",
+          "#414245",
+          "#606166",
+          "#818287",
+          "#a4a5a9",
+          "#c8c9cc",
+          "#eeeef0"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Superfície",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100.0% 0.000 0)",
+        "cssVar": "--surface",
+        "theme": "light",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "surface-dark": {
+        "role": "neutral",
+        "displayName": "Superfície (asfalto)",
+        "canonical": "#16171d",
+        "oklch": "oklch(20.6% 0.012 277.8)",
+        "cssVar": "--surface",
+        "theme": "dark",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#242528",
+          "#414247",
+          "#5f6168",
+          "#808289",
+          "#a3a5ab",
+          "#c8c9cd",
+          "#eeeef1"
+        ]
+      },
+      "surface-2": {
+        "role": "neutral",
+        "displayName": "Superfície Rebaixada",
+        "canonical": "#f4f3ef",
+        "oklch": "oklch(96.4% 0.005 95.1)",
+        "cssVar": "--surface-2",
+        "theme": "light",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#252523",
+          "#424240",
+          "#62615e",
+          "#83827f",
+          "#a6a5a2",
+          "#cac9c7",
+          "#efeeed"
+        ]
+      },
+      "surface-2-dark": {
+        "role": "neutral",
+        "displayName": "Superfície Rebaixada (asfalto)",
+        "canonical": "#1d1f27",
+        "oklch": "oklch(24.1% 0.016 274.1)",
+        "cssVar": "--surface-2",
+        "theme": "dark",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#242529",
+          "#404248",
+          "#5e616a",
+          "#7f828b",
+          "#a3a5ac",
+          "#c7c9cf",
+          "#edeef2"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Fio",
+        "canonical": "#d6d4cc",
+        "oklch": "oklch(86.9% 0.011 95.2)",
+        "cssVar": "--line",
+        "theme": "light",
+        "tonalRamp": [
+          "#0c0b09",
+          "#262522",
+          "#43423d",
+          "#63615b",
+          "#84827c",
+          "#a6a59f",
+          "#cac9c5",
+          "#efeeec"
+        ]
+      },
+      "line-dark": {
+        "role": "neutral",
+        "displayName": "Fio (asfalto)",
+        "canonical": "#2a2c36",
+        "oklch": "oklch(29.5% 0.018 276.3)",
+        "cssVar": "--line",
+        "theme": "dark",
+        "tonalRamp": [
+          "#0a0b0e",
+          "#24252a",
+          "#404149",
+          "#5e616b",
+          "#7f828d",
+          "#a3a4ae",
+          "#c7c9d0",
+          "#edeef3"
+        ]
+      },
+      "fg": {
+        "role": "neutral",
+        "displayName": "Tinta",
+        "canonical": "#131318",
+        "oklch": "oklch(18.9% 0.010 285.4)",
+        "cssVar": "--fg",
+        "theme": "light",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#252528",
+          "#414146",
+          "#606166",
+          "#818288",
+          "#a4a4a9",
+          "#c9c9cd",
+          "#eeeef1"
+        ]
+      },
+      "fg-dark": {
+        "role": "neutral",
+        "displayName": "Tinta (asfalto)",
+        "canonical": "#f2f0ea",
+        "oklch": "oklch(95.5% 0.008 91.5)",
+        "cssVar": "--fg",
+        "theme": "dark",
+        "tonalRamp": [
+          "#0c0b0a",
+          "#262523",
+          "#43423e",
+          "#63615c",
+          "#84827d",
+          "#a6a5a1",
+          "#cac9c6",
+          "#efeeec"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Tinta Apagada",
+        "canonical": "#5c5d68",
+        "oklch": "oklch(48.1% 0.018 281.6)",
+        "cssVar": "--muted",
+        "theme": "light",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#24252a",
+          "#414149",
+          "#5f606a",
+          "#80818c",
+          "#a3a4ad",
+          "#c8c8cf",
+          "#eeeef3"
+        ]
+      },
+      "muted-dark": {
+        "role": "neutral",
+        "displayName": "Tinta Apagada (asfalto)",
+        "canonical": "#a2a4b0",
+        "oklch": "oklch(72.1% 0.017 278.4)",
+        "cssVar": "--muted",
+        "theme": "dark",
+        "tonalRamp": [
+          "#0a0b0e",
+          "#24252a",
+          "#404149",
+          "#5f606a",
+          "#80828c",
+          "#a3a4ad",
+          "#c7c9cf",
+          "#edeef3"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Rosa de Spray",
+        "canonical": "#c70f62",
+        "oklch": "oklch(53.9% 0.211 3.2)",
+        "cssVar": "--accent",
+        "theme": "light",
+        "tonalRamp": [
+          "#1e0009",
+          "#4a0120",
+          "#7c003a",
+          "#b00f56",
+          "#d84177",
+          "#f1789b",
+          "#feafc3",
+          "#ffe8ed"
+        ]
+      },
+      "accent-dark": {
+        "role": "primary",
+        "displayName": "Rosa de Spray (asfalto)",
+        "canonical": "#ff3d93",
+        "oklch": "oklch(67.5% 0.236 359.2)",
+        "cssVar": "--accent",
+        "theme": "dark",
+        "tonalRamp": [
+          "#1d000a",
+          "#490124",
+          "#7b0040",
+          "#b1015e",
+          "#de327f",
+          "#f771a2",
+          "#ffaec7",
+          "#ffe8ee"
+        ]
+      },
+      "accent-hover": {
+        "role": "primary",
+        "displayName": "Rosa de Spray Fundo",
+        "canonical": "#a90c53",
+        "oklch": "oklch(47.8% 0.187 2.9)",
+        "cssVar": "--accent-hover",
+        "theme": "light",
+        "tonalRamp": [
+          "#1e0009",
+          "#480420",
+          "#77143b",
+          "#a82658",
+          "#d04d79",
+          "#e97f9d",
+          "#ffafc3",
+          "#fee8ed"
+        ]
+      },
+      "accent-hover-dark": {
+        "role": "primary",
+        "displayName": "Rosa de Spray Fundo (asfalto)",
+        "canonical": "#ff62a8",
+        "oklch": "oklch(71.6% 0.201 355.7)",
+        "cssVar": "--accent-hover",
+        "theme": "dark",
+        "tonalRamp": [
+          "#1d000c",
+          "#490027",
+          "#770c45",
+          "#a91d65",
+          "#d14786",
+          "#eb7ba8",
+          "#ffadcc",
+          "#fee8ef"
+        ]
+      },
+      "accent-fg": {
+        "role": "primary",
+        "displayName": "Tinta sobre Rosa",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100.0% 0.000 0)",
+        "cssVar": "--accent-fg",
+        "theme": "light",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "accent-fg-dark": {
+        "role": "primary",
+        "displayName": "Tinta sobre Rosa (asfalto)",
+        "canonical": "#14060d",
+        "oklch": "oklch(14.9% 0.030 348.8)",
+        "cssVar": "--accent-fg",
+        "theme": "dark",
+        "tonalRamp": [
+          "#0f090c",
+          "#2b2226",
+          "#4b3e44",
+          "#6e5b64",
+          "#8f7c85",
+          "#b0a0a7",
+          "#d2c5cb",
+          "#f4ecef"
+        ]
+      },
+      "spray": {
+        "role": "primary",
+        "displayName": "Jato",
+        "canonical": "#e4167a",
+        "oklch": "oklch(60.1% 0.235 0.2)",
+        "cssVar": "--spray",
+        "theme": "light",
+        "tonalRamp": [
+          "#1e000a",
+          "#490123",
+          "#7c003e",
+          "#b1015c",
+          "#df327d",
+          "#f771a0",
+          "#ffafc6",
+          "#ffe8ee"
+        ]
+      },
+      "spray-dark": {
+        "role": "primary",
+        "displayName": "Jato (asfalto)",
+        "canonical": "#ff3d93",
+        "oklch": "oklch(67.5% 0.236 359.2)",
+        "cssVar": "--spray",
+        "theme": "dark",
+        "tonalRamp": [
+          "#1d000a",
+          "#490124",
+          "#7b0040",
+          "#b1015e",
+          "#de327f",
+          "#f771a2",
+          "#ffaec7",
+          "#ffe8ee"
+        ]
+      },
+      "ok": {
+        "role": "status",
+        "displayName": "Verde Cabe",
+        "canonical": "#157a4c",
+        "oklch": "oklch(51.3% 0.114 157.3)",
+        "cssVar": "--ok",
+        "theme": "light",
+        "tonalRamp": [
+          "#000f06",
+          "#012e19",
+          "#0d4f30",
+          "#1d7249",
+          "#459569",
+          "#78b591",
+          "#a9d6ba",
+          "#daf7e4"
+        ]
+      },
+      "ok-dark": {
+        "role": "status",
+        "displayName": "Verde Cabe (asfalto)",
+        "canonical": "#43d69b",
+        "oklch": "oklch(78.4% 0.151 162.2)",
+        "cssVar": "--ok",
+        "theme": "dark",
+        "tonalRamp": [
+          "#000f07",
+          "#012d1c",
+          "#004f34",
+          "#04734e",
+          "#019a6a",
+          "#5eba90",
+          "#99dab9",
+          "#d0fae4"
+        ]
+      },
+      "warn": {
+        "role": "status",
+        "displayName": "Âmbar Cota",
+        "canonical": "#7a4f00",
+        "oklch": "oklch(46.4% 0.099 73.2)",
+        "cssVar": "--warn",
+        "theme": "light",
+        "tonalRamp": [
+          "#130900",
+          "#342003",
+          "#593b0e",
+          "#80581e",
+          "#a37a41",
+          "#c19f73",
+          "#dfc5a4",
+          "#fdecd6"
+        ]
+      },
+      "warn-dark": {
+        "role": "status",
+        "displayName": "Âmbar Cota (asfalto)",
+        "canonical": "#ffc83d",
+        "oklch": "oklch(85.9% 0.158 85.8)",
+        "cssVar": "--warn",
+        "theme": "dark",
+        "tonalRamp": [
+          "#110a00",
+          "#302301",
+          "#543e02",
+          "#7a5c04",
+          "#a37c03",
+          "#c59f48",
+          "#e2c689",
+          "#ffedc6"
+        ]
+      },
+      "warn-soft": {
+        "role": "status",
+        "displayName": "Âmbar Cota Suave",
+        "canonical": "#ffc83d33",
+        "oklch": "oklch(85.9% 0.158 85.8)",
+        "cssVar": "--warn-soft",
+        "theme": "light",
+        "tonalRamp": [
+          "#110a00",
+          "#302301",
+          "#543e02",
+          "#7a5c04",
+          "#a37c03",
+          "#c59f48",
+          "#e2c689",
+          "#ffedc6"
+        ],
+        "alpha": 0.2
+      },
+      "warn-soft-dark": {
+        "role": "status",
+        "displayName": "Âmbar Cota Suave (asfalto)",
+        "canonical": "#ffc83d1f",
+        "oklch": "oklch(85.9% 0.158 85.8)",
+        "cssVar": "--warn-soft",
+        "theme": "dark",
+        "tonalRamp": [
+          "#110a00",
+          "#302301",
+          "#543e02",
+          "#7a5c04",
+          "#a37c03",
+          "#c59f48",
+          "#e2c689",
+          "#ffedc6"
+        ],
+        "alpha": 0.12156862745098039
+      },
+      "danger": {
+        "role": "status",
+        "displayName": "Vermelho Erro",
+        "canonical": "#b3261e",
+        "oklch": "oklch(50.1% 0.178 28.7)",
+        "cssVar": "--danger",
+        "theme": "light",
+        "tonalRamp": [
+          "#1f0000",
+          "#490806",
+          "#781b14",
+          "#aa2e25",
+          "#d15447",
+          "#eb8476",
+          "#feb3a8",
+          "#ffe9e5"
+        ]
+      },
+      "danger-dark": {
+        "role": "status",
+        "displayName": "Vermelho Erro (asfalto)",
+        "canonical": "#ff6b6b",
+        "oklch": "oklch(71.2% 0.181 22.8)",
+        "cssVar": "--danger",
+        "theme": "dark",
+        "tonalRamp": [
+          "#1f0002",
+          "#4a060c",
+          "#79181e",
+          "#ab2a32",
+          "#d35152",
+          "#ec827e",
+          "#feb3ae",
+          "#fee9e7"
+        ]
+      },
+      "danger-soft": {
+        "role": "status",
+        "displayName": "Vermelho Erro Suave",
+        "canonical": "#b3261e14",
+        "oklch": "oklch(50.1% 0.178 28.7)",
+        "cssVar": "--danger-soft",
+        "theme": "light",
+        "tonalRamp": [
+          "#1f0000",
+          "#490806",
+          "#781b14",
+          "#aa2e25",
+          "#d15447",
+          "#eb8476",
+          "#feb3a8",
+          "#ffe9e5"
+        ],
+        "alpha": 0.0784313725490196
+      },
+      "danger-soft-dark": {
+        "role": "status",
+        "displayName": "Vermelho Erro Suave (asfalto)",
+        "canonical": "#ff6b6b1a",
+        "oklch": "oklch(71.2% 0.181 22.8)",
+        "cssVar": "--danger-soft",
+        "theme": "dark",
+        "tonalRamp": [
+          "#1f0002",
+          "#4a060c",
+          "#79181e",
+          "#ab2a32",
+          "#d35152",
+          "#ec827e",
+          "#feb3ae",
+          "#fee9e7"
+        ],
+        "alpha": 0.10196078431372549
+      }
+    },
+    "logoPalette": {
+      "source": "web/scripts/build-logo.cjs (COLORS)",
+      "note": "Só no logo e no favicon; não é token de CSS. Regenerar com `npm run build:logo`, nunca editar o SVG à mão.",
+      "fill": [
+        "#FFF25A",
+        "#FFB321",
+        "#FF6B2C",
+        "#FF2E88"
+      ],
+      "cut": "#FFFFFF",
+      "side": "#3B0F5C",
+      "line": "#0E0716",
+      "font": "Knewave Regular (OFL), web/scripts/fonts/"
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "O contador \"ainda faltam\" da Remoção. Um por tela, no máximo."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "h1 de cada tela, caixa-alta; 38px até 720px; clamp(40px, 4.6vw, 64px) no Entrar.",
+        "textTransform": "uppercase"
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "h2 de painel e seção, caixa-alta; 40px no estado vazio.",
+        "textTransform": "uppercase"
+      },
+      "numeral": {
+        "displayName": "Numeral",
+        "purpose": "Trio da Revisão (44px no celular); 40px no resumo das Playlists e no \"depois\"."
+      },
+      "numeral-row": {
+        "displayName": "Numeral de linha",
+        "purpose": "Posição do vídeo, repetidos (28px/900), cota (22px), job (24px), campo de confirmação (28px)."
+      },
+      "row-title": {
+        "displayName": "Row title",
+        "purpose": "Título de playlist. Título de vídeo é Geist 600 a 15px."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Texto corrido; .lead limita a 62ch e sobe para 18px no Entrar."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Rótulo sob número, metadado, custo, carimbo de hora (12–13px, muted)."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Estado do item na Remoção (apagado, agora, na fila, falhou), caixa-alta.",
+        "textTransform": "uppercase"
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Comando de restauração copiável."
+      }
+    },
+    "shadows": [
+      {
+        "name": "panel",
+        "value": "0 12px 32px -18px rgb(0 0 0 / 0.35)",
+        "purpose": "Painel lateral de ação, só no turno claro. No escuro vira none e entra --panel-border: var(--line)."
+      },
+      {
+        "name": "pulse",
+        "value": "0 0 0 0 color-mix(in srgb, var(--spray) 60%, transparent) → 0 0 0 12px transparent",
+        "purpose": "Ponto do item sendo apagado agora; animação de 1.2s ease-out infinita."
+      },
+      {
+        "name": "focus-ring",
+        "value": "outline: 3px solid var(--accent); outline-offset: 2px",
+        "purpose": "Foco visível global (1px de afastamento em campos com focus-within)."
+      }
+    ],
+    "texture": {
+      "name": "noise",
+      "value": "SVG feTurbulence fractalNoise baseFrequency .9, 3 oitavas, 180px, fixo sobre a página",
+      "opacity": {
+        "light": 0.05,
+        "dark": 0.07
+      },
+      "purpose": "Asfalto/concreto vetorial. Não há textura raster."
+    },
+    "motion": [
+      {
+        "name": "button",
+        "value": "150ms ease-out",
+        "purpose": "Fundo e translateY(1px) ao apertar."
+      },
+      {
+        "name": "spray-draw",
+        "value": "550ms cubic-bezier(0.2, 0.8, 0.2, 1)",
+        "purpose": "Risco de spray, uma vez por item recém-apagado; névoa 50ms depois."
+      },
+      {
+        "name": "progress",
+        "value": "400ms cubic-bezier(0.2, 0.8, 0.2, 1)",
+        "purpose": "Largura da barra de progresso da remoção."
+      },
+      {
+        "name": "pulse",
+        "value": "1.2s ease-out infinite",
+        "purpose": "Ponto do item em andamento."
+      },
+      {
+        "name": "spin",
+        "value": "0.9s linear infinite",
+        "purpose": "Ícone de carregando."
+      },
+      {
+        "name": "shimmer",
+        "value": "1.4s ease-in-out infinite",
+        "purpose": "Esqueleto de carregamento."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "@media (prefers-reduced-motion: no-preference)",
+        "purpose": "Todo movimento fica dentro dessa condição; sem ela, tudo aparece pronto."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "row-grid",
+        "value": "1020px",
+        "purpose": "Linhas de playlist em três áreas; painel lateral empilha e deixa de ser sticky."
+      },
+      {
+        "name": "wall",
+        "value": "900px",
+        "purpose": "Entrar vira uma coluna."
+      },
+      {
+        "name": "phone",
+        "value": "720px",
+        "purpose": "Topo em duas linhas, miniatura da linha some, tipos menores."
+      }
+    ],
+    "layout": {
+      "container": "1240px",
+      "gutter": "max(16px, env(safe-area-inset-left/right))",
+      "topBar": "68px sticky",
+      "sidePanel": "360px, sticky a 92px"
+    }
+  },
+  "components": [
+    {
+      "name": "Botão principal",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "A ação que remove ou leva a remover (Revisar, Remover). Uma por região.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Revisar</button>",
+      "css": ".ds-btn { font-family: var(--ui); font-size: 15px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 0 18px; border-radius: var(--radius); border: 1px solid transparent; cursor: pointer; white-space: nowrap; transition: transform 0.15s ease-out, background-color 0.15s ease-out; } .ds-btn:active { transform: translateY(1px); } .ds-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; } .ds-btn-primary { background: var(--accent); color: var(--accent-fg); } .ds-btn-primary:hover { background: var(--accent-hover); }"
+    },
+    {
+      "name": "Botão fantasma",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Ações secundárias: Analisar de novo, Sair, Copiar comando. O custo vai num small.",
+      "html": "<button class=\"ds-btn ds-btn-ghost\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" aria-hidden=\"true\" style=\"width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round\"><path d=\"M21 12a9 9 0 1 1-3-6.7L21 8 M21 3v5h-5\"/></svg>Analisar de novo <small>~14 un.</small></button>",
+      "css": ".ds-btn { font-family: var(--ui); font-size: 15px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 0 18px; border-radius: var(--radius); border: 1px solid transparent; cursor: pointer; white-space: nowrap; transition: transform 0.15s ease-out, background-color 0.15s ease-out; } .ds-btn:active { transform: translateY(1px); } .ds-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; } .ds-btn small { font-weight: 500; opacity: 0.75; } .ds-btn-ghost { background: transparent; color: var(--fg); border-color: var(--line); } .ds-btn-ghost:hover { background: var(--surface-2); }"
+    },
+    {
+      "name": "Botão de tinta (Google)",
+      "kind": "button",
+      "refersTo": "button-ink",
+      "description": "Só o Entrar com o Google, na tela Entrar.",
+      "html": "<a class=\"ds-btn ds-btn-ink\" href=\"#\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" aria-hidden=\"true\" style=\"width:18px;height:18px;flex:none;fill:currentColor;stroke:none\"><path d=\"M20.6 12.2c0-.6-.1-1.2-.2-1.8H12v3.4h4.8a4.1 4.1 0 0 1-1.8 2.7v2.2h2.9c1.7-1.6 2.7-3.9 2.7-6.5z M12 21c2.4 0 4.5-.8 6-2.2l-2.9-2.2c-.8.5-1.8.9-3.1.9-2.4 0-4.4-1.6-5.1-3.8H3.9v2.3A9 9 0 0 0 12 21z M6.9 13.7a5.4 5.4 0 0 1 0-3.4V8H3.9a9 9 0 0 0 0 8z M12 6.6c1.3 0 2.5.5 3.5 1.4l2.6-2.6A9 9 0 0 0 3.9 8l3 2.3C7.6 8.2 9.6 6.6 12 6.6z\"/></svg>Entrar com o Google</a>",
+      "css": ".ds-btn { font-family: var(--ui); font-size: 15px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 0 18px; border-radius: var(--radius); border: 1px solid transparent; cursor: pointer; white-space: nowrap; transition: transform 0.15s ease-out, background-color 0.15s ease-out; text-decoration: none; } .ds-btn:active { transform: translateY(1px); } .ds-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; } .ds-btn-ink { background: var(--fg); color: var(--bg); min-height: 52px; padding: 0 22px; font-size: 16px; } .ds-btn-ink:hover { background: color-mix(in srgb, var(--fg) 85%, var(--bg)); }"
+    },
+    {
+      "name": "Barra de topo",
+      "kind": "nav",
+      "refersTo": "nav-link",
+      "description": "Navegação Playlists/Remoções em cápsula e a cota do dia com medidor.",
+      "html": "<nav class=\"ds-top\" aria-label=\"Principal\"><a href=\"#\" aria-current=\"page\">Playlists</a><a href=\"#\">Remoções</a><div class=\"ds-quota\"><span>Cota hoje</span><strong>9.830</strong><span class=\"ds-meter\"><i style=\"width:98%\"></i></span><span>zera 05:00</span></div></nav>",
+      "css": ".ds-top { display: flex; align-items: center; gap: 4px; min-height: 68px; border-bottom: 1px solid var(--line); font-family: var(--ui); } .ds-top a { text-decoration: none; font-weight: 600; min-height: 44px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 999px; color: var(--muted); } .ds-top a:hover { color: var(--fg); } .ds-top a[aria-current=\"page\"] { color: var(--fg); background: var(--surface-2); } .ds-top a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; } .ds-quota { margin-left: auto; display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); } .ds-quota strong { color: var(--fg); font-family: var(--display); font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; } .ds-meter { width: 96px; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; } .ds-meter i { display: block; height: 100%; background: var(--fg); border-radius: 3px; }"
+    },
+    {
+      "name": "Pílulas de estado",
+      "kind": "chip",
+      "refersTo": "pill-ok",
+      "description": "Informativas, nunca clicáveis: cabe hoje, dias de cota, removendo, falhou.",
+      "html": "<span class=\"ds-pill ds-pill-ok\">cabe hoje</span> <span class=\"ds-pill ds-pill-warn\">2 dias de cota</span> <span class=\"ds-pill ds-pill-live\">removendo</span> <span class=\"ds-pill ds-pill-error\">falhou</span>",
+      "css": ".ds-pill { display: inline-flex; align-items: center; gap: 6px; font-family: var(--ui); font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; } .ds-pill-ok { color: var(--ok); background: color-mix(in srgb, var(--ok) 14%, transparent); } .ds-pill-warn { color: var(--warn); background: var(--warn-soft); } .ds-pill-live { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); } .ds-pill-error { color: var(--danger); background: var(--danger-soft); }"
+    },
+    {
+      "name": "Campo de confirmação",
+      "kind": "input",
+      "refersTo": "input-confirm",
+      "description": "Digitar o número exato de repetidos para liberar a remoção.",
+      "html": "<form class=\"ds-confirm\"><label for=\"ds-n\">Digite 75 para confirmar</label><input id=\"ds-n\" inputmode=\"numeric\" placeholder=\"75\" autocomplete=\"off\"><p class=\"ds-hint\">É o número de cópias que saem.</p><button type=\"button\" class=\"ds-go\">Remover 75 repetidos</button></form>",
+      "css": ".ds-confirm { display: grid; gap: 6px; font-family: var(--ui); } .ds-confirm label { font-size: 13px; font-weight: 600; } .ds-confirm input { caret-color: var(--accent); font-family: var(--display); font-size: 28px; font-weight: 800; letter-spacing: 0.04em; min-height: 52px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface-2); color: var(--fg); padding: 0 14px; } .ds-confirm input::placeholder { color: var(--muted); opacity: 0.6; } .ds-confirm input:focus { outline: 3px solid var(--accent); outline-offset: 1px; } .ds-hint { margin: 0 0 10px; font-size: 12px; color: var(--muted); } .ds-go { font: inherit; font-weight: 600; min-height: 52px; font-size: 16px; border: 0; border-radius: var(--radius); background: var(--accent); color: var(--accent-fg); cursor: pointer; transition: background-color 0.15s ease-out; } .ds-go:hover { background: var(--accent-hover); } .ds-go:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }"
+    },
+    {
+      "name": "Busca",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "Filtro da lista de repetidos na Revisão.",
+      "html": "<label class=\"ds-search\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" aria-hidden=\"true\" style=\"width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round\"><path d=\"M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14z M20 20l-3.5-3.5\"/></svg><input placeholder=\"Buscar nos repetidos\"></label>",
+      "css": ".ds-search { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 0 12px; min-height: 44px; width: min(360px, 100%); color: var(--muted); } .ds-search input { caret-color: var(--accent); font: 15px var(--ui); border: 0; background: transparent; color: var(--fg); outline: 0; width: 100%; min-width: 0; } .ds-search:focus-within { outline: 3px solid var(--accent); outline-offset: 1px; }"
+    },
+    {
+      "name": "Painel lateral de ação",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "O único contêiner elevado: custo, saldo, cabe hoje e a confirmação.",
+      "html": "<aside class=\"ds-panel\"><h2>Remover repetidos</h2><dl><div><dt>Custo</dt><dd>3.750 un.</dd></div><div><dt>Saldo hoje</dt><dd>9.830 un.</dd></div><div><dt>Cabe hoje</dt><dd class=\"ds-yes\">sim, tudo</dd></div></dl><hr><p class=\"ds-note\">A playlist inteira é salva antes de apagar.</p></aside>",
+      "css": ".ds-panel { display: grid; gap: 16px; background: var(--surface); border: 1px solid var(--panel-border); border-radius: 14px; padding: 22px; box-shadow: var(--shadow); font-family: var(--ui); color: var(--fg); max-width: 360px; } .ds-panel h2 { font-family: var(--display); font-weight: 800; font-size: 26px; line-height: 1; text-transform: uppercase; margin: 0; } .ds-panel dl { margin: 0; display: grid; gap: 8px; } .ds-panel dl div { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; } .ds-panel dt { color: var(--muted); } .ds-panel dd { margin: 0; font-weight: 600; } .ds-yes { color: var(--ok); } .ds-panel hr { border: 0; border-top: 1px solid var(--line); margin: 0; } .ds-note { margin: 0; font-size: 13px; color: var(--muted); }"
+    },
+    {
+      "name": "Linha antes → depois",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Playlists: antes cortado, depois grande, barra fica/sai e repetidos em rosa.",
+      "html": "<div class=\"ds-ba-row\"><div><div class=\"ds-ba\"><span class=\"ds-from\">338</span><span class=\"ds-to\">263</span><small>vídeos</small></div><div class=\"ds-bar\"><i style=\"width:78%\"></i><b style=\"width:22%\"></b></div></div><div class=\"ds-dup\">75<span>repetidos · 22,2%</span></div></div>",
+      "css": ".ds-ba-row { display: flex; gap: 24px; align-items: center; font-family: var(--ui); color: var(--fg); } .ds-ba { display: flex; align-items: baseline; gap: 10px; font-family: var(--display); font-weight: 800; font-variant-numeric: tabular-nums; } .ds-from { font-size: 24px; color: var(--muted); text-decoration: line-through; text-decoration-color: var(--spray); text-decoration-thickness: 2px; } .ds-to { font-size: 40px; line-height: 1; } .ds-ba small { font-family: var(--ui); font-size: 12px; font-weight: 500; color: var(--muted); } .ds-bar { display: flex; width: 210px; height: 6px; margin-top: 8px; border-radius: 3px; overflow: hidden; background: var(--line); } .ds-bar i { display: block; background: var(--fg); opacity: 0.55; } .ds-bar b { display: block; background: var(--spray); } .ds-dup { font-family: var(--display); font-size: 28px; font-weight: 900; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; } .ds-dup span { display: block; font-family: var(--ui); font-size: 12px; font-weight: 500; color: var(--muted); }"
+    },
+    {
+      "name": "Risco de spray",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Assinatura: o risco desenhado uma vez sobre cada vídeo apagado, com o estado em rosa.",
+      "html": "<svg width=\"0\" height=\"0\" style=\"position:absolute\" aria-hidden=\"true\"><filter id=\"spray\" x=\"-5%\" y=\"-60%\" width=\"110%\" height=\"220%\"><feTurbulence type=\"fractalNoise\" baseFrequency=\"1.4\" numOctaves=\"2\" result=\"noise\"/><feDisplacementMap in=\"SourceGraphic\" in2=\"noise\" scale=\"5\"/><feGaussianBlur stdDeviation=\"0.5\"/></filter><filter id=\"overspray\" x=\"-5%\" y=\"-150%\" width=\"110%\" height=\"400%\"><feGaussianBlur stdDeviation=\"3\"/></filter><linearGradient id=\"spray-taper-fade\" x1=\"0\" x2=\"1\" y1=\"0\" y2=\"0\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\"0.15\"/><stop offset=\"0.07\" stop-color=\"#fff\" stop-opacity=\"1\"/><stop offset=\"0.9\" stop-color=\"#fff\" stop-opacity=\"1\"/><stop offset=\"1\" stop-color=\"#fff\" stop-opacity=\"0.2\"/></linearGradient><mask id=\"spray-taper\" maskContentUnits=\"objectBoundingBox\"><rect width=\"1\" height=\"1\" fill=\"url(#spray-taper-fade)\"/></mask></svg><ul class=\"ds-tracks\"><li class=\"ds-track ds-gone\"><span class=\"ds-pos\">#206</span><span class=\"ds-text\"><b>Triunfo</b><span>Emicida</span></span><span class=\"ds-state\">apagado</span><svg class=\"ds-strike\" viewBox=\"0 0 620 26\" preserveAspectRatio=\"none\" aria-hidden=\"true\" style=\"rotate:-1.2deg\"><path class=\"ds-over\" d=\"M12 16 C 125 10, 300 20, 520 10 q 12 -2 18 -7\"/><path class=\"ds-core\" d=\"M12 16 C 125 10, 300 20, 520 10 q 12 -2 18 -7\"/></svg></li><li class=\"ds-track\"><span class=\"ds-pos\">#213</span><span class=\"ds-text\"><b>Senhor Tempo Bom</b><span>Thaíde &amp; DJ Hum</span></span><span class=\"ds-state ds-now\">agora</span></li></ul>",
+      "css": ".ds-tracks { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); font-family: var(--ui); color: var(--fg); } .ds-track { position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 16px; align-items: center; padding-block: 12px; border-bottom: 1px solid var(--line); } .ds-pos { font-family: var(--display); font-size: 26px; font-weight: 800; color: var(--muted); } .ds-text { display: grid; } .ds-text b { font-weight: 600; } .ds-text span { font-size: 13px; color: var(--muted); } .ds-gone .ds-text { opacity: 0.55; } .ds-state { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); } .ds-gone .ds-state { color: var(--accent); } .ds-now { color: var(--fg); } .ds-strike { position: absolute; left: 70px; width: calc(100% - 166px); top: 50%; height: 26px; translate: 0 -50%; pointer-events: none; overflow: visible; } .ds-strike path { fill: none; stroke: var(--spray); stroke-linecap: round; stroke-dasharray: 1300; stroke-dashoffset: 0; } .ds-core { stroke-width: 7; filter: url(#spray); mask: url(#spray-taper); } .ds-over { stroke-width: 16; opacity: 0.25; filter: url(#overspray); } @media (prefers-reduced-motion: no-preference) { .ds-strike path { animation: ds-spray 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; } .ds-over { animation-delay: 0.05s; } } @keyframes ds-spray { from { stroke-dashoffset: 1300; } to { stroke-dashoffset: 0; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "A Peça e o Risco",
+    "overview": "O youtoba é uma ferramenta de faxina que fala a língua da rua sem virar fantasia. Uma peça de grafite assina o app (o logo) e um risco de spray marca cada vídeo que saiu. Todo o resto é operacional e contido: listas em fio de 1 px, números grandes em caixa-alta condensada, um painel lateral de ação e texto de interface em Geist. A rua aparece em três lugares e só neles: o logo, a névoa de spray da tela de entrada e o risco sobre o que foi apagado.\n\nO mundo tem dois turnos. De noite é asfalto (fundo quase preto com ruído leve); de dia é concreto (cinza-quente claro com o mesmo ruído, mais fraco). O tema segue `prefers-color-scheme`; não há alternador. Os dois turnos têm os mesmos papéis de cor, só mudam os valores.\n\nA densidade é de ferramenta de trabalho: a pessoa precisa ler quantos vídeos saem, quantos ficam, quanto custa na cota e se cabe hoje. Os números carregam a hierarquia; o rosa aparece só no que sai e na ação principal. O direction contract recusa o painel SaaS de cards com capa e botão roxo, e o build segue isso: as playlists e os vídeos são linhas, não cards.",
+    "keyCharacteristics": [
+      "Asfalto à noite e concreto de dia, com textura de ruído vetorial bem leve por cima de tudo.",
+      "Rosa de spray só no que sai (repetidos, risco, progresso da remoção) e na ação principal.",
+      "Títulos e números em Big Shoulders Display caixa-alta; interface em Geist.",
+      "Listas em fio de 1 px, sem card por item.",
+      "Um único gesto de assinatura: o risco de spray desenhado uma vez por vídeo apagado.",
+      "Movimento curto (150 a 550 ms), ease-out, só sem `prefers-reduced-motion`."
+    ],
+    "rules": [
+      {
+        "name": "The Spray Marca o Que Sai Rule",
+        "body": "O rosa só aparece no que vai sair ou saiu e na ação que faz isso acontecer (mais o anel de foco). Um número rosa numa tela significa \"isto vai ser apagado\"; não use rosa para decorar, destacar seção ou enfeitar vazio.",
+        "section": "colors"
+      },
+      {
+        "name": "The Não É o YouTube Rule",
+        "body": "O vermelho, o logo e a marca do YouTube nunca são identidade. O vermelho do sistema (`danger`) é só erro.",
+        "section": "colors"
+      },
+      {
+        "name": "The Calor Mora no Logo Rule",
+        "body": "Amarelo, laranja e roxo pertencem ao logo. A interface fica em neutros, rosa e as três cores de estado.",
+        "section": "colors"
+      },
+      {
+        "name": "The Números Gritam Rule",
+        "body": "Toda quantidade que decide a ação (repetidos, saem, ficam, faltam, cota) é display com algarismos tabulares (`.num`), com um rótulo curto em Geist `muted` logo abaixo ou ao lado.",
+        "section": "typography"
+      },
+      {
+        "name": "The Duas Vozes Rule",
+        "body": "Big Shoulders só em títulos e números. Botões, navegação, rótulos e texto corrido são Geist.",
+        "section": "typography"
+      },
+      {
+        "name": "The Fio de 1 px Rule",
+        "body": "Listas são linhas separadas por um fio `line` de 1 px, com fio também no topo da lista. Nada de card, fundo alternado ou sombra por item.",
+        "section": "layout"
+      },
+      {
+        "name": "The Asfalto É Chapado Rule",
+        "body": "No escuro não existe sombra. O que precisa se separar ganha um fio `line`.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Uma Camada Rule",
+        "body": "Só o painel lateral se eleva. Avisos, linhas, campos e botões ficam no chão.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** usar `accent` só no que sai e na ação que remove; o resto da tela fica em neutros.",
+      "**Do** escrever toda quantidade decisiva em Big Shoulders com `.num` (algarismos tabulares) e um rótulo curto em Geist `muted`.",
+      "**Do** separar itens de lista com um fio `line` de 1 px, com fio também no topo da lista.",
+      "**Do** manter 44 px de alvo mínimo em todo controle e o anel de foco de 3 px em `accent` com 2 px de afastamento.",
+      "**Do** pôr todo movimento dentro de `@media (prefers-reduced-motion: no-preference)`, entre 150 e 550 ms, com ease-out ou `cubic-bezier(0.2, 0.8, 0.2, 1)`.",
+      "**Do** definir cada cor nova nos dois turnos em `tokens.css`, com o fio no lugar da sombra no escuro.",
+      "**Do** regenerar o logo com `npm run build:logo` depois de mudar `web/scripts/build-logo.cjs`."
+    ],
+    "donts": [
+      "**Don't** usar o vermelho, o logo ou a marca do YouTube como identidade.",
+      "**Don't** transformar linhas de playlist ou de vídeo em cards com capa, sombra e botão.",
+      "**Don't** desenhar o risco de spray em algo que não foi apagado de fato, nem animá-lo mais de uma vez por item.",
+      "**Don't** levar amarelo, laranja ou roxo do logo para controles, textos ou fundos da interface.",
+      "**Don't** usar Big Shoulders em botões, navegação, rótulos ou texto corrido.",
+      "**Don't** pôr sombra em nada além do painel lateral, e nunca no turno escuro.",
+      "**Don't** editar `web/src/assets/logo.svg` à mão."
+    ]
+  }
+}

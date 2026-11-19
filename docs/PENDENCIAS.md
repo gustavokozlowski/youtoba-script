@@ -2,7 +2,7 @@
 
 O que falta para dar o projeto por encerrado, em ordem de prioridade. Atualize este arquivo no mesmo PR que resolver um item: risque o item e anote o número do PR.
 
-Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 80 testes passando.
+Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 113 testes passando (82 da API, 31 da interface).
 
 ## 1. Segurança (fazer primeiro)
 
@@ -23,8 +23,11 @@ Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com 
 
 ## 3. Funcionalidades (opcionais)
 
-- [ ] **Interface web** (em andamento: #16 entrada e playlists; falta revisão e remoção). Trocamos o EJS do plano por React + Vite (decisão do dono, 19/11).
-- [ ] **Validação real pela interface** na playlist de teste, antes de usar a interface em playlist real.
+- [x] ~~**Interface web**~~ (#16, #17): entrar, playlists com repetidos, revisão com confirmação pelo número exato, remoção ao vivo e lista de remoções. Trocamos o EJS do plano por React + Vite (decisão do dono, 19/11).
+- [ ] **Escolher itens um a um na revisão** (adiado pelo dono): o backend passa a aceitar a lista de `playlistItemId` escolhidos (TDD), e a revisão ganha caixas de seleção.
+- [ ] **Consolidar a escala de tipos da interface**: o `app.css` usa uns 15 tamanhos soltos (14, 16, 18, 20, 22, 24, 28, 30, 38, 40, 44 px...); juntar em poucos degraus, virar tokens e registrar no `DESIGN.md` (o detector do impeccable aponta cada um).
+- [ ] **Restaurar pela interface**: hoje a tela de remoção mostra o comando `npm run restore:playlist`; um botão que chama a restauração pelo servidor evita o terminal.
+- [ ] **Validação real pela interface** na playlist de teste, antes de usar a interface em playlist real. Em 19/11 a cota do dia já estava zerada; conferido só o estado "sem cota" com dados reais. Fazer depois das 05:00.
 - [ ] **Release v1.0.0 (PR 5):** `GET /health`, `engines` (Node ≥ 22), workflow de release por tag com changelog. Sem deploy e sem Docker (o projeto roda só localmente).
 - [ ] **Opção para limpar itens indisponíveis** ("Deleted video" / "Private video"), separada da remoção de duplicados.
 
@@ -44,3 +47,4 @@ Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com 
 | #14 | Servidor só aceita pedidos da própria máquina e da própria interface (`localOnly`, sem CORS) |
 | #15 | Base para a interface: itens com estado no job, `GET /jobs`, login volta para a interface |
 | #16 | Interface web (React + Vite): logo, entrada e lista de playlists com repetidos |
+| #17 | Interface: revisão do dry-run, remoção ao vivo com o risco de spray, lista de remoções |

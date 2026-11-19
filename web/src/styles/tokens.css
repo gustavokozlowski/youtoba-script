@@ -11,12 +11,15 @@
     --accent-hover: #a90c53;
     --accent-fg: #ffffff;
     --spray: #e4167a;
+    /* Laranja do logo, usado só na névoa de spray da entrada. */
+    --spray-warm: #ff8a1f;
     --ok: #157a4c;
     --warn: #7a4f00;
     --warn-soft: #ffc83d33;
     --danger: #b3261e;
     --danger-soft: #b3261e14;
     --shadow: 0 12px 32px -18px rgb(0 0 0 / 0.35);
+    --panel-border: transparent;
     --noise-opacity: 0.05;
 
     --display: "Big Shoulders Display", "Arial Narrow", system-ui, sans-serif;
@@ -46,7 +49,8 @@
         --warn-soft: #ffc83d1f;
         --danger: #ff6b6b;
         --danger-soft: #ff6b6b1a;
-        --shadow: 0 12px 32px -18px rgb(0 0 0 / 0.8);
+        --shadow: none;
+        --panel-border: var(--line);
         --noise-opacity: 0.07;
     }
 }

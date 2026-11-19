@@ -7,6 +7,9 @@ import { clearOverview } from './lib/overview-cache';
 import { useRoute } from './lib/router';
 import { Entrar } from './screens/Entrar';
 import { Playlists } from './screens/Playlists';
+import { Remocao } from './screens/Remocao';
+import { Remocoes } from './screens/Remocoes';
+import { Revisao } from './screens/Revisao';
 
 type Session = 'checking' | 'connected' | 'signed-out' | 'expired' | 'offline';
 
@@ -75,6 +78,12 @@ export function App() {
 
 function Screen({ route }: { route: ReturnType<typeof useRoute> }) {
     switch (route.name) {
+        case 'revisao':
+            return <Revisao key={route.playlistId} playlistId={route.playlistId} />;
+        case 'remocao':
+            return <Remocao key={route.jobId} jobId={route.jobId} />;
+        case 'remocoes':
+            return <Remocoes />;
         default:
             return <Playlists />;
     }

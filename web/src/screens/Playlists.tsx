@@ -30,9 +30,10 @@ export function Playlists() {
         }
     }, []);
 
-    // Primeira visita nesta aba: analisa sozinho. Depois, só quando a pessoa pedir.
+    // Primeira visita nesta aba, ou depois de uma remoção: analisa sozinho. Fora isso, só quando pedirem.
     useEffect(() => {
-        if (!readOverview()) void analyze();
+        const current = readOverview();
+        if (!current || current.stale) void analyze();
     }, [analyze]);
 
     const overview = cached?.overview;

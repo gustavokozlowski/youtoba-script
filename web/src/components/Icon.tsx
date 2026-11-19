@@ -14,9 +14,17 @@ const PATHS = {
 
 export type IconName = keyof typeof PATHS;
 
+// Marcas cheias (não são traço): desenhadas com preenchimento.
+const FILLED: ReadonlySet<IconName> = new Set(['google']);
+
 export function Icon({ name, className = '' }: { name: IconName; className?: string }) {
     return (
-        <svg className={`icon ${className}`} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <svg
+            className={`icon${FILLED.has(name) ? ' icon-filled' : ''} ${className}`}
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            focusable="false"
+        >
             <path d={PATHS[name]} />
         </svg>
     );
