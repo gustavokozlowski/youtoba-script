@@ -220,6 +220,10 @@ O servidor **conta o gasto de cada chamada** (no SQLite local) e, antes de cada 
 
 A conta é local: gastos do mesmo projeto do Google Cloud feitos por outros programas não aparecem. Se o Google responder `quotaExceeded` mesmo assim, o saldo do dia é zerado na hora. Para um limite diferente, use `YOUTUBE_DAILY_QUOTA` no `.env`.
 
+## 📌 Pendências
+
+O que ainda falta fazer está em [`docs/PENDENCIAS.md`](docs/PENDENCIAS.md).
+
 ## 👨‍💻 Autor
 
 **Gustavo Kozlowski**
