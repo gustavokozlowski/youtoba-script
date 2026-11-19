@@ -13,6 +13,14 @@ import type {
 
 const { YOUTUBE_BASE_URL, API_KEY } = process.env;
 
+export type DeleteItemsResult = {
+    removed: string[];
+    failed: { id: string; status?: number; reason?: string }[];
+};
+
+const RETRYABLE_STATUS = new Set([409, 429, 500, 503]);
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export class YoutubeClient {
     private client;
     private apiKey: string;
@@ -80,34 +88,57 @@ export class YoutubeClient {
         }
     }
 
-    async deleteItemsById(items: string[]): Promise<boolean | null> {
-        try {
-            switch (items.length) {
-                case 0:
-                    console.info('Nenhum item para deletar.');
-                    return true;
-                case 1:
-                    await this.client.delete(
-                        `https://youtube.googleapis.com/youtube/v3/playlistItems?id=${items[0]}&key=${API_KEY}`,
-                    );
-                    console.info('Item deletado com sucesso:', items[0]);
-                    return true;
+    async deleteItemsById(
+        itemIds: string[],
+        { retries = 3, baseDelayMs = 1000 }: { retries?: number; baseDelayMs?: number } = {},
+    ): Promise<DeleteItemsResult> {
+        const result: DeleteItemsResult = { removed: [], failed: [] };
+
+        // Sequencial de propósito: a API responde 409 a alterações simultâneas na mesma playlist.
+        for (const [index, itemId] of itemIds.entries()) {
+            const outcome = await this.deleteWithRetry(itemId, retries, baseDelayMs);
+
+            if (outcome === 'removed') {
+                result.removed.push(itemId);
+                continue;
             }
 
-            const requests = items.map(async (itemId: string) => {
-                await this.client.delete(
-                    `https://youtube.googleapis.com/youtube/v3/playlistItems?id=${itemId}&key=${API_KEY}`,
-                );
-            });
+            result.failed.push({ id: itemId, ...outcome });
 
-            const result = await Promise.all(requests);
+            if (outcome.reason === 'quotaExceeded') {
+                // Sem quota, as próximas tentativas também falhariam: interrompe e reporta o restante.
+                for (const skipped of itemIds.slice(index + 1)) {
+                    result.failed.push({ id: skipped, reason: 'skipped_quota_exceeded' });
+                }
+                break;
+            }
+        }
 
-            console.info('Itens deletados com sucesso:', result);
+        return result;
+    }
 
-            return true;
-        } catch (error: any) {
-            console.error(`Erro ao deletar o item da playlist: ${items}`, error);
-            return null;
+    private async deleteWithRetry(
+        itemId: string,
+        retries: number,
+        baseDelayMs: number,
+    ): Promise<'removed' | { status?: number; reason?: string }> {
+        for (let attempt = 0; ; attempt++) {
+            try {
+                await this.client.delete(`playlistItems?id=${encodeURIComponent(itemId)}&key=${this.apiKey}`);
+                return 'removed';
+            } catch (error: any) {
+                const status: number | undefined = error?.response?.status;
+                const reason: string | undefined = error?.response?.data?.error?.errors?.[0]?.reason;
+
+                if (status !== undefined && RETRYABLE_STATUS.has(status) && attempt < retries) {
+                    await wait(baseDelayMs * 2 ** attempt);
+                    continue;
+                }
+
+                // Loga só status e motivo: o objeto de erro do axios carrega o header Authorization.
+                console.error(`Falha ao remover o item ${itemId}: HTTP ${status ?? '?'} ${reason ?? error?.message}`);
+                return { status, reason };
+            }
         }
     }
 

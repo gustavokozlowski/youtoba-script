@@ -2,7 +2,13 @@ require('dotenv').config();
 
 import { getToken } from '../../utils/repository/user.repository';
 import type { PlaylistItem, PlaylistsResponse } from './client/client.types';
-import { YoutubeClient } from './client/youtube.client';
+import { type DeleteItemsResult, YoutubeClient } from './client/youtube.client';
+
+export type RemoveDuplicatesResult =
+    | { status: 'not_connected' }
+    | { status: 'fetch_failed' }
+    | { status: 'no_duplicates' }
+    | ({ status: 'done'; found: number } & DeleteItemsResult);
 
 const { API_KEY } = process.env;
 export class YoutubeService {
@@ -72,29 +78,25 @@ export class YoutubeService {
         return filteredPlaylist;
     }
 
-    async removeDuplicateVideos(playlistId: string) {
+    async removeDuplicateVideos(playlistId: string): Promise<RemoveDuplicatesResult> {
         await this._getCredentials();
+
+        if (!this.client) {
+            return { status: 'not_connected' };
+        }
+
         const duplicatedVideos = await this._playlistDuplicateItems(playlistId);
-        if (!duplicatedVideos || duplicatedVideos.length === 0) {
-            return {
-                mensagem: 'Nenhum item duplicado encontrado na playlist!',
-                resultado: [],
-            };
-        }
-        const itemsToDelete = duplicatedVideos.map((item) => item.id);
-        const result = await this.client?.deleteItemsById(itemsToDelete);
 
-        if (result) {
-            return {
-                mensagem: 'Itens deletados com sucesso!',
-                resultado: result,
-            };
+        if (duplicatedVideos === null) {
+            return { status: 'fetch_failed' };
         }
 
-        return {
-            mensagem: 'Erro ao deletar os itens da playlist!',
-            resultado: result,
-        };
+        if (duplicatedVideos.length === 0) {
+            return { status: 'no_duplicates' };
+        }
+
+        const { removed, failed } = await this.client.deleteItemsById(duplicatedVideos.map((item) => item.id));
+        return { status: 'done', found: duplicatedVideos.length, removed, failed };
     }
 
     private _filterDuplicatedItemsById = (list: PlaylistItem[]) => {
