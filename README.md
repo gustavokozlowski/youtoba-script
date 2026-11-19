@@ -134,8 +134,8 @@ JWT_SECRET=seu_jwt_secret_aqui
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `GET` | `/auth/login` | Obtém URL de autenticação OAuth2 |
-| `GET` | `/auth` | Callback do OAuth2 (recebe o token) |
+| `GET` | `/auth/login` | Redireciona para o login do Google |
+| `GET` | `/auth` | Callback do OAuth2 (salva o token e mostra a confirmação) |
 
 ### Playlists
 
@@ -147,12 +147,15 @@ JWT_SECRET=seu_jwt_secret_aqui
 
 ## 📝 Exemplo de Uso
 
-### 1. Obter URL de autenticação
+### 1. Conectar a conta do YouTube
 
-```bash
-curl http://localhost:3000/auth/login
-# abra a URL retornada no navegador e autorize; o Google redireciona para /auth
+Com o servidor rodando, abra no navegador:
+
 ```
+http://localhost:3000/auth/login
+```
+
+Você é levado ao login do Google e, depois de autorizar, volta para uma página de confirmação.
 
 ### 2. Listar playlists
 
