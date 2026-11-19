@@ -145,6 +145,12 @@ JWT_SECRET=seu_jwt_secret_aqui
 | `GET` | `/playlist/:playlistId` | Obtém detalhes de uma playlist |
 | `DELETE` | `/playlist/:playlistId/remove-duplicates` | Remove vídeos duplicados |
 
+### Desenvolvimento (desligado por padrão)
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `POST` | `/dev/seed-test-playlist` | Cria a playlist privada `youtoba-teste` com 7 itens (3 duplicados) para validação manual. Só existe com `ENABLE_DEV_ROUTES=true`. |
+
 ## 📝 Exemplo de Uso
 
 ### 1. Conectar a conta do YouTube

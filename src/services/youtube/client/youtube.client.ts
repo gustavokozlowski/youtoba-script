@@ -2,7 +2,14 @@ require('dotenv').config();
 
 import axios from 'axios';
 
-import type { PlaylistDetailsResponse, PlaylistResponse, PlaylistsResponse, YoutubeClientConfig } from './client.types';
+import type {
+    Playlist,
+    PlaylistDetailsResponse,
+    PlaylistItem,
+    PlaylistResponse,
+    PlaylistsResponse,
+    YoutubeClientConfig,
+} from './client.types';
 
 const { YOUTUBE_BASE_URL, API_KEY } = process.env;
 
@@ -24,7 +31,9 @@ export class YoutubeClient {
 
     async playlists(): Promise<PlaylistsResponse | null> {
         try {
-            const playlists = await this.client.get(`playlists?part=contentDetails&mine=true&key=${this.apiKey}`);
+            const playlists = await this.client.get(
+                `playlists?part=snippet,contentDetails&mine=true&maxResults=50&key=${this.apiKey}`,
+            );
             return playlists.data as PlaylistsResponse;
         } catch (error: any) {
             console.error('Erro ao obter playlists:', error);
@@ -100,5 +109,20 @@ export class YoutubeClient {
             console.error(`Erro ao deletar o item da playlist: ${items}`, error);
             return null;
         }
+    }
+
+    async createPrivatePlaylist(title: string, description: string): Promise<Playlist> {
+        const response = await this.client.post(`playlists?part=snippet,status&key=${this.apiKey}`, {
+            snippet: { title, description },
+            status: { privacyStatus: 'private' },
+        });
+        return response.data as Playlist;
+    }
+
+    async addVideoToPlaylist(playlistId: string, videoId: string): Promise<PlaylistItem> {
+        const response = await this.client.post(`playlistItems?part=snippet&key=${this.apiKey}`, {
+            snippet: { playlistId, resourceId: { kind: 'youtube#video', videoId } },
+        });
+        return response.data as PlaylistItem;
     }
 }
