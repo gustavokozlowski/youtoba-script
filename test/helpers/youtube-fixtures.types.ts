@@ -1,4 +1,4 @@
-import type { YouTubeThumbnails } from '../../src/services/youtube/client/client.types';
+import type { YouTubeThumbnails } from '../../src/infra/youtube/youtube-api.types';
 
 export interface PlaylistItemFixture {
     id?: string;

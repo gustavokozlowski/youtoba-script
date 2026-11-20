@@ -1,4 +1,5 @@
 import { type Request, type Response, Router } from 'express';
+import { setting } from '../config/settings';
 import {
     expectedFor,
     LARGE_TEST_PLAYLIST_TITLE,
@@ -7,10 +8,10 @@ import {
     TEST_PLAYLIST_SEQUENCE,
     TEST_PLAYLIST_TITLE,
 } from '../dev/test-playlist.seed';
+import { apiFailure } from '../infra/youtube/youtube.client';
 import { googleAuth } from '../services/google';
 import { createTrackedClient } from '../services/youtube/client/tracked-client';
-import { apiFailure } from '../services/youtube/client/youtube.client';
-import { logger } from '../utils/logger';
+import { logger } from '../shared/logger';
 
 const devRouter = Router();
 
@@ -18,7 +19,7 @@ const devRouter = Router();
 // POST /dev/seed-test-playlist?size=large → youtoba-teste-grande (56 itens, ~2.900 unidades)
 devRouter.post('/seed-test-playlist', async (req: Request, res: Response) => {
     const token = await googleAuth().getAccessToken();
-    const apiKey = process.env.API_KEY;
+    const apiKey = setting('API_KEY');
 
     if (!token || !apiKey) {
         res.status(401).json({ error: 'not_connected', login: '/auth/login' });

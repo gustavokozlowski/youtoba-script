@@ -1,7 +1,8 @@
-import { PAGE_SIZE, QUOTA_COST } from './youtube.constants';
+import { setting } from '../../config/settings';
+import { PAGE_SIZE, QUOTA_COST } from '../../infra/youtube/youtube.constants';
 import type { RemovalQuotaEstimate } from './youtube.types';
 
-export const dailyQuotaLimit = () => Number(process.env.YOUTUBE_DAILY_QUOTA ?? 10_000);
+export const dailyQuotaLimit = () => setting('YOUTUBE_DAILY_QUOTA');
 
 /** Estima o custo de ler a playlist e remover os duplicados, sem considerar o que já foi gasto hoje. */
 export function estimateRemovalQuota(

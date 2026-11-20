@@ -1,4 +1,4 @@
-import type { Playlist, PlaylistItem } from '../../src/services/youtube/client/client.types';
+import type { Playlist, PlaylistItem } from '../../src/infra/youtube/youtube-api.types';
 import type { PlaylistFixture, PlaylistItemFixture } from './youtube-fixtures.types';
 
 export const thumbnail = (url: string) => ({ url, width: 1, height: 1 });

@@ -1,15 +1,16 @@
-import { logger } from '../../utils/logger';
+import { setting } from '../../config/settings';
+import { apiFailure } from '../../infra/youtube/youtube.client';
+import { PAGE_SIZE, QUOTA_COST } from '../../infra/youtube/youtube.constants';
+import type { PlaylistsResponse } from '../../infra/youtube/youtube-api.types';
+import { logger } from '../../shared/logger';
 import { googleAuth } from '../google';
 import { writeBackup } from './backup';
-import type { PlaylistsResponse } from './client/client.types';
 import { createTrackedClient } from './client/tracked-client';
-import { apiFailure } from './client/youtube.client';
 import { findDuplicates, toEntries } from './duplicates';
 import { summarizePlaylist } from './playlist-summary';
 import { estimateRemovalQuota } from './quota';
 import { type QuotaTracker, quotaTracker } from './quota-tracker';
 import { type RemovalJobs, removalJobs } from './removal-jobs';
-import { PAGE_SIZE, QUOTA_COST } from './youtube.constants';
 import type {
     ClientFactory,
     DuplicatesOverview,
@@ -23,7 +24,7 @@ import type {
 
 // Um client por chamada: o service não guarda token nem client entre requisições.
 const defaultClientFactory: ClientFactory = async () => {
-    const apiKey = process.env.API_KEY;
+    const apiKey = setting('API_KEY');
     const token = await googleAuth().getAccessToken();
     return token && apiKey ? createTrackedClient({ apiKey, token }) : undefined;
 };

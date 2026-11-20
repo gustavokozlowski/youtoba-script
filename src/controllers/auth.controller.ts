@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
+import { setting } from '../config/settings';
 import { googleAuth, LOGIN_TTL_MS, MissingRefreshTokenError, pendingLogins } from '../services/google';
 
 const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
@@ -70,7 +71,7 @@ export const getAuthorizationToken = async (req: Request, res: Response, next: N
     try {
         await googleAuth().connect(code, codeVerifier);
         // Volta para a interface. WEB_URL só é preciso quando ela roda no Vite (outra porta).
-        res.redirect(process.env.WEB_URL ?? '/');
+        res.redirect(setting('WEB_URL') ?? '/');
     } catch (err) {
         if (err instanceof MissingRefreshTokenError) {
             loginFailed(res, 502, '<p>O Google não enviou o token de acesso contínuo.</p>');

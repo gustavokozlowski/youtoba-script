@@ -35,6 +35,63 @@
             }
         }
     },
+    // Direção das dependências (ADR 0001): a infraestrutura e o que é compartilhado não conhecem o domínio.
+    "overrides": [
+        {
+            "includes": ["src/infra/**", "src/shared/**"],
+            "linter": {
+                "rules": {
+                    "style": {
+                        "noRestrictedImports": {
+                            "level": "error",
+                            "options": {
+                                "patterns": [
+                                    {
+                                        "group": [
+                                            "**/modules/**",
+                                            "**/services/**",
+                                            "**/controllers/**",
+                                            "**/routes/**",
+                                            "**/server/**"
+                                        ],
+                                        "message": "infra/ e shared/ não importam o domínio nem o servidor (ADR 0001)."
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "includes": ["src/shared/**"],
+            "linter": {
+                "rules": {
+                    "style": {
+                        "noRestrictedImports": {
+                            "level": "error",
+                            "options": {
+                                "patterns": [
+                                    {
+                                        "group": [
+                                            "**/infra/**",
+                                            "**/config/**",
+                                            "**/modules/**",
+                                            "**/services/**",
+                                            "**/controllers/**",
+                                            "**/routes/**",
+                                            "**/server/**"
+                                        ],
+                                        "message": "shared/ não depende de nada do projeto (ADR 0001)."
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ],
     "javascript": {
         "formatter": {
             "quoteStyle": "single"

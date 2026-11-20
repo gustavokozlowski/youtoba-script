@@ -1,5 +1,5 @@
-import type { DeleteItemsResult } from './client/client.types';
-import type { YoutubeClient } from './client/youtube.client';
+import type { YoutubeClient } from '../../infra/youtube/youtube.client';
+import type { DeleteItemsResult } from '../../infra/youtube/youtube-api.types';
 
 export interface PlaylistEntry {
     playlistItemId: string;

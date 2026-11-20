@@ -1,10 +1,11 @@
 require('dotenv').config();
 
+import { setting } from '../config/settings';
 import { googleAuth } from '../services/google';
 import { readBackup } from '../services/youtube/backup';
 import { createTrackedClient } from '../services/youtube/client/tracked-client';
 import { restoreRemoved } from '../services/youtube/restore';
-import { errorMessage } from '../utils/errors';
+import { errorMessage } from '../shared/errors';
 
 // Uso: npm run restore:playlist -- backups/<arquivo>.json
 async function main() {
@@ -26,7 +27,7 @@ async function main() {
     }
 
     const token = await googleAuth().getAccessToken();
-    const apiKey = process.env.API_KEY;
+    const apiKey = setting('API_KEY');
     if (!token || !apiKey) {
         console.error(
             'Conta não conectada. Abra http://localhost:3000/auth/login com o servidor rodando e tente de novo.',

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { KEY_HELP } from '../utils/crypto';
+import { KEY_HELP } from '../infra/crypto';
 import type { Env } from './env.types';
 
 const MISSING = 'falta (veja o .env.example)';
@@ -29,14 +29,14 @@ export const envSchema = z.object({
         .enum(['true', 'false'], { error: 'use true ou false' })
         .default('false')
         .transform((value) => value === 'true'),
-    TOKEN_DB_PATH: z.string().optional(),
-    BACKUP_DIR: z.string().optional(),
+    TOKEN_DB_PATH: z.string().default('data/youtoba.db'),
+    BACKUP_DIR: z.string().default('backups'),
     LOG_LEVEL: z
         .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'], {
             error: 'use fatal, error, warn, info, debug, trace ou silent',
         })
         .optional(),
-    YOUTUBE_DAILY_QUOTA: z.coerce.number({ error: 'precisa ser um número' }).int().positive().default(10_000),
+    YOUTUBE_DAILY_QUOTA: z.coerce.number({ error: 'precisa ser um número' }).int().nonnegative().default(10_000),
 });
 
 /** Configuração inválida. `problems` traz uma linha por variável, sem nunca mostrar o valor. */

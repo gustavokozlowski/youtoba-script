@@ -1,6 +1,6 @@
-import { dbPath } from '../../utils/repository/db-path';
-import { createSqliteQuotaStore } from '../../utils/repository/quota.store';
-import type { QuotaStore } from '../../utils/repository/quota-store.types';
+import { dbPath } from '../../infra/storage/db-path';
+import { createSqliteQuotaStore } from '../../infra/storage/quota.store';
+import type { QuotaStore } from '../../infra/storage/quota.store.types';
 import { dailyQuotaLimit } from './quota';
 import type { QuotaSnapshot } from './youtube.types';
 

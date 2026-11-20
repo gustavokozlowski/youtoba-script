@@ -1,4 +1,4 @@
-import { QUOTA_COST } from '../services/youtube/youtube.constants';
+import { QUOTA_COST } from '../infra/youtube/youtube.constants';
 import type {
     DuplicateEntry,
     DuplicatesOverview,

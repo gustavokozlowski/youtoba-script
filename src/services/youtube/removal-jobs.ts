@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
-import { errorMessage } from '../../utils/errors';
-import { logger } from '../../utils/logger';
+import type { YoutubeClient } from '../../infra/youtube/youtube.client';
+import { errorMessage } from '../../shared/errors';
+import { logger } from '../../shared/logger';
 import { recordRemoval } from './backup';
-import type { YoutubeClient } from './client/youtube.client';
 import type { QuotaTracker } from './quota-tracker';
 import type { DuplicateEntry, RemovalJob } from './youtube.types';
 
