@@ -1,80 +1,65 @@
 import { describe, expect, it } from 'vitest';
-import type { Playlist } from '../src/infra/youtube/youtube-api.types';
 import type { PlaylistItemLister } from '../src/modules/playlist/playlist.types';
-import { summarizeEach } from '../src/modules/playlist/playlist-overview';
+import { OVERVIEW_CONCURRENT_PLAYLISTS, summarizeEach } from '../src/modules/playlist/playlist-overview';
+import { playlist, playlistItem } from './helpers/youtube-fixtures';
 
-const playlist = (id: string, title: string): Playlist =>
-    ({
-        id,
-        snippet: { title, thumbnails: {} },
-        contentDetails: { itemCount: 2 },
-    }) as Playlist;
+const quotaExceeded = { response: { status: 403, data: { error: { errors: [{ reason: 'quotaExceeded' }] } } } };
+const notFound = { response: { status: 404, data: { error: { errors: [{ reason: 'playlistNotFound' }] } } } };
 
-describe('análise das playlists', () => {
-    it('lê em lote limitado e mantém o resultado na ordem das playlists', async () => {
-        let active = 0;
-        let peak = 0;
-        const client: PlaylistItemLister = {
-            async listPlaylistItems(playlistId) {
-                active++;
-                peak = Math.max(peak, active);
-                await new Promise((resolve) => setTimeout(resolve, 5));
-                active--;
-                return [
-                    {
-                        kind: 'youtube#playlistItem',
-                        etag: `${playlistId}-etag-1`,
-                        id: `${playlistId}-1`,
-                        snippet: {
-                            publishedAt: '2026-11-20T00:00:00Z',
-                            channelId: 'channel',
-                            description: '',
-                            thumbnails: {},
-                            channelTitle: 'Canal',
-                            videoOwnerChannelTitle: 'Canal',
-                            videoOwnerChannelId: 'channel',
-                            playlistId,
-                            position: 0,
-                            title: `Vídeo ${playlistId}`,
-                            resourceId: { kind: 'youtube#video', videoId: `video-${playlistId}` },
-                        },
-                        contentDetails: { videoId: `video-${playlistId}`, videoPublishedAt: '2026-11-20T00:00:00Z' },
-                    },
-                    {
-                        kind: 'youtube#playlistItem',
-                        etag: `${playlistId}-etag-2`,
-                        id: `${playlistId}-2`,
-                        snippet: {
-                            publishedAt: '2026-11-20T00:00:00Z',
-                            channelId: 'channel',
-                            description: '',
-                            thumbnails: {},
-                            channelTitle: 'Canal',
-                            videoOwnerChannelTitle: 'Canal',
-                            videoOwnerChannelId: 'channel',
-                            playlistId,
-                            position: 1,
-                            title: `Vídeo ${playlistId}`,
-                            resourceId: { kind: 'youtube#video', videoId: `video-${playlistId}` },
-                        },
-                        contentDetails: { videoId: `video-${playlistId}`, videoPublishedAt: '2026-11-20T00:00:00Z' },
-                    },
-                ];
-            },
-        };
+const playlists = (...ids: string[]) => ids.map((id) => playlist({ id, title: `Playlist ${id}` }));
 
-        const result = await summarizeEach(client, [
-            playlist('PL-a', 'A'),
-            playlist('PL-b', 'B'),
-            playlist('PL-c', 'C'),
-            playlist('PL-d', 'D'),
-            playlist('PL-e', 'E'),
+/** Cliente falso: cada playlist tem um vídeo repetido; as de `errors` falham com o erro dado. */
+function fakeLister(errors: Record<string, unknown> = {}) {
+    const requested: string[] = [];
+    let active = 0;
+    let peak = 0;
+    const client: PlaylistItemLister = {
+        async listPlaylistItems(playlistId) {
+            requested.push(playlistId);
+            active++;
+            peak = Math.max(peak, active);
+            await new Promise((resolve) => setTimeout(resolve, 5));
+            active--;
+            if (errors[playlistId]) throw errors[playlistId];
+            return [0, 1].map((position) => playlistItem({ id: `${playlistId}-${position}`, videoId: 'v', position }));
+        },
+    };
+    return { client, requested, peak: () => peak };
+}
+
+describe('summarizeEach', () => {
+    it('reads at most OVERVIEW_CONCURRENT_PLAYLISTS at a time and keeps the playlist order', async () => {
+        const lister = fakeLister();
+
+        const result = await summarizeEach(lister.client, playlists('a', 'b', 'c', 'd', 'e'));
+
+        expect(lister.peak()).toBe(OVERVIEW_CONCURRENT_PLAYLISTS);
+        expect(result.summaries.map((summary) => summary.playlistId)).toEqual(['a', 'b', 'c', 'd', 'e']);
+        expect(result.summaries.every((summary) => summary.duplicates === 1)).toBe(true);
+        expect(result).toMatchObject({ failed: [], stoppedByQuota: false });
+    });
+
+    it('stops before the next batch when the quota runs out, keeping what was already read', async () => {
+        const lister = fakeLister({ b: quotaExceeded });
+
+        const result = await summarizeEach(lister.client, playlists('a', 'b', 'c', 'd'));
+
+        expect(lister.requested).toEqual(['a', 'b']);
+        expect(result.summaries.map((summary) => summary.playlistId)).toEqual(['a']);
+        expect(result.failed).toEqual([{ playlistId: 'b', title: 'Playlist b', reason: 'quotaExceeded' }]);
+        expect(result.stoppedByQuota).toBe(true);
+    });
+
+    it('records other failures and keeps reading the remaining playlists', async () => {
+        const lister = fakeLister({ a: notFound, c: new Error('socket hang up') });
+
+        const result = await summarizeEach(lister.client, playlists('a', 'b', 'c'));
+
+        expect(result.summaries.map((summary) => summary.playlistId)).toEqual(['b']);
+        expect(result.failed).toEqual([
+            { playlistId: 'a', title: 'Playlist a', reason: 'playlistNotFound' },
+            { playlistId: 'c', title: 'Playlist c', reason: 'unknown' },
         ]);
-
-        expect(peak).toBeGreaterThan(1);
-        expect(peak).toBeLessThanOrEqual(4);
-        expect(result.summaries.map((summary) => summary.playlistId)).toEqual(['PL-a', 'PL-b', 'PL-c', 'PL-d', 'PL-e']);
-        expect(result.failed).toEqual([]);
         expect(result.stoppedByQuota).toBe(false);
     });
 });

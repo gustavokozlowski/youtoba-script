@@ -1,10 +1,16 @@
 import { apiFailure } from '../../infra/youtube/api-failure';
 import { PAGE_SIZE, QUOTA_COST } from '../../infra/youtube/youtube.constants';
 import type { Playlist } from '../../infra/youtube/youtube-api.types';
-import type { OverviewAnalysis, PlaylistDuplicateSummary, PlaylistItemLister } from './playlist.types';
+import type {
+    OverviewAnalysis,
+    PlaylistDuplicateSummary,
+    PlaylistItemLister,
+    PlaylistReadResult,
+} from './playlist.types';
 import { summarizePlaylist } from './playlist-summary';
 
-const OVERVIEW_CONCURRENT_PLAYLISTS = 2;
+/** Playlists lidas ao mesmo tempo na análise geral: acelera sem disparar rajadas contra a API. */
+export const OVERVIEW_CONCURRENT_PLAYLISTS = 2;
 
 /** Só playlists com 2 itens ou mais podem ter duplicados. */
 export const analyzable = (playlists: Playlist[]) =>
@@ -17,43 +23,39 @@ export const analysisEstimate = (playlists: Playlist[]) =>
         0,
     );
 
-/** Lê lotes de playlists em paralelo e para o lote seguinte se a quota acabar no meio. */
+/** Lê uma playlist e devolve o resumo ou o motivo da falha, sem lançar. */
+async function readPlaylist(client: PlaylistItemLister, playlist: Playlist): Promise<PlaylistReadResult> {
+    try {
+        return { ok: true, summary: summarizePlaylist(playlist, await client.listPlaylistItems(playlist.id)) };
+    } catch (error) {
+        const { reason, status } = apiFailure(error);
+        const title = playlist.snippet?.title ?? playlist.id;
+        return {
+            ok: false,
+            failure: { playlistId: playlist.id, title, reason: reason ?? String(status ?? 'unknown') },
+        };
+    }
+}
+
+function recordResult(analysis: OverviewAnalysis, result: PlaylistReadResult) {
+    if (result.ok) {
+        analysis.summaries.push(result.summary);
+        return;
+    }
+    analysis.failed.push(result.failure);
+    if (result.failure.reason === 'quotaExceeded') analysis.stoppedByQuota = true;
+}
+
+/**
+ * Lê as playlists em lotes de OVERVIEW_CONCURRENT_PLAYLISTS, mantendo a ordem do resultado.
+ * Se a quota acabar num lote, os lotes seguintes não são lidos.
+ */
 export async function summarizeEach(client: PlaylistItemLister, playlists: Playlist[]): Promise<OverviewAnalysis> {
     const analysis: OverviewAnalysis = { summaries: [], failed: [], stoppedByQuota: false };
-    for (let start = 0; start < playlists.length; start += OVERVIEW_CONCURRENT_PLAYLISTS) {
-        const batch = await Promise.all(
-            playlists.slice(start, start + OVERVIEW_CONCURRENT_PLAYLISTS).map(async (playlist) => {
-                try {
-                    return {
-                        playlist,
-                        summary: summarizePlaylist(playlist, await client.listPlaylistItems(playlist.id)),
-                        failureReason: undefined,
-                    };
-                } catch (error) {
-                    const { reason, status } = apiFailure(error);
-                    return {
-                        playlist,
-                        failureReason: reason ?? String(status ?? 'unknown'),
-                        summary: undefined,
-                    };
-                }
-            }),
-        );
-
-        for (const result of batch) {
-            if (result.summary) {
-                analysis.summaries.push(result.summary);
-            } else {
-                const title = result.playlist.snippet?.title ?? result.playlist.id;
-                analysis.failed.push({
-                    playlistId: result.playlist.id,
-                    title,
-                    reason: result.failureReason ?? 'unknown',
-                });
-                if (result.failureReason === 'quotaExceeded') analysis.stoppedByQuota = true;
-            }
-        }
-        if (analysis.stoppedByQuota) break;
+    for (let start = 0; start < playlists.length && !analysis.stoppedByQuota; start += OVERVIEW_CONCURRENT_PLAYLISTS) {
+        const batch = playlists.slice(start, start + OVERVIEW_CONCURRENT_PLAYLISTS);
+        const results = await Promise.all(batch.map((playlist) => readPlaylist(client, playlist)));
+        for (const result of results) recordResult(analysis, result);
     }
     return analysis;
 }

@@ -59,7 +59,7 @@ export interface DuplicatesOverview {
     totalRemovalCost: number;
     /** Unidades de quota gastas por esta análise. */
     analysisCost: number;
-    failed: { playlistId: string; title: string; reason: string }[];
+    failed: PlaylistReadFailure[];
     stoppedByQuota: boolean;
     quotaToday: QuotaSnapshot;
 }
@@ -79,6 +79,19 @@ export interface OverviewAnalysis {
     stoppedByQuota: boolean;
 }
 
+/** Playlist que não pôde ser lida na análise geral. */
+export interface PlaylistReadFailure {
+    playlistId: string;
+    title: string;
+    reason: string;
+}
+
+/** Resultado da leitura de uma playlist na análise geral. */
+export type PlaylistReadResult =
+    | { ok: true; summary: PlaylistDuplicateSummary }
+    | { ok: false; failure: PlaylistReadFailure };
+
+/** O que a análise precisa do cliente do YouTube (permite testar sem rede). */
 export interface PlaylistItemLister {
     listPlaylistItems(playlistId: string): Promise<PlaylistItem[]>;
 }
