@@ -20,7 +20,7 @@ Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com 
 - [x] ~~**Remover dependências sem uso**~~ (#28): saíram `googleapis` e `@googleapis/docs` (nenhum import; eram a origem de 3 das 5 vulnerabilidades moderadas), `body-parser`, `express-session`, `jsonwebtoken`, `nodemon` e os tipos de `express-session` e `jsonwebtoken`. `@types/express` 4.17.25, alinhado ao `express` 4.
 - [x] ~~**`google-auth-library` 10.**~~ (#36): atualizado para 10.9.1, com `gaxios` 7 e sem vulnerabilidades no `npm audit --audit-level=high`; o fluxo OAuth/PKCE passou pelos 14 testes de auth. Falta apenas confirmar um login real no Google.
 - [x] ~~**Arquivar a branch `develop`.**~~ (ação administrativa): a referência remota foi removida depois de confirmar que não havia PR aberta baseada nela e que suas ideias úteis já estavam na `main`.
-- [ ] **Jobs de remoção ficam só em memória:** se o servidor reiniciar no meio, o progresso some (o backup continua certo). Avaliar guardar o job no SQLite.
+- [x] ~~**Jobs de remoção ficam só em memória.**~~ (avaliação): persistir um snapshot no SQLite é útil para manter histórico e progresso, mas não é seguro retomar automaticamente uma remoção interrompida — o cliente OAuth, a quota e as exclusões já tentadas podem ter mudado. Fica decidido para uma futura implementação: persistir o snapshot, marcar jobs `running` como `interrupted` no boot e apontar para o backup, sem repetir exclusões.
 
 ## 3. Funcionalidades (opcionais)
 
