@@ -13,7 +13,7 @@ Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com 
 
 ## 2. Qualidade e manutenção
 
-- [ ] **CI no GitHub Actions:** `biome ci`, `tsc --noEmit`, `vitest run` e `npm audit --audit-level=high` em todo PR. Depois, proteger a `main` exigindo o CI verde.
+- [x] ~~**CI no GitHub Actions**~~ (#22, #23): `biome ci`, typecheck da API e do `web/`, testes, build da interface e `npm audit --audit-level=high` em todo PR e na `main` (`.github/workflows/ci.yml`, actions pinadas por SHA, permissão só de leitura). O vitest subiu para a 4.1.12 para tirar 2 vulnerabilidades críticas. A `main` passa a exigir o check `checks` verde.
 - [ ] **Validar o `.env` com `zod` no boot** (`src/config/env.ts`): o servidor não sobe se faltar `CLIENT_ID`, `CLIENT_SECRET_KEY`, `REDIRECT_URL`, `API_KEY` ou `TOKEN_ENCRYPTION_KEY`, e diz qual falta.
 - [ ] **Middleware de erro único** no fim do `createApp()` e **logs estruturados** (`pino`), sem token nem dados pessoais.
 - [ ] **`biome.json` → `biome.jsonc`** com o motivo escrito ao lado de cada regra desligada (hoje `noExplicitAny` está desligada sem explicação). Ligar `vcs.useIgnoreFile`.
@@ -65,3 +65,6 @@ Pedido do dono em 20/11/2026: nenhum code smell no projeto. Passar a code base i
 | #18 | Logo novo "chiclete e grafite" (Anton, bloco 3D, adesivo), escolhido num protótipo do app |
 | #19 | TanStack Query na interface: cache por chave, polling do job pelo `refetchInterval`, cota da barra vinda das próprias respostas, revisão não relê a playlist por 30 s |
 | #20 | Remoção ao vivo com a Motion: a lista desliza quando a janela anda (FLIP, só transform), barra de progresso por `scaleX`, tela carregada sob demanda |
+| #21 | Plano da refatoração final (seção 4) e convenções de tipos e nomes |
+| #22 | vitest 4.1.12: tira 2 vulnerabilidades críticas do runner de testes |
+| #23 | CI no GitHub Actions (Biome, tipos, testes, build, audit) |
