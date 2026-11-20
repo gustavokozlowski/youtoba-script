@@ -219,8 +219,11 @@ describe('remoção de duplicados', () => {
         expect(res.body).toMatchObject({ total: 3, cabemHoje: 3, acompanhar: `/jobs/${res.body.jobId}` });
 
         const job = await waitForJob(res.body.jobId);
+        // O total vem também na consulta do job (não só na resposta 202): a tela mostra "N de total".
         expect(job).toMatchObject({
             status: 'done',
+            total: 3,
+            removidos: 3,
             progresso: '3 de 3 itens apagados',
             percentual: 100,
             pendentes: 0,
@@ -704,6 +707,7 @@ describe('deleted videos removal', () => {
         expect(job).toMatchObject({
             tipo: 'apagados',
             status: 'done',
+            total: 2,
             progresso: '2 de 2 itens apagados',
             percentual: 100,
             pendentes: 0,

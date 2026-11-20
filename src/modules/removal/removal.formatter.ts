@@ -71,6 +71,8 @@ export function formatJob(job: RemovalJob, quota: QuotaSnapshot) {
         progresso: `${job.removed.length} de ${total} itens apagados`,
         percentual: total === 0 ? 100 : Math.round((job.removed.length / total) * 100),
         removidos: job.removed.length,
+        // A tela mostra "removidos de total" a cada consulta: o total vem aqui, não só na resposta 202.
+        total,
         falhas: errors,
         pendentes: pending,
         ultimoItem: job.lastItem && {

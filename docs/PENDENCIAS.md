@@ -94,3 +94,4 @@ Pedido do dono em 20/11/2026: nenhum code smell no projeto. Passar a code base i
 | #48 | API para remover vídeos apagados (dry-run e remoção com confirmação), pipeline de remoção único para os dois tipos, e duas remoções simultâneas na mesma playlist não começam dois jobs |
 | #49 | Interface para remover vídeos apagados: revisão própria, painel de confirmação único para os dois tipos, aviso de que apagado não volta, e a análise geral conta os apagados |
 | #50 | `npm run dev:all`: API e interface juntas com um comando; proxy do Vite passa `/backups` e `/health`; `LOG_FORMAT` opcional |
+| #51 | Tela de remoção mostrava "80 de 0 apagados": `GET /jobs/:id` não trazia `total` (só a resposta 202 trazia) |
