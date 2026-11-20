@@ -39,6 +39,7 @@
     "google-auth-library": "^9.15.0",
     "googleapis": "^144.0.0",
     "jsonwebtoken": "^9.0.2",
+    "motion": "14.9.1",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },

@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { UNAUTHORIZED_EVENT } from './api/client';
 import { signedOut, useAuthStatus, useSignOut } from './api/queries';
 import { Notice } from './components/Notice';
@@ -7,9 +7,11 @@ import { TopBar } from './components/TopBar';
 import { useRoute } from './lib/router';
 import { Entrar } from './screens/Entrar';
 import { Playlists } from './screens/Playlists';
-import { Remocao } from './screens/Remocao';
 import { Remocoes } from './screens/Remocoes';
 import { Revisao } from './screens/Revisao';
+
+// A remoção ao vivo traz a Motion: só baixa quando alguém abre essa tela.
+const Remocao = lazy(() => import('./screens/Remocao').then((mod) => ({ default: mod.Remocao })));
 
 export function App() {
     const route = useRoute();
@@ -67,7 +69,11 @@ function Screen({ route }: { route: ReturnType<typeof useRoute> }) {
         case 'revisao':
             return <Revisao key={route.playlistId} playlistId={route.playlistId} />;
         case 'remocao':
-            return <Remocao key={route.jobId} jobId={route.jobId} />;
+            return (
+                <Suspense fallback={<main aria-busy="true" />}>
+                    <Remocao key={route.jobId} jobId={route.jobId} />
+                </Suspense>
+            );
         case 'remocoes':
             return <Remocoes />;
         default:

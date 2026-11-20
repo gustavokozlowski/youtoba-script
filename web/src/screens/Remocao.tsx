@@ -3,8 +3,9 @@ import type { RemovalJob } from '../api/api.types';
 import type { ApiError } from '../api/client';
 import { useJob } from '../api/queries';
 import { Icon } from '../components/Icon';
+import { LiveTracks } from '../components/LiveTracks';
 import { Notice } from '../components/Notice';
-import { SprayFilter, TrackRow } from '../components/TrackRow';
+import { SprayFilter } from '../components/TrackRow';
 import { num } from '../lib/format';
 import { findPlaylist } from '../lib/overview-cache';
 import { href } from '../lib/router';
@@ -91,7 +92,7 @@ function JobView({ job, fresh }: { job: RemovalJob; fresh: Set<string> }) {
                         </span>
                     </div>
                     <div className="track-bar" aria-hidden="true">
-                        <i style={{ width: `${job.percentual}%` }} />
+                        <i style={{ transform: `scaleX(${job.percentual / 100})` }} />
                     </div>
                     {current && (
                         <p className="now">
@@ -106,16 +107,7 @@ function JobView({ job, fresh }: { job: RemovalJob; fresh: Set<string> }) {
                         Como desfazer
                     </button>
                     <StopNotice job={job} errors={errors.length} />
-                    <ul className="tracks" aria-label="Itens da remoção">
-                        {rows.map((item) => (
-                            <TrackRow
-                                key={item.playlistItemId}
-                                item={item}
-                                state={item === current ? 'agora' : item.estado}
-                                fresh={fresh.has(item.playlistItemId)}
-                            />
-                        ))}
-                    </ul>
+                    <LiveTracks rows={rows} current={current} fresh={fresh} moving={running} />
                     {running && job.itens.length > rows.length && (
                         <p className="count">
                             Mostrando {num(rows.length)} de {num(job.itens.length)}. A lista completa aparece quando

@@ -351,7 +351,9 @@ O gesto do sistema, em `web/src/components/TrackRow.tsx`. Cada vídeo com estado
 - **Ainda não feito:** a textura de asfalto e concreto e a névoa do spray são vetoriais (ruído SVG e desfoque); não há versão raster.
 
 ### Contador de remoção
-O número de vídeos que ainda faltam, em Display, com "ainda faltam" e "7 de 75 apagados" ao lado. Embaixo, a barra de progresso de 14 px em `spray` (largura animada em 400 ms) e a linha "Apagando <título> (#posição)" com o ponto pulsante.
+O número de vídeos que ainda faltam, em Display, com "ainda faltam" e "7 de 75 apagados" ao lado. Embaixo, a barra de progresso de 14 px em `spray` (cresce por `transform: scaleX` em 400 ms, sem recalcular layout) e a linha "Apagando <título> (#posição)" com o ponto pulsante.
+
+A lista ao vivo (`web/src/components/LiveTracks.tsx`, com a Motion) mostra uma janela de 9 linhas em volta do item atual, e a janela anda a cada consulta. O apagado do topo sai subindo 14 px e esmaecendo (250 ms); as outras linhas sobem para o lugar dele por FLIP, só com transform (400 ms, `cubic-bezier(0.16, 1, 0.3, 1)`); o próximo da fila entra por baixo. É continuidade, não um segundo efeito: o gesto da tela continua sendo o risco. Com movimento reduzido nada se desloca: quem entra aparece em fade e quem sai some na hora. A Motion só carrega quando a tela de Remoção abre (rota em `lazy` e recursos em `LazyMotion`).
 
 ### Logo
 A peça "YOUTOBA" em caixa-alta: letras Anton (fonte OFL, em `web/scripts/fonts/`) convertidas em vetor, com contorno grosso, bloco 3D sombreado para baixo e à direita, chanfro de luz na borda de cima das letras e borda de adesivo creme em volta de tudo. O favicon é o "Y" no mesmo desenho, em Archivo Black (também OFL), porque a Anton fica fina demais em 16 px. `web/src/assets/logo.svg` e o favicon são gerados por `web/scripts/build-logo.cjs`. Para mudar o desenho, edite o script e rode `npm run build:logo`; nunca edite o SVG à mão. Na barra de topo o logo tem 50 px de altura (32 px no celular); na tela Entrar ocupa a coluna da esquerda, até 680 px, com a névoa de spray por trás.
@@ -363,7 +365,7 @@ A peça "YOUTOBA" em caixa-alta: letras Anton (fonte OFL, em `web/scripts/fonts/
 - **Do** escrever toda quantidade decisiva em Big Shoulders com `.num` (algarismos tabulares) e um rótulo curto em Geist `muted`.
 - **Do** separar itens de lista com um fio `line` de 1 px, com fio também no topo da lista.
 - **Do** manter 44 px de alvo mínimo em todo controle e o anel de foco de 3 px em `accent` com 2 px de afastamento.
-- **Do** pôr todo movimento dentro de `@media (prefers-reduced-motion: no-preference)`, entre 150 e 550 ms, com ease-out ou `cubic-bezier(0.2, 0.8, 0.2, 1)`.
+- **Do** pôr todo movimento dentro de `@media (prefers-reduced-motion: no-preference)` (na Motion, `MotionConfig reducedMotion="user"`), entre 150 e 550 ms, com ease-out ou `cubic-bezier(0.16, 1, 0.3, 1)`, e animar só `transform` e `opacity`.
 - **Do** definir cada cor nova nos dois turnos em `tokens.css`, com o fio no lugar da sombra no escuro.
 - **Do** regenerar o logo com `npm run build:logo` depois de mudar `web/scripts/build-logo.cjs`.
 
@@ -371,7 +373,7 @@ A peça "YOUTOBA" em caixa-alta: letras Anton (fonte OFL, em `web/scripts/fonts/
 - **Don't** usar o vermelho, o logo ou a marca do YouTube como identidade.
 - **Don't** transformar linhas de playlist ou de vídeo em cards com capa, sombra e botão.
 - **Don't** desenhar o risco de spray em algo que não foi apagado de fato, nem animá-lo mais de uma vez por item.
-- **Don't** levar amarelo, laranja ou roxo do logo para controles, textos ou fundos da interface.
+- **Don't** levar o grafite ou o creme do logo para controles, textos ou fundos da interface.
 - **Don't** usar Big Shoulders em botões, navegação, rótulos ou texto corrido.
 - **Don't** pôr sombra em nada além do painel lateral, e nunca no turno escuro.
 - **Don't** editar `web/src/assets/logo.svg` à mão.
