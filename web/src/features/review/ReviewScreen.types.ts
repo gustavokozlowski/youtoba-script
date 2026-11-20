@@ -22,11 +22,6 @@ export interface RemovePanelProps {
     confirmRef: RefObject<HTMLInputElement | null>;
 }
 
-export interface LoadErrorProps {
-    error: ApiError;
-    onRetry: () => void;
-}
-
 export interface ReviewHeaderProps {
     playlistId: string;
     title: string;

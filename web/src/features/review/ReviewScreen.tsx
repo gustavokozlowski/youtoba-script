@@ -1,6 +1,6 @@
+import { ApiErrorNotice } from '../../shared/ui/ApiErrorNotice';
 import { DuplicateList } from './DuplicateList';
 import { EmptyReview } from './EmptyReview';
-import { LoadError } from './LoadError';
 import { RemovePanel } from './RemovePanel';
 import { ReviewHeader } from './ReviewHeader';
 import type { ReviewScreenProps } from './ReviewScreen.types';
@@ -19,7 +19,20 @@ export function ReviewScreen({ playlistId }: ReviewScreenProps) {
                 loadError={loadError}
                 changed={changed}
             />
-            {loadError && <LoadError error={loadError} onRetry={() => void refetch()} />}
+            {loadError && (
+                <ApiErrorNotice
+                    error={loadError}
+                    fallbackTitle="Não consegui ler a playlist"
+                    quotaTitle="Sem cota para ler a playlist agora"
+                    onRetry={() => void refetch()}
+                    notFound={{
+                        code: 'playlist_not_found',
+                        title: 'Playlist não encontrada',
+                        message: 'Ela pode ter sido apagada ou ficado inacessível para esta conta.',
+                        tone: 'error',
+                    }}
+                />
+            )}
             {preview && preview.duplicados === 0 && <EmptyReview />}
             {preview && preview.duplicados > 0 && (
                 <div className="cols">
