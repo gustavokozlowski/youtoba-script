@@ -1,6 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
 import { googleAuth, LOGIN_TTL_MS, MissingRefreshTokenError, pendingLogins } from '../services/google';
-import { readCookie } from '../utils/cookies';
 
 const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
 
@@ -41,7 +40,7 @@ export const authUserGetUrl = (_req: Request, res: Response) => {
 /** O verifier do PKCE, só quando a volta do Google traz o state que este navegador recebeu. */
 function verifierFor(req: Request): string | undefined {
     const { state } = req.query;
-    if (typeof state !== 'string' || state !== readCookie(req.headers.cookie, STATE_COOKIE)) return undefined;
+    if (typeof state !== 'string' || state !== req.cookies?.[STATE_COOKIE]) return undefined;
     return pendingLogins().consume(state);
 }
 
