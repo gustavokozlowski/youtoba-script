@@ -34,7 +34,6 @@ function started<P extends RemovalPreviewBase>({ job, fitToday }: RemovalStarted
         202,
         {
             mensagem: `Remoção iniciada.${partialNote}`,
-            total: job.total,
             cabemHoje: fitToday,
             acompanhar: `/jobs/${job.id}`,
             ...formatJob(job, quotaTracker().snapshot()),
