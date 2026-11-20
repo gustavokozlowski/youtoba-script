@@ -2,14 +2,14 @@
 
 O que falta para dar o projeto por encerrado, em ordem de prioridade. Atualize este arquivo no mesmo PR que resolver um item: risque o item e anote o número do PR.
 
-Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 124 testes passando (91 da API, 33 da interface).
+Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 128 testes passando (95 da API, 33 da interface).
 
 ## 1. Segurança (fazer primeiro)
 
 - [x] ~~**Restringir o CORS e proteger as rotas que alteram dados.**~~ (#14) Sem `cors()`; o middleware `localOnly` aceita só Host local (barra DNS rebinding), exige `Origin` igual ao Host em POST/DELETE e recusa pedidos `Sec-Fetch-Site: cross-site` (exceto a volta do login e a página inicial). Escolhemos conferir o `Origin` em vez de um token: os navegadores sempre mandam esse header em escritas de outro site, e o curl continua funcionando sem passo extra.
 - [ ] **Excluir o cliente OAuth antigo no Google Cloud** (ação manual do dono da conta). O `client_secret` dele está no histórico público do git (commit `2113866`). Já existe um cliente novo em uso.
 - [x] ~~**`state` + PKCE no login**~~ (#24): `state` aleatório preso ao navegador por um cookie `HttpOnly; SameSite=Lax; Path=/auth` (10 min, uso único) e PKCE S256, com o `code_verifier` só no servidor. Barra CSRF de login (outro site abrindo `/auth?code=` do atacante) e código interceptado. Sem `express-session`: os logins pendentes ficam em memória (`pending-logins.ts`). Falta confirmar num login real que o Google aceita o PKCE neste cliente.
-- [ ] **`helmet`, rate limit em `/auth` e limite de tamanho do body.**
+- [x] ~~**`helmet`, rate limit em `/auth` e limite de tamanho do body.**~~ (#26): CSP só com o próprio app e as miniaturas de `*.ytimg.com` (`frame-ancestors 'none'`, sem HSTS e sem `upgrade-insecure-requests` porque roda em http://localhost); 20 tentativas de login por 10 min em `/auth/login` e na volta do Google (o `/auth/status` fica de fora); JSON até 64 KB e sem parser de formulário. Em `src/server/security.ts`.
 
 ## 2. Qualidade e manutenção
 
@@ -69,3 +69,5 @@ Pedido do dono em 20/11/2026: nenhum code smell no projeto. Passar a code base i
 | #22 | vitest 4.1.12: tira 2 vulnerabilidades críticas do runner de testes |
 | #23 | CI no GitHub Actions (Biome, tipos, testes, build, audit) |
 | #24 | Login com `state` preso ao navegador e PKCE (S256) |
+| #25 | Cookie do `state` lido pelo `cookie-parser` que o app já tinha |
+| #26 | `helmet` com CSP, limite de tentativas de login e JSON até 64 KB |
