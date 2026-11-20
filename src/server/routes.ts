@@ -9,6 +9,9 @@ import { removalRouter } from '../modules/removal/removal.routes';
 /** As rotas de cada módulo. A remoção e a cota declaram os caminhos completos (/playlist/:id/remove-duplicates, /jobs, /quota). */
 const routes = Router();
 
+routes.get('/health', (_req, res) => {
+    res.json({ status: 'ok' });
+});
 routes.use('/playlist', playlistRouter);
 routes.use('/auth', authRouter);
 routes.use(removalRouter);
