@@ -1,9 +1,10 @@
 import { apiFailure } from '../../infra/youtube/api-failure';
-import type { YoutubeClient } from '../../infra/youtube/youtube.client';
 import { PAGE_SIZE, QUOTA_COST } from '../../infra/youtube/youtube.constants';
 import type { Playlist } from '../../infra/youtube/youtube-api.types';
-import type { OverviewAnalysis, PlaylistDuplicateSummary } from './playlist.types';
+import type { OverviewAnalysis, PlaylistDuplicateSummary, PlaylistItemLister } from './playlist.types';
 import { summarizePlaylist } from './playlist-summary';
+
+const OVERVIEW_CONCURRENT_PLAYLISTS = 2;
 
 /** Só playlists com 2 itens ou mais podem ter duplicados. */
 export const analyzable = (playlists: Playlist[]) =>
@@ -16,21 +17,43 @@ export const analysisEstimate = (playlists: Playlist[]) =>
         0,
     );
 
-/** Lê e resume uma playlist por vez; se a quota acabar no meio, para e devolve o que já foi analisado. */
-export async function summarizeEach(client: YoutubeClient, playlists: Playlist[]): Promise<OverviewAnalysis> {
+/** Lê lotes de playlists em paralelo e para o lote seguinte se a quota acabar no meio. */
+export async function summarizeEach(client: PlaylistItemLister, playlists: Playlist[]): Promise<OverviewAnalysis> {
     const analysis: OverviewAnalysis = { summaries: [], failed: [], stoppedByQuota: false };
-    for (const playlist of playlists) {
-        try {
-            analysis.summaries.push(summarizePlaylist(playlist, await client.listPlaylistItems(playlist.id)));
-        } catch (error) {
-            const { reason, status } = apiFailure(error);
-            const title = playlist.snippet?.title ?? playlist.id;
-            analysis.failed.push({ playlistId: playlist.id, title, reason: reason ?? String(status ?? 'unknown') });
-            if (reason === 'quotaExceeded') {
-                analysis.stoppedByQuota = true;
-                break;
+    for (let start = 0; start < playlists.length; start += OVERVIEW_CONCURRENT_PLAYLISTS) {
+        const batch = await Promise.all(
+            playlists.slice(start, start + OVERVIEW_CONCURRENT_PLAYLISTS).map(async (playlist) => {
+                try {
+                    return {
+                        playlist,
+                        summary: summarizePlaylist(playlist, await client.listPlaylistItems(playlist.id)),
+                        failureReason: undefined,
+                    };
+                } catch (error) {
+                    const { reason, status } = apiFailure(error);
+                    return {
+                        playlist,
+                        failureReason: reason ?? String(status ?? 'unknown'),
+                        summary: undefined,
+                    };
+                }
+            }),
+        );
+
+        for (const result of batch) {
+            if (result.summary) {
+                analysis.summaries.push(result.summary);
+            } else {
+                const title = result.playlist.snippet?.title ?? result.playlist.id;
+                analysis.failed.push({
+                    playlistId: result.playlist.id,
+                    title,
+                    reason: result.failureReason ?? 'unknown',
+                });
+                if (result.failureReason === 'quotaExceeded') analysis.stoppedByQuota = true;
             }
         }
+        if (analysis.stoppedByQuota) break;
     }
     return analysis;
 }

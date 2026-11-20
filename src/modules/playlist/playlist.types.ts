@@ -1,3 +1,4 @@
+import type { PlaylistItem } from '../../infra/youtube/youtube-api.types';
 import type { QuotaSnapshot, RemovalQuotaEstimate } from '../quota/quota.types';
 
 export interface PlaylistEntry {
@@ -76,4 +77,8 @@ export interface OverviewAnalysis {
     failed: DuplicatesOverview['failed'];
     /** A quota acabou no meio: a lista está incompleta. */
     stoppedByQuota: boolean;
+}
+
+export interface PlaylistItemLister {
+    listPlaylistItems(playlistId: string): Promise<PlaylistItem[]>;
 }
