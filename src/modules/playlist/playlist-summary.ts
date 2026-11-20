@@ -2,6 +2,7 @@ import { QUOTA_COST } from '../../infra/youtube/youtube.constants';
 import type { Playlist, PlaylistItem, YouTubeThumbnails } from '../../infra/youtube/youtube-api.types';
 import { findDuplicates, toEntries } from './duplicates';
 import type { PlaylistDuplicateSummary } from './playlist.types';
+import { findDeleted } from './unavailable';
 
 const THUMBNAIL_PREFERENCE: (keyof YouTubeThumbnails)[] = ['maxres', 'standard', 'high', 'medium', 'default'];
 
@@ -54,6 +55,7 @@ export function summarizePlaylist(playlist: Playlist, items: PlaylistItem[]): Pl
         duplicates: duplicates.length,
         duplicatePercent: entries.length === 0 ? 0 : Math.round((duplicates.length / entries.length) * 1000) / 10,
         unavailable: entries.filter((entry) => entry.unavailable).length,
+        deleted: findDeleted(entries).length,
         mostRepeated,
         removalCost: duplicates.length * QUOTA_COST.delete,
     };

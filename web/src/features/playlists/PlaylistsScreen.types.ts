@@ -30,3 +30,7 @@ export interface PlaylistNoticesProps {
     error: ApiError | null;
     onRetry: () => void;
 }
+
+export interface PlaylistMetaProps {
+    playlist: PlaylistSummary;
+}

@@ -2,7 +2,7 @@
 
 O que falta para dar o projeto por encerrado, em ordem de prioridade. Atualize este arquivo no mesmo PR que resolver um item: risque o item e anote o número do PR.
 
-Situação em 20/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 166 testes passando (131 da API, 35 da interface).
+Situação em 20/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 185 testes passando (135 da API, 50 da interface).
 
 ## 1. Segurança (fazer primeiro)
 
@@ -30,7 +30,7 @@ Situação em 20/11/2026: a remoção de duplicados funciona e foi validada com 
 - [x] ~~**Restaurar pela interface.**~~ (#41): a tela de remoção agora chama a restauração pelo servidor; o comando de terminal continua disponível como alternativa.
 - [ ] **Validação real pela interface** na playlist de teste, antes de usar a interface em playlist real. Em 19/11 a cota do dia já estava zerada; conferido só o estado "sem cota" com dados reais. Fazer depois das 05:00.
 - [x] ~~**Release v1.0.0.**~~ (#40): `GET /health`, `engines` (Node ≥ 22) e workflow de release por tag com changelog. Sem deploy e sem Docker (o projeto roda só localmente).
-- [ ] **Opção para limpar itens indisponíveis**, separada da remoção de duplicados. Decisão do dono (20/11): só "Deleted video" sai; "Private video" fica (pode voltar a ser público). API pronta (#48): `GET /playlist/:id/unavailable` (dry-run) e `DELETE /playlist/:id/remove-unavailable?confirm=N`, com o mesmo pipeline dos duplicados (confirmação exata, backup antes, quota, job com `tipo`). Conta como apagado só o item com título "Deleted video" **e** sem `videoPublishedAt`. A cópia de um apagado continua na lista de duplicados. Vídeo apagado não volta pela restauração. Falta a interface.
+- [x] ~~**Opção para limpar itens indisponíveis**~~ (#48, #49), separada da remoção de duplicados. Decisão do dono (20/11): só "Deleted video" sai; "Private video" fica (pode voltar a ser público). API pronta (#48): `GET /playlist/:id/unavailable` (dry-run) e `DELETE /playlist/:id/remove-unavailable?confirm=N`, com o mesmo pipeline dos duplicados (confirmação exata, backup antes, quota, job com `tipo`). Conta como apagado só o item com título "Deleted video" **e** sem `videoPublishedAt`. A cópia de um apagado continua na lista de duplicados. Vídeo apagado não volta pela restauração. Interface (#49): revisão em `#/p/:id/apagados`, links "N apagados" na lista e na revisão de repetidos, e a análise geral passa a mostrar também as playlists que só têm vídeos apagados.
 
 ## 4. Refatoração final (antes da release v1.0.0)
 
@@ -92,3 +92,4 @@ Pedido do dono em 20/11/2026: nenhum code smell no projeto. Passar a code base i
 | #46 | Estado "concluído" da remoção sem contadores negativos ou NaN |
 | #47 | Análise geral lê duas playlists por vez, na mesma ordem, e para no lote seguinte se a quota acabar |
 | #48 | API para remover vídeos apagados (dry-run e remoção com confirmação), pipeline de remoção único para os dois tipos, e duas remoções simultâneas na mesma playlist não começam dois jobs |
+| #49 | Interface para remover vídeos apagados: revisão própria, painel de confirmação único para os dois tipos, aviso de que apagado não volta, e a análise geral conta os apagados |

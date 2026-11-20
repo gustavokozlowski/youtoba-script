@@ -22,6 +22,31 @@ describe('PlaylistsScreen', () => {
         expect(fetchMock).toHaveBeenCalledWith('/playlist/with-duplicates', expect.anything());
     });
 
+    it('shows a link with the deleted videos count that opens the deleted review', async () => {
+        const withDeleted = { ...rapNacional, apagados: 4 };
+        fakeApi({ '/playlist/with-duplicates': { body: overview([withDeleted]) }, '/quota': { body: quota } });
+        render(<PlaylistsScreen />);
+
+        const link = await screen.findByRole('link', { name: /4 apagados/i });
+        expect(link).toHaveAttribute('href', '#/p/PLrap/apagados');
+    });
+
+    it('renders a playlist that has only deleted videos', async () => {
+        const onlyDeleted = {
+            ...rapNacional,
+            playlistId: 'PLold',
+            titulo: 'old favorites',
+            duplicados: 0,
+            apagados: 2,
+            custoRemocao: { unidades: 0, cabeHoje: true },
+        };
+        fakeApi({ '/playlist/with-duplicates': { body: overview([onlyDeleted]) }, '/quota': { body: quota } });
+        render(<PlaylistsScreen />);
+
+        expect(await screen.findByRole('link', { name: 'old favorites' })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: /2 apagados/i })).toHaveAttribute('href', '#/p/PLold/apagados');
+    });
+
     it('com análise guardada nesta aba, não gasta cota de novo até pedirem', async () => {
         sessionStorage.setItem(
             'youtoba:overview',

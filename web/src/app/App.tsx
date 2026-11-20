@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { SignInScreen } from '../features/auth/SignInScreen';
 import { PlaylistsScreen } from '../features/playlists/PlaylistsScreen';
 import { RemovalsScreen } from '../features/removal/RemovalsScreen';
+import { DeletedReviewScreen } from '../features/review/DeletedReviewScreen';
 import { ReviewScreen } from '../features/review/ReviewScreen';
 import { UNAUTHORIZED_EVENT } from '../shared/api/client';
 import { signedOut, useAuthStatus, useSignOut } from '../shared/api/queries';
@@ -43,6 +44,7 @@ export function App() {
 function screenKey(route: ScreenProps['route']) {
     switch (route.name) {
         case 'review':
+        case 'deleted':
             return `${route.name}-${route.playlistId}`;
         case 'removal':
             return `${route.name}-${route.jobId}`;
@@ -88,6 +90,8 @@ function Screen({ route }: ScreenProps) {
     switch (route.name) {
         case 'review':
             return <ReviewScreen key={route.playlistId} playlistId={route.playlistId} />;
+        case 'deleted':
+            return <DeletedReviewScreen key={route.playlistId} playlistId={route.playlistId} />;
         case 'removal':
             return (
                 <Suspense fallback={<main aria-busy="true" />}>

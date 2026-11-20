@@ -59,6 +59,8 @@ export function formatOverview(overview: DuplicatesOverview) {
             ignoradasComMenosDe2Itens: overview.skippedSmall,
             comDuplicados: overview.withDuplicates,
             totalDuplicados: overview.totalDuplicates,
+            comApagados: overview.withDeleted,
+            totalApagados: overview.totalDeleted,
             custoTotalRemocao: overview.totalRemovalCost,
             custoDestaAnalise: overview.analysisCost,
             ...(overview.stoppedByQuota
@@ -79,6 +81,7 @@ export function formatOverview(overview: DuplicatesOverview) {
             duplicados: p.duplicates,
             percentualDuplicado: p.duplicatePercent,
             indisponiveis: p.unavailable,
+            apagados: p.deleted,
             maisRepetidos: p.mostRepeated.map((m) => ({ videoId: m.videoId, titulo: m.title, copias: m.copies })),
             custoRemocao: { unidades: p.removalCost, cabeHoje: p.removalCost <= remaining },
             comandos:

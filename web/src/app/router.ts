@@ -5,6 +5,7 @@ import type { Route } from './router.types';
 const ID = '([A-Za-z0-9_-]{1,128})';
 const PATTERNS: [RegExp, (match: RegExpMatchArray) => Route][] = [
     [new RegExp(`^#/p/${ID}$`), (m) => ({ name: 'review', playlistId: m[1] })],
+    [new RegExp(`^#/p/${ID}/apagados$`), (m) => ({ name: 'deleted', playlistId: m[1] })],
     [new RegExp(`^#/remocao/${ID}$`), (m) => ({ name: 'removal', jobId: m[1] })],
     [/^#\/remocoes$/, () => ({ name: 'removals' })],
 ];

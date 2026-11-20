@@ -1,5 +1,5 @@
 import { num, thumbnail } from '../lib/format';
-import type { SprayStrikeProps, TrackRowProps } from './TrackRow.types';
+import type { SprayStrikeProps, TrackRowProps, TrackTailProps } from './TrackRow.types';
 
 const STATE_LABEL = { apagado: 'apagado', falhou: 'falhou', pendente: 'na fila', agora: 'agora' } as const;
 
@@ -24,15 +24,20 @@ export function TrackRowContent({ item, state }: Omit<TrackRowProps, 'fresh'>) {
                 <div className="track-title">{item.titulo}</div>
                 {item.canal && <div className="track-channel">{item.canal}</div>}
             </div>
-            {state ? (
-                <span className={`state state-${state}`}>{STATE_LABEL[state]}</span>
-            ) : (
-                <span className="first">
-                    1ª vez em <b className="num">#{num(item.primeiraOcorrencia)}</b>
-                </span>
-            )}
+            <TrackTail item={item} state={state} />
             {state === 'apagado' && <SprayStrike seed={item.posicao} />}
         </>
+    );
+}
+
+/** O fim da linha: o estado na remoção; na revisão, a primeira ocorrência (só o repetido tem). */
+function TrackTail({ item, state }: TrackTailProps) {
+    if (state) return <span className={`state state-${state}`}>{STATE_LABEL[state]}</span>;
+    if (item.primeiraOcorrencia === undefined) return null;
+    return (
+        <span className="first">
+            1ª vez em <b className="num">#{num(item.primeiraOcorrencia)}</b>
+        </span>
     );
 }
 

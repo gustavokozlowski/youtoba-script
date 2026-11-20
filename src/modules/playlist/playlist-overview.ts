@@ -60,16 +60,22 @@ export async function summarizeEach(client: PlaylistItemLister, playlists: Playl
     return analysis;
 }
 
-/** As playlists mostradas (as com duplicados, ou todas), da mais suja para a mais limpa, e os totais. */
+const sumOf = (summaries: PlaylistDuplicateSummary[], pick: (summary: PlaylistDuplicateSummary) => number) =>
+    summaries.reduce((sum, summary) => sum + pick(summary), 0);
+
+/** As playlists mostradas (com duplicados ou apagados, ou todas), da mais suja para a mais limpa, e os totais. */
 export function overviewTotals(summaries: PlaylistDuplicateSummary[], includeAll: boolean) {
     const withDuplicates = summaries.filter((summary) => summary.duplicates > 0);
-    const shown = (includeAll ? summaries : withDuplicates).sort(
-        (a, b) => b.duplicates - a.duplicates || a.title.localeCompare(b.title),
+    const withDeleted = summaries.filter((summary) => summary.deleted > 0);
+    const shown = (includeAll ? summaries : summaries.filter((s) => s.duplicates > 0 || s.deleted > 0)).sort(
+        (a, b) => b.duplicates - a.duplicates || b.deleted - a.deleted || a.title.localeCompare(b.title),
     );
     return {
         playlists: shown,
         withDuplicates: withDuplicates.length,
-        totalDuplicates: withDuplicates.reduce((sum, summary) => sum + summary.duplicates, 0),
-        totalRemovalCost: withDuplicates.reduce((sum, summary) => sum + summary.removalCost, 0),
+        totalDuplicates: sumOf(withDuplicates, (summary) => summary.duplicates),
+        totalRemovalCost: sumOf(withDuplicates, (summary) => summary.removalCost),
+        withDeleted: withDeleted.length,
+        totalDeleted: sumOf(withDeleted, (summary) => summary.deleted),
     };
 }

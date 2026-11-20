@@ -1,30 +1,41 @@
+import type { ReactElement } from 'react';
 import { useRef } from 'react';
-import type { RemovalJob } from '../../shared/api/api.types';
+import type { RemovalJob, RemovalKind } from '../../shared/api/api.types';
 import { num } from '../../shared/lib/format';
 import { Icon } from '../../shared/ui/Icon';
 import { LiveTracks } from './LiveTracks';
-import type { JobViewProps } from './RemovalScreen.types';
+import { NoUndoPanel } from './NoUndoPanel';
+import type { AsidePanelProps, JobViewProps } from './RemovalScreen.types';
+import { KIND_COPY, kindOf } from './removal-kind-copy';
 import { StopNotice } from './StopNotice';
 import { UndoPanel } from './UndoPanel';
 import { useRemovalWindow } from './use-removal-window';
 
-const HEADINGS: Record<RemovalJob['status'], string> = {
-    running: 'Apagando repetidos',
-    done: 'Pronto, repetidos apagados',
-    partial: 'Remoção pausada',
-    failed: 'A remoção parou com erro',
+// O que ficou para depois: restaurar (repetidos, dá para voltar) ou só o aviso do backup (apagados).
+const ASIDE_PANELS: Record<RemovalKind, (props: AsidePanelProps) => ReactElement> = {
+    duplicados: UndoPanel,
+    apagados: NoUndoPanel,
 };
 
+function remainingCopy(status: RemovalJob['status'], pending: number) {
+    if (status === 'done') return 'todos saíram';
+    if (pending === 1) return 'ainda falta';
+    return 'ainda faltam';
+}
+
 export function JobProgressSection({ job, fresh, onRestore, restoring }: JobViewProps) {
-    const undoRef = useRef<HTMLElement>(null);
-    const goToUndo = () => undoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const asideRef = useRef<HTMLElement>(null);
+    const goToAside = () => asideRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const kind = kindOf(job.tipo);
+    const copy = KIND_COPY[kind];
+    const Aside = ASIDE_PANELS[kind];
     const { running, errors, current, rows } = useRemovalWindow(job);
     const pending = Math.max(0, job.pendentes);
-    const completedCopy = job.status === 'done' ? 'todos saíram' : pending === 1 ? 'ainda falta' : 'ainda faltam';
+    const completedCopy = remainingCopy(job.status, pending);
 
     return (
         <>
-            <h1>{HEADINGS[job.status]}</h1>
+            <h1>{copy.headings[job.status]}</h1>
             <div className="live">
                 <section>
                     <div className="counter">
@@ -49,9 +60,9 @@ export function JobProgressSection({ job, fresh, onRestore, restoring }: JobView
                             </span>
                         </p>
                     )}
-                    <button type="button" className="btn btn-ghost btn-sm to-undo" onClick={goToUndo}>
+                    <button type="button" className="btn btn-ghost btn-sm to-undo" onClick={goToAside}>
                         <Icon name="shield" />
-                        Como desfazer
+                        {copy.shortcut}
                     </button>
                     <StopNotice job={job} errors={errors} />
                     <LiveTracks rows={rows} current={current} fresh={fresh} moving={running} />
@@ -62,7 +73,7 @@ export function JobProgressSection({ job, fresh, onRestore, restoring }: JobView
                         </p>
                     )}
                 </section>
-                <UndoPanel job={job} panelRef={undoRef} onRestore={onRestore} restoring={restoring} />
+                <Aside job={job} panelRef={asideRef} onRestore={onRestore} restoring={restoring} />
             </div>
         </>
     );
