@@ -1,9 +1,16 @@
 import { apiFailure } from '../../infra/youtube/api-failure';
-import type { YoutubeClient } from '../../infra/youtube/youtube.client';
 import { PAGE_SIZE, QUOTA_COST } from '../../infra/youtube/youtube.constants';
 import type { Playlist } from '../../infra/youtube/youtube-api.types';
-import type { OverviewAnalysis, PlaylistDuplicateSummary } from './playlist.types';
+import type {
+    OverviewAnalysis,
+    PlaylistDuplicateSummary,
+    PlaylistItemLister,
+    PlaylistReadResult,
+} from './playlist.types';
 import { summarizePlaylist } from './playlist-summary';
+
+/** Playlists lidas ao mesmo tempo na análise geral: acelera sem disparar rajadas contra a API. */
+export const OVERVIEW_CONCURRENT_PLAYLISTS = 2;
 
 /** Só playlists com 2 itens ou mais podem ter duplicados. */
 export const analyzable = (playlists: Playlist[]) =>
@@ -16,21 +23,39 @@ export const analysisEstimate = (playlists: Playlist[]) =>
         0,
     );
 
-/** Lê e resume uma playlist por vez; se a quota acabar no meio, para e devolve o que já foi analisado. */
-export async function summarizeEach(client: YoutubeClient, playlists: Playlist[]): Promise<OverviewAnalysis> {
+/** Lê uma playlist e devolve o resumo ou o motivo da falha, sem lançar. */
+async function readPlaylist(client: PlaylistItemLister, playlist: Playlist): Promise<PlaylistReadResult> {
+    try {
+        return { ok: true, summary: summarizePlaylist(playlist, await client.listPlaylistItems(playlist.id)) };
+    } catch (error) {
+        const { reason, status } = apiFailure(error);
+        const title = playlist.snippet?.title ?? playlist.id;
+        return {
+            ok: false,
+            failure: { playlistId: playlist.id, title, reason: reason ?? String(status ?? 'unknown') },
+        };
+    }
+}
+
+function recordResult(analysis: OverviewAnalysis, result: PlaylistReadResult) {
+    if (result.ok) {
+        analysis.summaries.push(result.summary);
+        return;
+    }
+    analysis.failed.push(result.failure);
+    if (result.failure.reason === 'quotaExceeded') analysis.stoppedByQuota = true;
+}
+
+/**
+ * Lê as playlists em lotes de OVERVIEW_CONCURRENT_PLAYLISTS, mantendo a ordem do resultado.
+ * Se a quota acabar num lote, os lotes seguintes não são lidos.
+ */
+export async function summarizeEach(client: PlaylistItemLister, playlists: Playlist[]): Promise<OverviewAnalysis> {
     const analysis: OverviewAnalysis = { summaries: [], failed: [], stoppedByQuota: false };
-    for (const playlist of playlists) {
-        try {
-            analysis.summaries.push(summarizePlaylist(playlist, await client.listPlaylistItems(playlist.id)));
-        } catch (error) {
-            const { reason, status } = apiFailure(error);
-            const title = playlist.snippet?.title ?? playlist.id;
-            analysis.failed.push({ playlistId: playlist.id, title, reason: reason ?? String(status ?? 'unknown') });
-            if (reason === 'quotaExceeded') {
-                analysis.stoppedByQuota = true;
-                break;
-            }
-        }
+    for (let start = 0; start < playlists.length && !analysis.stoppedByQuota; start += OVERVIEW_CONCURRENT_PLAYLISTS) {
+        const batch = playlists.slice(start, start + OVERVIEW_CONCURRENT_PLAYLISTS);
+        const results = await Promise.all(batch.map((playlist) => readPlaylist(client, playlist)));
+        for (const result of results) recordResult(analysis, result);
     }
     return analysis;
 }

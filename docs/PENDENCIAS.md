@@ -2,7 +2,7 @@
 
 O que falta para dar o projeto por encerrado, em ordem de prioridade. Atualize este arquivo no mesmo PR que resolver um item: risque o item e anote o número do PR.
 
-Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 136 testes passando (103 da API, 33 da interface).
+Situação em 20/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 143 testes passando (108 da API, 35 da interface).
 
 ## 1. Segurança (fazer primeiro)
 
@@ -79,3 +79,15 @@ Pedido do dono em 20/11/2026: nenhum code smell no projeto. Passar a code base i
 | #30 | Tratador de erro único e logs `pino` sem token, sem dado pessoal |
 | #31 | ADR 0001: arquitetura de pastas, nomes e tipos |
 | #32 | Refatoração da API, parte 1: `config/settings.ts`, `shared/`, `infra/` e guardas de import no Biome |
+| #33 | API em módulos de domínio (`src/modules/`) |
+| #34 | Interface por features, tipos em `*.types.ts`, telas em seções e hooks, guardas de import |
+| #35 | Deduplicação da interface (avisos de erro, datas, reset da cota) |
+| #36 | `google-auth-library` 11 |
+| #37, #38 | Branch `develop` arquivada; decisão sobre persistir os jobs de remoção |
+| #39 | Escala tipográfica consolidada nos tokens |
+| #40 | Release v1.0.0: `GET /health`, `engines`, workflow de release |
+| #41 | Restaurar backup pela tela de remoção |
+| #42, #43 | Entrada suave e interações/feedback mais macios na interface |
+| #44 | Cliente do YouTube no SDK oficial |
+| #46 | Estado "concluído" da remoção sem contadores negativos ou NaN |
+| #47 | Análise geral lê duas playlists por vez, na mesma ordem, e para no lote seguinte se a quota acabar |
