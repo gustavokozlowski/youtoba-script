@@ -1,11 +1,12 @@
-import { logger } from '../../../utils/logger';
+import { setting } from '../../config/settings';
+import { logger } from '../../shared/logger';
 
 require('dotenv').config();
 
 import axios, { type AxiosInstance } from 'axios';
-import { httpErrorLike } from '../../../utils/errors';
-import type { GoogleApiErrorBody } from '../../../utils/errors.types';
-import { PAGE_SIZE, QUOTA_COST, requestCost } from '../youtube.constants';
+import { httpErrorLike } from '../../shared/errors';
+import type { GoogleApiErrorBody } from '../../shared/errors.types';
+import { PAGE_SIZE, QUOTA_COST, requestCost } from './youtube.constants';
 import type {
     ApiFailure,
     DeleteItemsResult,
@@ -16,9 +17,7 @@ import type {
     PlaylistsResponse,
     YoutubeClientConfig,
     YoutubeClientOptions,
-} from './client.types';
-
-const { YOUTUBE_BASE_URL } = process.env;
+} from './youtube-api.types';
 
 const RETRYABLE_STATUS = new Set([409, 429, 500, 503]);
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -48,7 +47,7 @@ export class YoutubeClient {
         this.retries = retries;
         this.baseDelayMs = baseDelayMs;
         this.client = axios.create({
-            baseURL: YOUTUBE_BASE_URL,
+            baseURL: setting('YOUTUBE_BASE_URL'),
             timeout: 15_000,
             headers: {
                 Accept: 'application/json',

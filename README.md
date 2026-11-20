@@ -35,34 +35,13 @@ Este projeto é uma API REST desenvolvida em Node.js com TypeScript que permite:
 
 ## 📁 Estrutura do Projeto
 
-```
-script/
-├── src/
-│   ├── controllers/          # Controladores das rotas
-│   │   ├── auth.controller.ts
-│   │   └── playlist.controller.ts
-│   ├── middlewares/          # Middlewares da aplicação
-│   │   └── auth.middlewares.ts
-│   ├── routes/               # Definição das rotas
-│   │   ├── auth.routes.ts
-│   │   ├── playlist.routes.ts
-│   │   └── index.ts
-│   ├── server/               # Configuração do servidor
-│   │   └── index.ts
-│   ├── services/             # Lógica de negócio
-│   │   └── youtube/
-│   │       ├── client/
-│   │       │   └── youtube.client.ts
-│   │       └── youtube-playlist.services.ts
-│   └── utils/                # Utilitários
-│       └── repository/
-│           └── user.repository.ts
-├── .env                      # Variáveis de ambiente
-├── biome.json                # Configuração do Biome
-├── package.json
-├── tsconfig.json
-└── README.md
-```
+A organização das pastas, os nomes dos arquivos e a direção das dependências estão em [`docs/adr/0001-arquitetura-pastas-e-nomes.md`](docs/adr/0001-arquitetura-pastas-e-nomes.md). Em resumo:
+
+- `src/config/`: validação do `.env` no boot e leitura de cada variável (`setting('NOME')`).
+- `src/server/`: o app Express, o tratador de erro e as proteções (só localhost, CSP, limite de login).
+- `src/infra/`: cliente HTTP do YouTube, SQLite (token cifrado e cota) e criptografia.
+- `src/shared/`: erros e logger, sem depender de nada do projeto.
+- `web/`: a interface (React + Vite).
 
 ## 🔧 Instalação
 

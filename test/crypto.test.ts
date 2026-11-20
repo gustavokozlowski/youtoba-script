@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { decrypt, encrypt, parseEncryptionKey } from '../src/utils/crypto';
+import { decrypt, encrypt, parseEncryptionKey } from '../src/infra/crypto';
 
 const key = randomBytes(32);
 

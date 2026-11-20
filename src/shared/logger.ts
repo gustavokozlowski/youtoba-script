@@ -20,6 +20,7 @@ export const createLogger = (options: LoggerOptions, destination?: DestinationSt
     pino({ ...options, base: undefined, redact: { paths: REDACT_PATHS, censor: '[omitido]' } }, destination);
 
 // Legível no terminal (npm run dev), JSON quando a saída não é um terminal (CI), mudo nos testes.
+// Lê process.env direto: shared/ não depende de nada do projeto (ADR 0001); LOG_LEVEL é validado no boot.
 const testing = process.env.VITEST !== undefined;
 const pretty = process.stdout.isTTY && !testing;
 

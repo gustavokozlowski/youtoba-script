@@ -1,4 +1,4 @@
-import { apiFailure, type YoutubeClient } from './client/youtube.client';
+import { apiFailure, type YoutubeClient } from '../../infra/youtube/youtube.client';
 import { toEntries } from './duplicates';
 import type { PlaylistBackup, RestoreResult } from './youtube.types';
 

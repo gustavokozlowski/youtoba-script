@@ -1,5 +1,5 @@
 import type { ErrorRequestHandler } from 'express';
-import { errorMessage, httpErrorLike } from '../utils/errors';
+import { errorMessage, httpErrorLike } from '../shared/errors';
 import type { ClientErrorReply, ErrorLog } from './error-handler.types';
 
 // Erros do parser de JSON do Express: culpa do pedido, não do servidor.

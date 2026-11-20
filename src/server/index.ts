@@ -2,7 +2,7 @@ require('dotenv').config();
 
 import { EnvError, loadEnv } from '../config/env';
 import { googleAuth } from '../services/google';
-import { logger } from '../utils/logger';
+import { logger } from '../shared/logger';
 import { createApp } from './app';
 
 /** Sobe só com o .env válido; senão diz o que falta e sai, sem mostrar nenhum valor. */

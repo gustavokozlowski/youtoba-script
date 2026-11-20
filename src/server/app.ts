@@ -3,7 +3,7 @@ import path from 'node:path';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import { routes } from '../routes';
-import { logger } from '../utils/logger';
+import { logger } from '../shared/logger';
 import { errorHandler } from './error-handler';
 import { localOnly } from './local-only';
 import { loginRateLimit, securityHeaders } from './security';

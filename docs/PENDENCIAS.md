@@ -77,3 +77,4 @@ Pedido do dono em 20/11/2026: nenhum code smell no projeto. Passar a code base i
 | #29 | `biome.jsonc` comentado, `noExplicitAny` ligada, typecheck dos testes e `npm run check` |
 | #30 | Tratador de erro único e logs `pino` sem token, sem dado pessoal |
 | #31 | ADR 0001: arquitetura de pastas, nomes e tipos |
+| #32 | Refatoração da API, parte 1: `config/settings.ts`, `shared/`, `infra/` e guardas de import no Biome |

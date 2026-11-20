@@ -1,9 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { DeleteItemsResult } from './client/client.types';
+import { setting } from '../../config/settings';
+import type { DeleteItemsResult } from '../../infra/youtube/youtube-api.types';
 import type { PlaylistBackup, PlaylistEntry } from './youtube.types';
 
-export const backupDir = () => process.env.BACKUP_DIR ?? 'backups';
+export const backupDir = () => setting('BACKUP_DIR');
 
 /** Grava a playlist inteira antes de qualquer remoção. O YouTube não tem lixeira. */
 export function writeBackup(playlistId: string, items: PlaylistEntry[], now = new Date()): string {

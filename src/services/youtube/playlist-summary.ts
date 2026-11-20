@@ -1,6 +1,6 @@
-import type { Playlist, PlaylistItem, YouTubeThumbnails } from './client/client.types';
+import { QUOTA_COST } from '../../infra/youtube/youtube.constants';
+import type { Playlist, PlaylistItem, YouTubeThumbnails } from '../../infra/youtube/youtube-api.types';
 import { findDuplicates, toEntries } from './duplicates';
-import { QUOTA_COST } from './youtube.constants';
 import type { PlaylistDuplicateSummary } from './youtube.types';
 
 // Títulos que a API devolve para itens cujo vídeo foi apagado ou ficou privado.

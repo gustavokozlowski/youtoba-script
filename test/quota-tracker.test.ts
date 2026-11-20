@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import type { QuotaStore } from '../src/infra/storage/quota.store.types';
 import { nextPacificMidnight, pacificDay, QuotaTracker } from '../src/services/youtube/quota-tracker';
-import type { QuotaStore } from '../src/utils/repository/quota-store.types';
 
 const memoryStore = (): QuotaStore => {
     const days = new Map<string, number>();

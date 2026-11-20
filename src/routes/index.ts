@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { setting } from '../config/settings';
 import { getQuota } from '../controllers/playlist.controller';
 import { authRouter } from '../routes/auth.routes';
 import { devRouter } from '../routes/dev.routes';
@@ -13,7 +14,7 @@ routes.use('/jobs', jobsRouter);
 routes.get('/quota', getQuota);
 
 // Rotas de apoio para validação manual. Desligadas por padrão.
-if (process.env.ENABLE_DEV_ROUTES === 'true') {
+if (setting('ENABLE_DEV_ROUTES')) {
     routes.use('/dev', devRouter);
 }
 

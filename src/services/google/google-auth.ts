@@ -1,6 +1,6 @@
 import { CodeChallengeMethod, OAuth2Client } from 'google-auth-library';
-import { errorMessage, httpErrorLike } from '../../utils/errors';
-import type { TokenStore } from '../../utils/repository/token-store.types';
+import type { TokenStore } from '../../infra/storage/token.store.types';
+import { errorMessage, httpErrorLike } from '../../shared/errors';
 import type { GoogleAuthConfig } from './google-auth.types';
 import type { PendingLogin } from './pending-logins.types';
 

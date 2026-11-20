@@ -4,7 +4,7 @@ import request from 'supertest';
 import { describe, expect, it, vi } from 'vitest';
 import { createApp } from '../src/server/app';
 import { errorHandler } from '../src/server/error-handler';
-import { createLogger } from '../src/utils/logger';
+import { createLogger } from '../src/shared/logger';
 
 const TOKEN = 'ya29.token-que-nao-pode-vazar';
 
