@@ -1,7 +1,8 @@
-import type { DuplicateItem, JobItemState } from '../api/api.types';
+import type { DeletedItem, JobItemState } from '../api/api.types';
 
 export interface TrackRowProps {
-    item: DuplicateItem;
+    /** Com `primeiraOcorrencia` (repetido) a linha da revisão mostra onde o vídeo aparece primeiro. */
+    item: DeletedItem & { primeiraOcorrencia?: number };
     /** Sem estado: linha da revisão (mostra a primeira ocorrência). Com estado: linha da remoção. */
     state?: JobItemState | 'agora';
     /** Acabou de ser apagado: o risco de spray é desenhado na hora. */
@@ -10,4 +11,9 @@ export interface TrackRowProps {
 
 export interface SprayStrikeProps {
     seed: number;
+}
+
+export interface TrackTailProps {
+    item: TrackRowProps['item'];
+    state: TrackRowProps['state'];
 }

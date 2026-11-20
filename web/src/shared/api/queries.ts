@@ -8,6 +8,7 @@ import type {
     RemovalJob,
     RemovalJobSummary,
     RemovalStarted,
+    UnavailablePreview,
 } from './api.types';
 import { api } from './client';
 
@@ -17,6 +18,7 @@ export const keys = {
     quota: ['quota'] as const,
     overview: ['overview'] as const,
     preview: (playlistId: string) => ['preview', playlistId] as const,
+    unavailable: (playlistId: string) => ['unavailable', playlistId] as const,
     jobs: ['jobs'] as const,
     job: (jobId: string) => ['job', jobId] as const,
 };
@@ -91,24 +93,40 @@ export function usePreview(playlistId: string) {
     });
 }
 
-export function useStartRemoval(playlistId: string) {
+export function useUnavailablePreview(playlistId: string) {
+    const client = useQueryClient();
+    return useQuery({
+        queryKey: keys.unavailable(playlistId),
+        queryFn: () => spending(client, api.get<UnavailablePreview>(`${playlistPath(playlistId)}/unavailable`)),
+        staleTime: PREVIEW_FRESH_MS,
+    });
+}
+
+/** Começar uma remoção: muda só o endpoint. O resto (job, análise, prévias velhas) é igual. */
+function useStartRemovalTo(playlistId: string, endpoint: 'remove-duplicates' | 'remove-unavailable') {
     const client = useQueryClient();
     return useMutation({
         mutationFn: (confirm: number) =>
             spending(
                 client,
-                api.send<RemovalStarted>('DELETE', `${playlistPath(playlistId)}/remove-duplicates?confirm=${confirm}`),
+                api.send<RemovalStarted>('DELETE', `${playlistPath(playlistId)}/${endpoint}?confirm=${confirm}`),
             ),
         onSuccess: (started) => {
             markOverviewStale();
             // A tela de progresso abre já com o job, sem esperar a primeira consulta.
             client.setQueryData(keys.job(started.jobId), started);
             void client.invalidateQueries({ queryKey: keys.overview });
+            // As duas prévias da playlist ficam velhas: tirar um tipo muda os números do outro.
             void client.invalidateQueries({ queryKey: keys.preview(playlistId) });
+            void client.invalidateQueries({ queryKey: keys.unavailable(playlistId) });
             void client.invalidateQueries({ queryKey: keys.jobs });
         },
     });
 }
+
+export const useStartRemoval = (playlistId: string) => useStartRemovalTo(playlistId, 'remove-duplicates');
+
+export const useStartDeletedRemoval = (playlistId: string) => useStartRemovalTo(playlistId, 'remove-unavailable');
 
 /** Consulta o job a cada segundo enquanto ele roda; para sozinha quando termina. */
 export function useJob(jobId: string) {

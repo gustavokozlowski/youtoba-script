@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react';
 import { href } from '../../shared/lib/route-links';
 import { Icon } from '../../shared/ui/Icon';
-import type { UndoPanelProps } from './RemovalScreen.types';
+import type { AsidePanelProps } from './RemovalScreen.types';
 
-export function UndoPanel({ job, panelRef, onRestore, restoring }: UndoPanelProps) {
+export function UndoPanel({ job, panelRef, onRestore, restoring }: AsidePanelProps) {
     const [copied, setCopied] = useState<'idle' | 'copied' | 'select'>('idle');
     const commandRef = useRef<HTMLElement>(null);
 

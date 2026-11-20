@@ -1,17 +1,18 @@
 import { num } from '../../shared/lib/format';
 import { Icon } from '../../shared/ui/Icon';
 import { TrackRow } from '../../shared/ui/TrackRow';
-import type { DuplicateListProps } from './ReviewScreen.types';
-import { useDuplicateFilter } from './use-duplicate-filter';
+import type { TrackSearchListProps } from './ReviewScreen.types';
+import { useTrackFilter } from './use-track-filter';
 
-export function DuplicateList({ preview, onGoToConfirm }: DuplicateListProps) {
-    const { query, setQuery, listLabel, visible } = useDuplicateFilter(preview);
+/** A lista de itens que saem, com busca e o atalho para a confirmação. Serve a repetidos e a apagados. */
+export function TrackSearchList({ items, noun, heading, onGoToConfirm }: TrackSearchListProps) {
+    const { query, setQuery, listLabel, visible } = useTrackFilter(items);
     return (
         <section>
             <div className="tools">
                 <label className="search">
                     <Icon name="search" />
-                    <span className="sr-only">Buscar nos repetidos</span>
+                    <span className="sr-only">Buscar nos {noun}</span>
                     <input
                         type="search"
                         value={query}
@@ -24,20 +25,22 @@ export function DuplicateList({ preview, onGoToConfirm }: DuplicateListProps) {
                     Confirmar remoção
                 </button>
                 <span className="count" aria-live="polite">
-                    {query
-                        ? `${num(visible.length)} de ${num(preview.duplicados)} repetidos`
-                        : `${num(preview.duplicados)} repetidos`}
+                    {query ? `${num(visible.length)} de ${num(items.length)} ${noun}` : `${num(items.length)} ${noun}`}
                 </span>
             </div>
             <h2 className="sr-only" id={listLabel}>
-                Repetidos que saem
+                {heading}
             </h2>
             <ul className="tracks" aria-labelledby={listLabel}>
                 {visible.map((item) => (
                     <TrackRow key={item.playlistItemId} item={item} />
                 ))}
             </ul>
-            {visible.length === 0 && <p className="count">Nenhum repetido com “{query}”.</p>}
+            {visible.length === 0 && (
+                <p className="count">
+                    Nada com “{query}” entre os {noun}.
+                </p>
+            )}
         </section>
     );
 }

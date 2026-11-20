@@ -543,6 +543,40 @@ describe('playlists com duplicados', () => {
         expect(res.body.playlists[2]).toMatchObject({ duplicados: 0, aposRemocao: 2, comandos: null });
     });
 
+    it('counts deleted videos per playlist (without later copies) and lists playlists that only have deleted videos', async () => {
+        // PLc só tem vídeo apagado (sem duplicado): precisa aparecer.
+        mockMyPlaylists();
+        mockItems('PLa', [{ id: 'a' }, { id: 'b' }, { id: 'a' }]);
+        mockItems('PLb', [
+            { id: 'x', title: 'Deleted video' },
+            { id: 'v1' },
+            { id: 'x', title: 'Deleted video' },
+            { id: 'v1' },
+        ]);
+        mockItems('PLc', [{ id: 'c1' }, { id: 'd1', title: 'Deleted video' }]);
+
+        const res = await request(app).get('/playlist/with-duplicates');
+
+        expect(res.status).toBe(200);
+        const byId = (id: string) =>
+            res.body.playlists.find((p: OverviewBody['playlists'][number]) => p.playlistId === id);
+        expect(res.body.playlists.map((p: OverviewBody['playlists'][number]) => p.playlistId)).toEqual([
+            'PLb',
+            'PLa',
+            'PLc',
+        ]);
+        expect(byId('PLb')).toMatchObject({ duplicados: 2, apagados: 1 });
+        expect(byId('PLa')).toMatchObject({ duplicados: 1, apagados: 0 });
+        expect(byId('PLc')).toMatchObject({ duplicados: 0, apagados: 1 });
+        expect(res.body.resumo).toMatchObject({
+            comDuplicados: 2,
+            totalDuplicados: 3,
+            custoTotalRemocao: 150,
+            comApagados: 2,
+            totalApagados: 2,
+        });
+    });
+
     it('se a análise não couber no saldo do dia, recusa antes de ler os itens', async () => {
         await rebootWithQuota(4); // a lista de playlists gasta 2; ler os itens custaria mais 3
         mockMyPlaylists();

@@ -60,6 +60,8 @@ export interface PlaylistDuplicateSummary {
     duplicatePercent: number;
     /** Itens "Deleted video" ou "Private video". */
     unavailable: number;
+    /** Vídeos apagados que dá para remover (sem contar cópias posteriores, que entram nos duplicados). */
+    deleted: number;
     mostRepeated: { videoId: string; title: string; copies: number }[];
     /** Unidades de quota para remover os duplicados desta playlist. */
     removalCost: number;
@@ -73,6 +75,8 @@ export interface DuplicatesOverview {
     withDuplicates: number;
     totalDuplicates: number;
     totalRemovalCost: number;
+    withDeleted: number;
+    totalDeleted: number;
     /** Unidades de quota gastas por esta análise. */
     analysisCost: number;
     failed: PlaylistReadFailure[];

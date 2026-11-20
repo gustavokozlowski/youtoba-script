@@ -29,6 +29,8 @@ export const overview = (playlists: unknown[] = [rapNacional]) => ({
         ignoradasComMenosDe2Itens: 1,
         comDuplicados: playlists.length,
         totalDuplicados: 75,
+        comApagados: 0,
+        totalApagados: 0,
         custoTotalRemocao: 3_750,
         custoDestaAnalise: 14,
         falhas: [],
@@ -48,6 +50,7 @@ export const rapNacional = {
     duplicados: 75,
     percentualDuplicado: 22.2,
     indisponiveis: 3,
+    apagados: 0,
     maisRepetidos: [],
     custoRemocao: { unidades: 3_750, cabeHoje: true },
 };

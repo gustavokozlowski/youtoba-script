@@ -2,7 +2,10 @@ const integer = new Intl.NumberFormat('pt-BR');
 
 export const num = (n: number) => integer.format(Number.isFinite(n) ? Math.max(0, n) : 0);
 
-export const units = (n: number) => `${num(n)} ${n === 1 ? 'unidade' : 'unidades'}`;
+/** O número com a palavra no singular ou plural: quantity(1, 'vídeo', 'vídeos') → '1 vídeo'. */
+export const quantity = (n: number, one: string, many: string) => `${num(n)} ${n === 1 ? one : many}`;
+
+export const units = (n: number) => quantity(n, 'unidade', 'unidades');
 
 export const daysLabel = (days: number) => `${days} ${days === 1 ? 'dia' : 'dias'} de cota`;
 

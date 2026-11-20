@@ -4,6 +4,7 @@ import { num, shortDateTimeLabel } from '../../shared/lib/format';
 import { playlistTitle } from '../../shared/lib/overview-cache';
 import { href } from '../../shared/lib/route-links';
 import { Notice } from '../../shared/ui/Notice';
+import { KIND_COPY, kindOf } from './removal-kind-copy';
 
 const STATUS_TONE: Record<RemovalJobSummary['status'], string> = {
     running: 'pill-live',
@@ -48,7 +49,9 @@ export function RemovalsScreen() {
                                 <a className="pl-title" href={href.removal(job.jobId)}>
                                     {playlistTitle(job.playlistId)}
                                 </a>
-                                <div className="pl-meta">começou {shortDateTimeLabel(job.iniciadoEm)}</div>
+                                <div className="pl-meta">
+                                    {KIND_COPY[kindOf(job.tipo)].label} · começou {shortDateTimeLabel(job.iniciadoEm)}
+                                </div>
                             </div>
                             <span className="num job-count">
                                 {num(job.removidos)} de {num(job.total)}

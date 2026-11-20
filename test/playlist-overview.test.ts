@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import type { PlaylistItemLister } from '../src/modules/playlist/playlist.types';
-import { OVERVIEW_CONCURRENT_PLAYLISTS, summarizeEach } from '../src/modules/playlist/playlist-overview';
+import type { PlaylistDuplicateSummary, PlaylistItemLister } from '../src/modules/playlist/playlist.types';
+import {
+    OVERVIEW_CONCURRENT_PLAYLISTS,
+    overviewTotals,
+    summarizeEach,
+} from '../src/modules/playlist/playlist-overview';
 import { playlist, playlistItem } from './helpers/youtube-fixtures';
+import type { SummaryFixture } from './playlist-overview.types';
 
 const quotaExceeded = { response: { status: 403, data: { error: { errors: [{ reason: 'quotaExceeded' }] } } } };
 const notFound = { response: { status: 404, data: { error: { errors: [{ reason: 'playlistNotFound' }] } } } };
@@ -61,5 +66,69 @@ describe('summarizeEach', () => {
             { playlistId: 'c', title: 'Playlist c', reason: 'unknown' },
         ]);
         expect(result.stoppedByQuota).toBe(false);
+    });
+});
+
+/** Resumo completo com só os números que os totais leem. */
+const summary = ({ playlistId, title, duplicates, deleted }: SummaryFixture): PlaylistDuplicateSummary => ({
+    playlistId,
+    title,
+    link: `https://www.youtube.com/playlist?list=${playlistId}`,
+    coverSource: 'none',
+    totalVideos: 10,
+    afterRemoval: 10 - duplicates,
+    duplicates,
+    duplicatePercent: duplicates * 10,
+    unavailable: deleted,
+    deleted,
+    mostRepeated: [],
+    removalCost: duplicates * 50,
+});
+
+const mixed = () => [
+    summary({ playlistId: 'clean', title: 'Clean', duplicates: 0, deleted: 0 }),
+    summary({ playlistId: 'only-deleted', title: 'Only deleted', duplicates: 0, deleted: 4 }),
+    summary({ playlistId: 'only-dups', title: 'Only dups', duplicates: 2, deleted: 0 }),
+    summary({ playlistId: 'both-b', title: 'B both', duplicates: 2, deleted: 1 }),
+    summary({ playlistId: 'both-a', title: 'A both', duplicates: 2, deleted: 1 }),
+    summary({ playlistId: 'more-dups', title: 'More dups', duplicates: 5, deleted: 0 }),
+];
+
+describe('overviewTotals', () => {
+    it('shows playlists with duplicates or deleted videos, sorted by duplicates, then deleted, then title', () => {
+        const totals = overviewTotals(mixed(), false);
+
+        expect(totals.playlists.map((p) => p.playlistId)).toEqual([
+            'more-dups',
+            'both-a',
+            'both-b',
+            'only-dups',
+            'only-deleted',
+        ]);
+    });
+
+    it('with includeAll, also shows the clean playlists', () => {
+        const totals = overviewTotals(mixed(), true);
+
+        expect(totals.playlists.map((p) => p.playlistId)).toEqual([
+            'more-dups',
+            'both-a',
+            'both-b',
+            'only-dups',
+            'only-deleted',
+            'clean',
+        ]);
+    });
+
+    it('counts deleted videos in new totals and keeps the duplicate totals unchanged', () => {
+        const totals = overviewTotals(mixed(), false);
+
+        expect(totals).toMatchObject({
+            withDuplicates: 4,
+            totalDuplicates: 11,
+            totalRemovalCost: 550,
+            withDeleted: 3,
+            totalDeleted: 6,
+        });
     });
 });

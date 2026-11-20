@@ -1,50 +1,66 @@
-import { ApiErrorNotice } from '../../shared/ui/ApiErrorNotice';
-import { DuplicateList } from './DuplicateList';
+import { ChangedNotice } from './ChangedNotice';
+import { DeletedLink } from './DeletedLink';
 import { EmptyReview } from './EmptyReview';
+import { LoadErrorNotice } from './LoadErrorNotice';
 import { RemovePanel } from './RemovePanel';
 import { ReviewHeader } from './ReviewHeader';
+import { ReviewLayout } from './ReviewLayout';
 import type { ReviewScreenProps } from './ReviewScreen.types';
+import { TrackSearchList } from './TrackSearchList';
 import { useReviewScreen } from './use-review-screen';
 
 export function ReviewScreen({ playlistId }: ReviewScreenProps) {
-    const { title, preview, loadError, changed, confirmRef, goToConfirm, reloadAfterChange, refetch } =
+    const { title, preview, loadError, changed, deletedCount, confirmRef, goToConfirm, reloadAfterChange, refetch } =
         useReviewScreen(playlistId);
 
     return (
-        <main>
-            <ReviewHeader
-                playlistId={playlistId}
-                title={title}
-                preview={preview}
-                loadError={loadError}
-                changed={changed}
-            />
-            {loadError && (
-                <ApiErrorNotice
-                    error={loadError}
-                    fallbackTitle="Não consegui ler a playlist"
-                    quotaTitle="Sem cota para ler a playlist agora"
-                    onRetry={() => void refetch()}
-                    notFound={{
-                        code: 'playlist_not_found',
-                        title: 'Playlist não encontrada',
-                        message: 'Ela pode ter sido apagada ou ficado inacessível para esta conta.',
-                        tone: 'error',
-                    }}
-                />
-            )}
-            {preview && preview.duplicados === 0 && <EmptyReview />}
-            {preview && preview.duplicados > 0 && (
-                <div className="cols">
-                    <DuplicateList preview={preview} onGoToConfirm={goToConfirm} />
+        <ReviewLayout
+            count={preview?.duplicados}
+            header={
+                <>
+                    <ReviewHeader
+                        playlistId={playlistId}
+                        title={title}
+                        loadError={loadError}
+                        trio={
+                            preview && {
+                                total: preview.totalItens,
+                                leaving: preview.duplicados,
+                                staying: preview.ficam,
+                                leavingLabel: 'repetidos saem',
+                            }
+                        }
+                        notice={changed && preview && <ChangedNotice count={preview.duplicados} noun="repetidos" />}
+                    />
+                    <DeletedLink playlistId={playlistId} count={deletedCount} />
+                </>
+            }
+            error={loadError && <LoadErrorNotice error={loadError} onRetry={() => void refetch()} />}
+            empty={
+                <EmptyReview title="Nada para tirar">
+                    Nenhum vídeo repetido nesta playlist. Cada vídeo aparece uma vez só.
+                </EmptyReview>
+            }
+            list={
+                preview && (
+                    <TrackSearchList
+                        items={preview.itensDuplicados}
+                        noun="repetidos"
+                        heading="Repetidos que saem"
+                        onGoToConfirm={goToConfirm}
+                    />
+                )
+            }
+            panel={
+                preview && (
                     <RemovePanel
                         preview={preview}
                         playlistId={playlistId}
                         onChanged={reloadAfterChange}
                         confirmRef={confirmRef}
                     />
-                </div>
-            )}
-        </main>
+                )
+            }
+        />
     );
 }

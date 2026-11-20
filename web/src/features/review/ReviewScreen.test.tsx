@@ -1,7 +1,7 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fakeApi, quota } from '../../test/fake-api';
+import { fakeApi, overview, quota, rapNacional } from '../../test/fake-api';
 import { render } from '../../test/render';
 // biome-ignore lint/style/noRestrictedImports: este teste de comportamento cobre o fluxo completo de revisão e remoção.
 import { RemovalScreen } from '../removal/RemovalScreen';
@@ -55,6 +55,10 @@ const job = (removed: number, overrides: Record<string, unknown> = {}) => ({
 });
 
 afterEach(() => vi.restoreAllMocks());
+
+// Simula a análise geral guardada na aba (a revisão lê dela as contagens e a capa).
+const cacheOverview = (value: unknown) =>
+    sessionStorage.setItem('youtoba:overview', JSON.stringify({ overview: value, savedAt: new Date().toISOString() }));
 
 describe('Revisão', () => {
     it('mostra quantos saem e quantos ficam, e só libera a remoção com o número exato digitado', async () => {
@@ -130,6 +134,24 @@ describe('Revisão', () => {
         render(<ReviewScreen playlistId="PLrap" />, client);
         expect(screen.getByRole('button', { name: /remover 3 repetidos/i })).toBeInTheDocument();
         expect(fetchMock.mock.calls.filter(([url]) => url === '/playlist/PLrap/duplicates')).toHaveLength(1);
+    });
+
+    it('links to the deleted videos review when the cached overview knows the playlist has some', async () => {
+        cacheOverview(overview([{ ...rapNacional, apagados: 4 }]));
+        fakeApi({ '/playlist/PLrap/duplicates': { body: preview() } });
+        render(<ReviewScreen playlistId="PLrap" />);
+
+        await screen.findByRole('button', { name: /remover 3 repetidos/i });
+        expect(screen.getByRole('link', { name: /4 vídeos apagados/i })).toHaveAttribute('href', '#/p/PLrap/apagados');
+    });
+
+    it('does not link to the deleted review when the playlist has none', async () => {
+        cacheOverview(overview([rapNacional]));
+        fakeApi({ '/playlist/PLrap/duplicates': { body: preview() } });
+        render(<ReviewScreen playlistId="PLrap" />);
+
+        await screen.findByRole('button', { name: /remover 3 repetidos/i });
+        expect(screen.queryByRole('link', { name: /apagados?/i })).toBeNull();
     });
 
     it('a busca filtra os repetidos por título ou canal', async () => {

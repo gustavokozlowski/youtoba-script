@@ -1,15 +1,14 @@
 import { num } from '../../shared/lib/format';
 import { Notice } from '../../shared/ui/Notice';
 import type { StopNoticeProps } from './RemovalScreen.types';
+import { KIND_COPY, kindOf } from './removal-kind-copy';
 
 export function StopNotice({ job, errors }: StopNoticeProps) {
     if (job.status === 'done') {
+        const copy = KIND_COPY[kindOf(job.tipo)];
         return (
-            <Notice
-                tone="warn"
-                title={`${num(job.removidos)} ${job.removidos === 1 ? 'vídeo repetido saiu' : 'vídeos repetidos saíram'}`}
-            >
-                A primeira vez de cada vídeo continua na playlist, na ordem de antes.
+            <Notice tone="warn" title={copy.doneTitle(job.removidos)}>
+                {copy.doneNote}
             </Notice>
         );
     }

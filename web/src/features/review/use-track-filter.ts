@@ -1,15 +1,16 @@
 import { useId, useMemo, useState } from 'react';
-import type { DuplicatesPreview } from '../../shared/api/api.types';
+import type { TrackSearchListProps } from './ReviewScreen.types';
 
-export function useDuplicateFilter(preview: DuplicatesPreview) {
+/** A busca por título ou canal na lista da revisão. */
+export function useTrackFilter(items: TrackSearchListProps['items']) {
     const [query, setQuery] = useState('');
     const listLabel = useId();
     const visible = useMemo(() => {
         const normalized = query.trim().toLocaleLowerCase('pt-BR');
-        if (!normalized) return preview.itensDuplicados;
-        return preview.itensDuplicados.filter((item) =>
+        if (!normalized) return items;
+        return items.filter((item) =>
             `${item.titulo} ${item.canal ?? ''}`.toLocaleLowerCase('pt-BR').includes(normalized),
         );
-    }, [preview, query]);
+    }, [items, query]);
     return { query, setQuery, listLabel, visible };
 }

@@ -1,6 +1,7 @@
 import { daysLabel, num } from '../../shared/lib/format';
 import { href } from '../../shared/lib/route-links';
 import { Icon } from '../../shared/ui/Icon';
+import { PlaylistMeta } from './PlaylistMeta';
 import type { FitLabelProps, PlaylistListProps, PlaylistRowProps } from './PlaylistsScreen.types';
 
 function fitLabel({ custoRemocao }: FitLabelProps, dailyLimit: number) {
@@ -11,7 +12,6 @@ function fitLabel({ custoRemocao }: FitLabelProps, dailyLimit: number) {
 
 function PlaylistRow({ playlist: p, dailyLimit }: PlaylistRowProps) {
     const fit = fitLabel(p, dailyLimit);
-    const meta = [p.privacidade, p.indisponiveis > 0 && `${num(p.indisponiveis)} indisponíveis`].filter(Boolean);
     return (
         <li className="pl">
             {p.capa ? <img className="cover" src={p.capa} alt="" loading="lazy" /> : <span className="cover" />}
@@ -19,7 +19,7 @@ function PlaylistRow({ playlist: p, dailyLimit }: PlaylistRowProps) {
                 <div className="pl-title">
                     <a href={href.review(p.playlistId)}>{p.titulo}</a>
                 </div>
-                {meta.length > 0 && <div className="pl-meta">{meta.join(' · ')}</div>}
+                <PlaylistMeta playlist={p} />
             </div>
             <div className="ba-wrap">
                 <div className="ba">
@@ -58,14 +58,15 @@ function PlaylistRow({ playlist: p, dailyLimit }: PlaylistRowProps) {
 
 export function PlaylistList({ overview }: PlaylistListProps) {
     const { resumo, playlists, quotaHoje } = overview;
-    const clean = resumo.playlistsAnalisadas + resumo.ignoradasComMenosDe2Itens - resumo.comDuplicados;
+    // Limpa = analisada (ou ignorada por ter menos de 2 itens) e fora da lista: sem repetidos nem apagados.
+    const clean = resumo.playlistsAnalisadas + resumo.ignoradasComMenosDe2Itens - playlists.length;
     if (playlists.length === 0) {
         return (
             <div className="empty">
                 <h2>Tudo limpo</h2>
                 <p>
                     Nenhuma das suas {num(resumo.playlistsAnalisadas + resumo.ignoradasComMenosDe2Itens)} playlists tem
-                    vídeo repetido. Se adicionar vídeos depois, é só analisar de novo.
+                    vídeo repetido ou apagado. Se adicionar vídeos depois, é só analisar de novo.
                 </p>
             </div>
         );
@@ -80,8 +81,8 @@ export function PlaylistList({ overview }: PlaylistListProps) {
             {clean > 0 && (
                 <p className="aside-line">
                     <Icon name="check" />
-                    {clean === 1 ? 'Outra playlist não tem' : `Outras ${num(clean)} playlists não têm`} vídeos
-                    repetidos.
+                    {clean === 1 ? 'Outra playlist não tem' : `Outras ${num(clean)} playlists não têm`} vídeos repetidos
+                    nem apagados.
                 </p>
             )}
         </>

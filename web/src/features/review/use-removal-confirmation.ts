@@ -1,25 +1,30 @@
 import { type FormEvent, useId, useState } from 'react';
-import type { DuplicatesPreview } from '../../shared/api/api.types';
 import type { ApiError } from '../../shared/api/client';
-import { useStartRemoval } from '../../shared/api/queries';
 import { href } from '../../shared/lib/route-links';
+import type { RemovalConfirmation, StartRemovalMutation } from './use-removal-confirmation.types';
 
 const handledHere = (error: ApiError) =>
     (error.code === 'already_running' && Boolean(error.body?.jobId)) || error.code === 'confirmation_required';
 
-export function useReviewConfirmation(preview: DuplicatesPreview, playlistId: string, onChanged: () => void) {
-    const n = preview.duplicados;
+/**
+ * A confirmação por digitação, igual para repetidos e apagados: `count` é o número que a pessoa
+ * precisa digitar e `start` a mutação do tipo de remoção.
+ */
+export function useRemovalConfirmation(
+    count: number,
+    start: StartRemovalMutation,
+    onChanged: () => void,
+): RemovalConfirmation {
     const inputId = useId();
     const hintId = useId();
     const [typed, setTyped] = useState('');
-    const start = useStartRemoval(playlistId);
-    const confirmed = typed.trim() === String(n);
+    const confirmed = typed.trim() === String(count);
     const error = start.error && !handledHere(start.error) ? start.error : undefined;
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
         if (!confirmed || start.isPending) return;
-        start.mutate(n, {
+        start.mutate(count, {
             onSuccess: (started) => {
                 window.location.hash = href.removal(started.jobId);
             },
@@ -33,5 +38,5 @@ export function useReviewConfirmation(preview: DuplicatesPreview, playlistId: st
         });
     };
 
-    return { n, inputId, hintId, typed, setTyped, confirmed, sending: start.isPending, error, submit };
+    return { n: count, inputId, hintId, typed, setTyped, confirmed, sending: start.isPending, error, submit };
 }
