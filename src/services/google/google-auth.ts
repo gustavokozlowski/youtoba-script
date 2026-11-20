@@ -1,6 +1,7 @@
-import { OAuth2Client } from 'google-auth-library';
+import { CodeChallengeMethod, OAuth2Client } from 'google-auth-library';
 import type { TokenStore } from '../../utils/repository/token-store.types';
 import type { GoogleAuthConfig } from './google-auth.types';
+import type { PendingLogin } from './pending-logins.types';
 
 export const DEFAULT_ACCOUNT = 'default';
 
@@ -31,18 +32,21 @@ export class GoogleAuth {
         private readonly account: string = DEFAULT_ACCOUNT,
     ) {}
 
-    authUrl(): string {
+    authUrl({ state, codeChallenge }: PendingLogin): string {
         return this.createClient().generateAuthUrl({
             access_type: 'offline',
             // Sem consent o Google só manda refresh token no primeiro login da conta.
             prompt: 'consent',
             scope: SCOPES,
+            state,
+            code_challenge: codeChallenge,
+            code_challenge_method: CodeChallengeMethod.S256,
         });
     }
 
-    async connect(code: string): Promise<void> {
+    async connect(code: string, codeVerifier: string): Promise<void> {
         const client = this.createClient();
-        const { tokens } = await client.getToken(code);
+        const { tokens } = await client.getToken({ code, codeVerifier });
 
         if (!tokens.refresh_token) {
             throw new MissingRefreshTokenError();

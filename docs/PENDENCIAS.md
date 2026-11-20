@@ -2,13 +2,13 @@
 
 O que falta para dar o projeto por encerrado, em ordem de prioridade. Atualize este arquivo no mesmo PR que resolver um item: risque o item e anote o número do PR.
 
-Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 115 testes passando (82 da API, 33 da interface).
+Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 124 testes passando (91 da API, 33 da interface).
 
 ## 1. Segurança (fazer primeiro)
 
 - [x] ~~**Restringir o CORS e proteger as rotas que alteram dados.**~~ (#14) Sem `cors()`; o middleware `localOnly` aceita só Host local (barra DNS rebinding), exige `Origin` igual ao Host em POST/DELETE e recusa pedidos `Sec-Fetch-Site: cross-site` (exceto a volta do login e a página inicial). Escolhemos conferir o `Origin` em vez de um token: os navegadores sempre mandam esse header em escritas de outro site, e o curl continua funcionando sem passo extra.
 - [ ] **Excluir o cliente OAuth antigo no Google Cloud** (ação manual do dono da conta). O `client_secret` dele está no histórico público do git (commit `2113866`). Já existe um cliente novo em uso.
-- [ ] **`state` + PKCE no login** (`/auth/login` e callback), com `express-session`. Protege contra CSRF de login.
+- [x] ~~**`state` + PKCE no login**~~ (#24): `state` aleatório preso ao navegador por um cookie `HttpOnly; SameSite=Lax; Path=/auth` (10 min, uso único) e PKCE S256, com o `code_verifier` só no servidor. Barra CSRF de login (outro site abrindo `/auth?code=` do atacante) e código interceptado. Sem `express-session`: os logins pendentes ficam em memória (`pending-logins.ts`). Falta confirmar num login real que o Google aceita o PKCE neste cliente.
 - [ ] **`helmet`, rate limit em `/auth` e limite de tamanho do body.**
 
 ## 2. Qualidade e manutenção
@@ -17,7 +17,7 @@ Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com 
 - [ ] **Validar o `.env` com `zod` no boot** (`src/config/env.ts`): o servidor não sobe se faltar `CLIENT_ID`, `CLIENT_SECRET_KEY`, `REDIRECT_URL`, `API_KEY` ou `TOKEN_ENCRYPTION_KEY`, e diz qual falta.
 - [ ] **Middleware de erro único** no fim do `createApp()` e **logs estruturados** (`pino`), sem token nem dados pessoais.
 - [ ] **`biome.json` → `biome.jsonc`** com o motivo escrito ao lado de cada regra desligada (hoje `noExplicitAny` está desligada sem explicação). Ligar `vcs.useIgnoreFile`.
-- [ ] **Remover dependências sem uso:** `@googleapis/docs`, `body-parser`, `express-session` (se não entrar no item de `state`), `jsonwebtoken`, `nodemon`, `cookie-parser`. Alinhar `@types/express` (v5) com o `express` (v4).
+- [ ] **Remover dependências sem uso:** `@googleapis/docs`, `body-parser`, `express-session` (o item de `state` não precisou dela), `jsonwebtoken`, `nodemon`, `cookie-parser`. Alinhar `@types/express` (v5) com o `express` (v4).
 - [ ] **Arquivar a branch `develop`**, que ficou para trás (as ideias úteis dela já estão na `main`).
 - [ ] **Jobs de remoção ficam só em memória:** se o servidor reiniciar no meio, o progresso some (o backup continua certo). Avaliar guardar o job no SQLite.
 
@@ -68,3 +68,4 @@ Pedido do dono em 20/11/2026: nenhum code smell no projeto. Passar a code base i
 | #21 | Plano da refatoração final (seção 4) e convenções de tipos e nomes |
 | #22 | vitest 4.1.12: tira 2 vulnerabilidades críticas do runner de testes |
 | #23 | CI no GitHub Actions (Biome, tipos, testes, build, audit) |
+| #24 | Login com `state` preso ao navegador e PKCE (S256) |
