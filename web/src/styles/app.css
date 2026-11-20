@@ -959,35 +959,39 @@ main {
 .track.gone .thumb {
     opacity: 0.55;
 }
-/* O gesto de grafite: um risco de spray por cima do que saiu. */
-.strike {
+/* O "buff": tinta cinza de concreto passada por cima do que saiu (na gíria do grafite, cobrir a peça). */
+.buff {
     position: absolute;
-    left: 70px;
-    /* SVG não estica com left/right: a largura vai explícita. */
-    width: calc(100% - 166px);
-    top: 50%;
-    height: 26px;
-    translate: 0 -50%;
+    /* Ancorada em cima e embaixo: acompanha a linha quando o título quebra em duas ou três linhas.
+       Começa logo antes da miniatura (coluna da posição 64px + gap 16px) e vai até o gap antes do rótulo do estado. */
+    left: 76px;
+    right: 78px;
+    top: 8px;
+    bottom: 8px;
+    overflow: hidden;
+    border-radius: 4px;
     pointer-events: none;
-    overflow: visible;
 }
-.strike path {
-    fill: none;
-    stroke: var(--spray);
-    stroke-linecap: round;
-    stroke-dasharray: 1300;
-    stroke-dashoffset: 0;
-}
-.strike .core {
-    stroke-width: 7;
-    filter: url(#spray);
-    /* As pontas esmaecem, como um jato de spray que começa e termina no ar. */
-    mask: url(#spray-taper);
-}
-.strike .overspray {
-    stroke-width: 16;
-    opacity: 0.25;
-    filter: url(#overspray);
+.buff::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.86;
+    background:
+        repeating-linear-gradient(
+            90deg,
+            transparent 0 9px,
+            color-mix(in srgb, var(--buff-streak) 70%, transparent) 9px 11px,
+            transparent 11px 23px
+        ),
+        linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--buff) 80%, var(--bg)) 0 8%,
+            var(--buff) 18% 82%,
+            color-mix(in srgb, var(--buff) 80%, var(--bg)) 92%
+        );
+    /* Borda irregular, como rolo de tinta que não chega no canto. */
+    clip-path: polygon(0 6%, 3% 0, 97% 2%, 100% 10%, 99% 90%, 96% 100%, 2% 97%, 0 88%);
 }
 
 .panel {
@@ -1198,11 +1202,8 @@ main {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-    .track.fresh .strike path {
-        animation: spray-draw 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-    }
-    .track.fresh .strike .overspray {
-        animation-delay: 0.05s;
+    .track.fresh .buff::before {
+        animation: roll 0.62s cubic-bezier(0.25, 0.8, 0.25, 1) both;
     }
     .track-bar i {
         transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1211,12 +1212,12 @@ main {
         animation: pulse 1.2s ease-out infinite;
     }
 }
-@keyframes spray-draw {
+@keyframes roll {
     from {
-        stroke-dashoffset: 1300;
+        transform: translateX(-101%);
     }
     to {
-        stroke-dashoffset: 0;
+        transform: translateX(0);
     }
 }
 @keyframes pulse {
@@ -1267,10 +1268,12 @@ main {
         grid-column: 2;
         text-align: left;
     }
-    .strike {
-        left: 50px;
-        width: calc(100% - 66px);
-        top: 34%;
+    /* No celular o estado fica numa linha própria embaixo: a tinta cobre título e canal e deixa o rótulo à vista. */
+    .buff {
+        left: 58px;
+        right: 0;
+        top: 8px;
+        bottom: 30px;
     }
     .pos {
         font-size: var(--type-index);

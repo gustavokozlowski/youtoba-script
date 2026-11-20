@@ -1,6 +1,6 @@
 ---
 name: youtoba
-description: Faxina de playlists do YouTube com pegada de grafite; o spray marca o que sai.
+description: Faxina de playlists do YouTube com pegada de grafite; a tinta cinza cobre o que sai.
 colors:
   bg: "#ecebe6"
   bg-dark: "#0e0f13"
@@ -22,6 +22,10 @@ colors:
   accent-fg-dark: "#14060d"
   spray: "#e4167a"
   spray-dark: "#ff3d93"
+  buff: "#bdb9ae"
+  buff-dark: "#3b3c45"
+  buff-streak: "#aeaa9e"
+  buff-streak-dark: "#45464f"
   ok: "#157a4c"
   ok-dark: "#43d69b"
   warn: "#7a4f00"
@@ -196,9 +200,9 @@ components:
 
 ## Overview
 
-**Creative North Star: "A Peça e o Risco"**
+**Creative North Star: "A Peça e o Buff"**
 
-O youtoba é uma ferramenta de faxina que fala a língua da rua sem virar fantasia. Uma peça de grafite assina o app (o logo) e um risco de spray marca cada vídeo que saiu. Todo o resto é operacional e contido: listas em fio de 1 px, números grandes em caixa-alta condensada, um painel lateral de ação e texto de interface em Geist. A rua aparece em três lugares e só neles: o logo, a névoa de spray da tela de entrada e o risco sobre o que foi apagado.
+O youtoba é uma ferramenta de faxina que fala a língua da rua sem virar fantasia. Uma peça de grafite assina o app (o logo) e cada vídeo que saiu leva uma demão de tinta cinza por cima, como o buff que apaga pichação no muro. Todo o resto é operacional e contido: listas em fio de 1 px, números grandes em caixa-alta condensada, um painel lateral de ação e texto de interface em Geist. A rua aparece em três lugares e só neles: o logo, a névoa de spray da tela de entrada e o buff sobre o que foi apagado.
 
 O mundo tem dois turnos. De noite é asfalto (fundo quase preto com ruído leve); de dia é concreto (cinza-quente claro com o mesmo ruído, mais fraco). O tema segue `prefers-color-scheme`; não há alternador. Os dois turnos têm os mesmos papéis de cor, só mudam os valores.
 
@@ -206,10 +210,10 @@ A densidade é de ferramenta de trabalho: a pessoa precisa ler quantos vídeos s
 
 **Key Characteristics:**
 - Asfalto à noite e concreto de dia, com textura de ruído vetorial bem leve por cima de tudo.
-- Rosa de spray só no que sai (repetidos, risco, progresso da remoção) e na ação principal.
+- Rosa de spray só no que vai sair (repetidos, progresso da remoção) e na ação principal; o que já saiu fica sob o buff cinza.
 - Títulos e números em Big Shoulders Display caixa-alta; interface em Geist.
 - Listas em fio de 1 px, sem card por item.
-- Um único gesto de assinatura: o risco de spray desenhado uma vez por vídeo apagado.
+- Um único gesto de assinatura: o buff, a demão de tinta cinza passada uma vez por vídeo apagado.
 - Movimento curto (150 a 550 ms), ease-out, só sem `prefers-reduced-motion`.
 
 ## Colors
@@ -220,7 +224,7 @@ Neutros quentes de asfalto e concreto, um rosa de spray como única cor de açã
 - **Rosa de Spray** (`accent` / `accent-dark`): o botão principal (Revisar, Remover, confirmar), a contagem de repetidos, o número "saem" do trio da Revisão, o estado "apagado", a pílula de remoção em andamento, o anel de foco e a seleção de texto. No claro é mais fundo para dar AA com texto branco; no escuro acende.
 - **Rosa de Spray Fundo** (`accent-hover` / `accent-hover-dark`): só o hover do botão principal.
 - **Tinta sobre Rosa** (`accent-fg` / `accent-fg-dark`): texto em cima do rosa. Branco no claro, quase preto no escuro.
-- **Jato** (`spray` / `spray-dark`): o pigmento do gesto, não de controle. Pinta o risco sobre os vídeos apagados, a parte "sai" da barra antes/depois, a barra de progresso da remoção, o pulso do item em andamento, o traço do número "antes" e a névoa da tela Entrar.
+- **Jato** (`spray` / `spray-dark`): o pigmento do gesto, não de controle. Pinta a parte "sai" da barra antes/depois, a barra de progresso da remoção, o pulso do item em andamento, o traço do número "antes" e a névoa da tela Entrar.
 
 ### Neutral
 - **Concreto / Asfalto** (`bg` / `bg-dark`): o chão da página, por baixo da textura de ruído.
@@ -308,7 +312,7 @@ O único elemento que se descola é o painel lateral de ação. No claro ele lev
 
 Cantos levemente arredondados e consistentes, sem geometria inventada. Controles (botões, busca, confirmação) usam 10 px; avisos 12 px; o painel 14 px; capas 8 px; miniaturas e o anel de foco 6 px; barras 3 px (a de progresso da remoção, com 14 px de altura, usa 7 px). Pílulas e o item da navegação são cápsulas completas. Bordas são sempre de 1 px; o anel de foco é a única linha grossa (3 px em `accent`, 2 px de afastamento).
 
-A forma orgânica fica com o spray: o risco é um traço curvo com ponta solta, bordas irregulares por turbulência e pontas que esmaecem. Ele é a única forma desenhada à mão da interface.
+A forma orgânica fica com o buff: uma demão de rolo com bordas irregulares (recorte em polígono) e as listras verticais do rolo. É a única forma "pintada à mão" da interface.
 
 ## Components
 
@@ -342,18 +346,18 @@ Diretos e sólidos, nunca com ícone sozinho.
 - **Trilha:** "Remoções / PLrap" em 13 px `muted` acima do `h1` nas telas de detalhe.
 
 ### Linha antes → depois
-O coração da lista de playlists. O número "antes" em Big Shoulders 800 a 24 px `muted`, cortado por uma linha de 2 px em `spray`; o "depois" a 40 px em `fg`; "vídeos" em Geist 12 px. Embaixo, uma barra de 6 px: a parte que fica em `fg` a 55%, a parte que sai em `spray`. Ao lado, os repetidos em rosa (28 px, 900) com a porcentagem em caption. O corte do "antes" ainda é um `line-through` de CSS, não o risco de spray.
+O coração da lista de playlists. O número "antes" em Big Shoulders 800 a 24 px `muted`, cortado por uma linha de 2 px em `spray`; o "depois" a 40 px em `fg`; "vídeos" em Geist 12 px. Embaixo, uma barra de 6 px: a parte que fica em `fg` a 55%, a parte que sai em `spray`. Ao lado, os repetidos em rosa (28 px, 900) com a porcentagem em caption. O corte do "antes" é um `line-through` de CSS.
 
-### Risco de spray (assinatura)
-O gesto do sistema, em `web/src/shared/ui/TrackRow.tsx`. Cada vídeo com estado "apagado" ganha, por cima do título e da miniatura, um SVG com dois traços no mesmo caminho: o núcleo (7 px, filtro `#spray` com turbulência e deslocamento, máscara `#spray-taper` que esmaece as pontas) e a névoa (16 px, 25% de opacidade, desfoque `#overspray`). O caminho e a inclinação (cerca de -2,2° a +0,2°) variam por linha a partir da posição do vídeo, com um gerador estável, para o risco não parecer carimbo; o fim do traço tem a puxada curta de quem solta o bico. Os filtros e a máscara existem uma vez por página (`SprayFilter`).
-- **Movimento:** só a linha recém-apagada (`fresh`) desenha o risco, uma vez, em 550 ms com `cubic-bezier(0.2, 0.8, 0.2, 1)`, a névoa 50 ms depois. Com movimento reduzido o risco aparece pronto.
-- **Junto com ele:** o texto e a miniatura caem para 55% de opacidade, o estado vira "APAGADO" em rosa e o contador grande desce.
+### Buff (assinatura)
+O gesto do sistema, em `web/src/shared/ui/TrackRow.tsx` (`BuffMark`) e `.buff` em `web/src/styles/app.css`. Cada vídeo com estado "apagado" ganha, por cima da miniatura e do título, uma demão de tinta cinza-concreto (`buff` / `buff-dark`, 86% de opacidade), com as listras verticais do rolo (`buff-streak`) e bordas irregulares. O título fica fantasma por baixo, como pichação apagada no muro; a posição e o rótulo "apagado" (em rosa) continuam à vista, então o estado não depende só da cor. Escolhido pelo dono em 20/11/2026 no lugar do risco de spray rosa ("aquele risco neon não está legal"), num protótipo com quatro opções (https://claude.ai/artifact/TnKhNFhyYNfafKpuEkZCLu).
+- **Movimento:** só a linha recém-apagada (`fresh`) recebe a demão, uma vez: o rolo empurra a tinta da esquerda para a direita em 620 ms (`translateX`, `cubic-bezier(0.25, 0.8, 0.25, 1)`). Com movimento reduzido a tinta aparece pronta.
+- **Cor:** cinza neutro do próprio mundo (concreto), sem brilho; o rosa sai do que já foi apagado e fica no que é ação.
 - **Ainda não feito:** a textura de asfalto e concreto e a névoa do spray são vetoriais (ruído SVG e desfoque); não há versão raster.
 
 ### Contador de remoção
 O número de vídeos que ainda faltam, em Display, com "ainda faltam" e "7 de 75 apagados" ao lado. Embaixo, a barra de progresso de 14 px em `spray` (cresce por `transform: scaleX` em 400 ms, sem recalcular layout) e a linha "Apagando <título> (#posição)" com o ponto pulsante.
 
-A lista ao vivo (`web/src/features/removal/LiveTracks.tsx`, com a Motion) mostra uma janela de 9 linhas em volta do item atual, e a janela anda a cada consulta. O apagado do topo sai subindo 14 px e esmaecendo (250 ms); as outras linhas sobem para o lugar dele por FLIP, só com transform (400 ms, `cubic-bezier(0.16, 1, 0.3, 1)`); o próximo da fila entra por baixo. É continuidade, não um segundo efeito: o gesto da tela continua sendo o risco. Com movimento reduzido nada se desloca: quem entra aparece em fade e quem sai some na hora. A Motion só carrega quando a tela de Remoção abre (rota em `lazy` e recursos em `LazyMotion`).
+A lista ao vivo (`web/src/features/removal/LiveTracks.tsx`, com a Motion) mostra uma janela de 9 linhas em volta do item atual, e a janela anda a cada consulta. O apagado do topo sai subindo 14 px e esmaecendo (250 ms); as outras linhas sobem para o lugar dele por FLIP, só com transform (400 ms, `cubic-bezier(0.16, 1, 0.3, 1)`); o próximo da fila entra por baixo. É continuidade, não um segundo efeito: o gesto da tela continua sendo o buff. Com movimento reduzido nada se desloca: quem entra aparece em fade e quem sai some na hora. A Motion só carrega quando a tela de Remoção abre (rota em `lazy` e recursos em `LazyMotion`).
 
 ### Logo
 A peça "YOUTOBA" em caixa-alta: letras Anton (fonte OFL, em `web/scripts/fonts/`) convertidas em vetor, com contorno grosso, bloco 3D sombreado para baixo e à direita, chanfro de luz na borda de cima das letras e borda de adesivo creme em volta de tudo. O favicon é o "Y" no mesmo desenho, em Archivo Black (também OFL), porque a Anton fica fina demais em 16 px. `web/src/assets/logo.svg` e o favicon são gerados por `web/scripts/build-logo.cjs`. Para mudar o desenho, edite o script e rode `npm run build:logo`; nunca edite o SVG à mão. Na barra de topo o logo tem 50 px de altura (32 px no celular); na tela Entrar ocupa a coluna da esquerda, até 680 px, com a névoa de spray por trás.
@@ -372,7 +376,7 @@ A peça "YOUTOBA" em caixa-alta: letras Anton (fonte OFL, em `web/scripts/fonts/
 ### Don't:
 - **Don't** usar o vermelho, o logo ou a marca do YouTube como identidade.
 - **Don't** transformar linhas de playlist ou de vídeo em cards com capa, sombra e botão.
-- **Don't** desenhar o risco de spray em algo que não foi apagado de fato, nem animá-lo mais de uma vez por item.
+- **Don't** passar o buff em algo que não foi apagado de fato, nem animá-lo mais de uma vez por item.
 - **Don't** levar o grafite ou o creme do logo para controles, textos ou fundos da interface.
 - **Don't** usar Big Shoulders em botões, navegação, rótulos ou texto corrido.
 - **Don't** pôr sombra em nada além do painel lateral, e nunca no turno escuro.

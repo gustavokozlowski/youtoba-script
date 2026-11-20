@@ -11,6 +11,9 @@
     --accent-hover: #a90c53;
     --accent-fg: #ffffff;
     --spray: #e4167a;
+    /* Concreto cinza do buff (o que cobre o vídeo apagado) e o veio do rolo. */
+    --buff: #bdb9ae;
+    --buff-streak: #aeaa9e;
     /* Rosa chiclete e grafite do logo, usados só na névoa de spray da entrada. */
     --logo-face: #ff6fb8;
     --logo-block: #5c5c6b;
@@ -80,6 +83,8 @@
         --accent-hover: #ff62a8;
         --accent-fg: #14060d;
         --spray: #ff3d93;
+        --buff: #3b3c45;
+        --buff-streak: #45464f;
         --ok: #43d69b;
         --warn: #ffc83d;
         --warn-soft: #ffc83d1f;

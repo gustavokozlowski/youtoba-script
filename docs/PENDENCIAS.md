@@ -2,7 +2,7 @@
 
 O que falta para dar o projeto por encerrado, em ordem de prioridade. Atualize este arquivo no mesmo PR que resolver um item: risque o item e anote o número do PR.
 
-Situação em 20/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 186 testes passando (136 da API, 50 da interface).
+Situação em 20/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 187 testes passando (136 da API, 51 da interface).
 
 ## 1. Segurança (fazer primeiro)
 
@@ -95,3 +95,4 @@ Pedido do dono em 20/11/2026: nenhum code smell no projeto. Passar a code base i
 | #49 | Interface para remover vídeos apagados: revisão própria, painel de confirmação único para os dois tipos, aviso de que apagado não volta, e a análise geral conta os apagados |
 | #50 | `npm run dev:all`: API e interface juntas com um comando; proxy do Vite passa `/backups` e `/health`; `LOG_FORMAT` opcional |
 | #51 | Tela de remoção mostrava "80 de 0 apagados": `GET /jobs/:id` não trazia `total` (só a resposta 202 trazia) |
+| #52 | Marca do vídeo removido: o risco neon rosa virou "buff", uma demão de tinta cinza-concreto (escolha do dono num protótipo com 4 opções) |
