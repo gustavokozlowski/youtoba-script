@@ -1,7 +1,8 @@
-import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeApi, quota } from '../test/fake-api';
+import { render } from '../test/render';
 import { Remocao } from './Remocao';
 import { Remocoes } from './Remocoes';
 import { Revisao } from './Revisao';
@@ -115,6 +116,17 @@ describe('Revisão', () => {
         await userEvent.type(await screen.findByLabelText(/digite 3 para confirmar/i), '3');
         await userEvent.click(screen.getByRole('button', { name: /remover 3 repetidos/i }));
         await waitFor(() => expect(window.location.hash).toBe('#/remocao/job-9'));
+    });
+
+    it('voltar para a revisão logo depois não lê a playlist de novo (não gasta cota)', async () => {
+        const fetchMock = fakeApi({ '/playlist/PLrap/duplicates': { body: preview() } });
+        const { unmount, client } = render(<Revisao playlistId="PLrap" />);
+        await screen.findByRole('button', { name: /remover 3 repetidos/i });
+        unmount();
+
+        render(<Revisao playlistId="PLrap" />, client);
+        expect(screen.getByRole('button', { name: /remover 3 repetidos/i })).toBeInTheDocument();
+        expect(fetchMock.mock.calls.filter(([url]) => url === '/playlist/PLrap/duplicates')).toHaveLength(1);
     });
 
     it('a busca filtra os repetidos por título ou canal', async () => {

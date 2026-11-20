@@ -1,42 +1,17 @@
-import { useCallback, useEffect, useState } from 'react';
 import type { DuplicatesOverview, PlaylistSummary } from '../api/api.types';
-import { ApiError, api } from '../api/client';
+import type { ApiError } from '../api/client';
+import { useOverview } from '../api/queries';
 import { Icon } from '../components/Icon';
 import { Notice } from '../components/Notice';
 import { daysLabel, num } from '../lib/format';
-import { type CachedOverview, readOverview, saveOverview } from '../lib/overview-cache';
 import { href } from '../lib/router';
-import { announceQuotaChange } from '../lib/use-quota';
 
-const savedAtLabel = (iso: string) => new Intl.DateTimeFormat('pt-BR', { timeStyle: 'short' }).format(new Date(iso));
+const savedAtLabel = (ms: number) => new Intl.DateTimeFormat('pt-BR', { timeStyle: 'short' }).format(new Date(ms));
 
 export function Playlists() {
-    const [cached, setCached] = useState<CachedOverview | undefined>(readOverview);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<ApiError>();
-
-    const analyze = useCallback(async () => {
-        setLoading(true);
-        setError(undefined);
-        try {
-            const overview = await api.get<DuplicatesOverview>('/playlist/with-duplicates');
-            saveOverview(overview);
-            setCached(readOverview() ?? { overview, savedAt: new Date().toISOString() });
-        } catch (e) {
-            setError(e instanceof ApiError ? e : new ApiError(0, 'unknown', 'Algo deu errado na análise.'));
-        } finally {
-            setLoading(false);
-            announceQuotaChange();
-        }
-    }, []);
-
     // Primeira visita nesta aba, ou depois de uma remoção: analisa sozinho. Fora isso, só quando pedirem.
-    useEffect(() => {
-        const current = readOverview();
-        if (!current || current.stale) void analyze();
-    }, [analyze]);
-
-    const overview = cached?.overview;
+    const { data: overview, error, isFetching: loading, dataUpdatedAt, refetch } = useOverview();
+    const analyze = () => void refetch();
 
     return (
         <main>
@@ -59,7 +34,7 @@ export function Playlists() {
                         {loading ? 'Analisando…' : overview ? 'Analisar de novo' : 'Analisar'}
                         {overview && !loading && <small>~{num(overview.resumo.custoDestaAnalise)} un.</small>}
                     </button>
-                    {cached && <span className="stamp">Análise das {savedAtLabel(cached.savedAt)}</span>}
+                    {overview && <span className="stamp">Análise das {savedAtLabel(dataUpdatedAt)}</span>}
                 </div>
             </div>
 

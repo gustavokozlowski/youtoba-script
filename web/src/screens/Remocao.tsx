@@ -1,49 +1,21 @@
-import { type RefObject, useEffect, useRef, useState } from 'react';
+import { type RefObject, useRef, useState } from 'react';
 import type { RemovalJob } from '../api/api.types';
-import { ApiError, api } from '../api/client';
+import type { ApiError } from '../api/client';
+import { useJob } from '../api/queries';
 import { Icon } from '../components/Icon';
 import { Notice } from '../components/Notice';
 import { SprayFilter, TrackRow } from '../components/TrackRow';
 import { num } from '../lib/format';
 import { findPlaylist } from '../lib/overview-cache';
 import { href } from '../lib/router';
-import { announceQuotaChange } from '../lib/use-quota';
 
-const POLL_MS = 1_000;
 // Enquanto apaga, mostra só a janela em volta do item atual: os últimos apagados e os próximos.
 const WINDOW_BEFORE = 4;
 const WINDOW_SIZE = 9;
 
 export function Remocao({ jobId }: { jobId: string }) {
-    const [job, setJob] = useState<RemovalJob>();
-    const [error, setError] = useState<ApiError>();
-    const [fresh, setFresh] = useState<Set<string>>(new Set());
-    const seen = useRef<Set<string> | undefined>(undefined);
-
-    useEffect(() => {
-        let timer: number | undefined;
-        let stopped = false;
-        const poll = async () => {
-            try {
-                const next = await api.get<RemovalJob>(`/jobs/${encodeURIComponent(jobId)}`);
-                if (stopped) return;
-                const removedNow = next.itens.filter((i) => i.estado === 'apagado').map((i) => i.playlistItemId);
-                // Na primeira leitura nada é "novo": o risco só anima para o que sai com a tela aberta.
-                setFresh(seen.current ? new Set(removedNow.filter((id) => !seen.current?.has(id))) : new Set());
-                seen.current = new Set(removedNow);
-                setJob(next);
-                announceQuotaChange();
-                if (next.status === 'running') timer = window.setTimeout(poll, POLL_MS);
-            } catch (e) {
-                if (!stopped) setError(e instanceof ApiError ? e : new ApiError(0, 'unknown', 'Algo deu errado.'));
-            }
-        };
-        void poll();
-        return () => {
-            stopped = true;
-            window.clearTimeout(timer);
-        };
-    }, [jobId]);
+    const { data: job, error } = useJob(jobId);
+    const fresh = useNewlyRemoved(job);
 
     const title = job ? (findPlaylist(job.playlistId)?.titulo ?? job.playlistId) : '';
 
@@ -64,6 +36,24 @@ export function Remocao({ jobId }: { jobId: string }) {
             {job && <JobView job={job} fresh={fresh} />}
         </main>
     );
+}
+
+const removedIds = (job: RemovalJob) =>
+    new Set(job.itens.filter((i) => i.estado === 'apagado').map((i) => i.playlistItemId));
+
+/**
+ * Itens que passaram a "apagado" na última consulta: o risco só anima para o que sai com a tela
+ * aberta. Guarda a leitura anterior e compara durante a renderização, sem efeito.
+ */
+function useNewlyRemoved(job: RemovalJob | undefined) {
+    const [previous, setPrevious] = useState(job);
+    const [fresh, setFresh] = useState<Set<string>>(() => new Set());
+    if (job !== previous) {
+        setPrevious(job);
+        const before = previous ? removedIds(previous) : undefined;
+        setFresh(job && before ? new Set([...removedIds(job)].filter((id) => !before.has(id))) : new Set());
+    }
+    return fresh;
 }
 
 const HEADINGS: Record<RemovalJob['status'], string> = {

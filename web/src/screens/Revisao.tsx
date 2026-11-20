@@ -1,37 +1,21 @@
-import { type FormEvent, type RefObject, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
-import type { DuplicatesPreview, RemovalStarted } from '../api/api.types';
-import { ApiError, api } from '../api/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { type FormEvent, type RefObject, useId, useMemo, useRef, useState } from 'react';
+import type { DuplicatesPreview } from '../api/api.types';
+import type { ApiError } from '../api/client';
+import { keys, usePreview, useStartRemoval } from '../api/queries';
 import { Icon } from '../components/Icon';
 import { Notice } from '../components/Notice';
 import { TrackRow } from '../components/TrackRow';
 import { num, units } from '../lib/format';
-import { findPlaylist, markOverviewStale } from '../lib/overview-cache';
+import { findPlaylist } from '../lib/overview-cache';
 import { href } from '../lib/router';
-import { announceQuotaChange } from '../lib/use-quota';
-
-const asApiError = (e: unknown) => (e instanceof ApiError ? e : new ApiError(0, 'unknown', 'Algo deu errado.'));
 
 export function Revisao({ playlistId }: { playlistId: string }) {
     const known = findPlaylist(playlistId);
     const title = known?.titulo ?? playlistId;
-    const [preview, setPreview] = useState<DuplicatesPreview>();
-    const [loadError, setLoadError] = useState<ApiError>();
+    const client = useQueryClient();
+    const { data: preview, error: loadError, refetch } = usePreview(playlistId);
     const [changed, setChanged] = useState(false);
-
-    const load = useCallback(async () => {
-        setLoadError(undefined);
-        try {
-            setPreview(await api.get<DuplicatesPreview>(`/playlist/${encodeURIComponent(playlistId)}/duplicates`));
-        } catch (e) {
-            setLoadError(asApiError(e));
-        } finally {
-            announceQuotaChange();
-        }
-    }, [playlistId]);
-
-    useEffect(() => {
-        void load();
-    }, [load]);
 
     const confirmRef = useRef<HTMLInputElement>(null);
     // No celular o painel fica depois da lista inteira: o botão leva direto ao campo de confirmação.
@@ -40,10 +24,10 @@ export function Revisao({ playlistId }: { playlistId: string }) {
         confirmRef.current?.focus({ preventScroll: true });
     };
 
+    // Volta ao estado inicial (sem dados) para o painel e o número digitado recomeçarem do zero.
     const reloadAfterChange = () => {
         setChanged(true);
-        setPreview(undefined);
-        void load();
+        void client.resetQueries({ queryKey: keys.preview(playlistId) });
     };
 
     return (
@@ -64,7 +48,7 @@ export function Revisao({ playlistId }: { playlistId: string }) {
                     Agora são {num(preview.duplicados)} repetidos. Confira a lista de novo antes de confirmar.
                 </Notice>
             )}
-            {loadError && <LoadError error={loadError} onRetry={load} />}
+            {loadError && <LoadError error={loadError} onRetry={() => void refetch()} />}
             {preview && preview.duplicados === 0 && (
                 <div className="empty">
                     <h2>Nada para tirar</h2>
@@ -171,37 +155,25 @@ function RemovePanel({
     const inputId = useId();
     const hintId = useId();
     const [typed, setTyped] = useState('');
-    const [sending, setSending] = useState(false);
-    const [error, setError] = useState<ApiError>();
+    const start = useStartRemoval(playlistId);
+    const sending = start.isPending;
+    const error = start.error && !handledHere(start.error) ? start.error : undefined;
     const confirmed = typed.trim() === String(n);
     const fitsAll = preview.cabemHoje >= n;
     const resetHour = preview.quotaHoje.zeraEmBrasilia.split(' ').at(-1);
 
-    const submit = async (event: FormEvent) => {
+    const submit = (event: FormEvent) => {
         event.preventDefault();
         if (!confirmed || sending) return;
-        setSending(true);
-        setError(undefined);
-        try {
-            const started = await api.send<RemovalStarted>(
-                'DELETE',
-                `/playlist/${encodeURIComponent(playlistId)}/remove-duplicates?confirm=${n}`,
-            );
-            markOverviewStale();
-            window.location.hash = href.removal(started.jobId);
-        } catch (e) {
-            const apiError = asApiError(e);
-            if (apiError.code === 'already_running' && apiError.body?.jobId) {
-                window.location.hash = href.removal(apiError.body.jobId);
-            } else if (apiError.code === 'confirmation_required') {
-                onChanged();
-            } else {
-                setError(apiError);
-            }
-        } finally {
-            setSending(false);
-            announceQuotaChange();
-        }
+        start.mutate(n, {
+            onSuccess: (started) => {
+                window.location.hash = href.removal(started.jobId);
+            },
+            onError: (e) => {
+                if (e.code === 'already_running' && e.body?.jobId) window.location.hash = href.removal(e.body.jobId);
+                else if (e.code === 'confirmation_required') onChanged();
+            },
+        });
     };
 
     return (
@@ -268,6 +240,10 @@ function RemovePanel({
         </aside>
     );
 }
+
+/** Erros que a tela resolve sozinha (abre o job que já roda, ou relê a playlist que mudou). */
+const handledHere = (e: ApiError) =>
+    (e.code === 'already_running' && Boolean(e.body?.jobId)) || e.code === 'confirmation_required';
 
 function LoadError({ error, onRetry }: { error: ApiError; onRetry: () => void }) {
     if (error.code === 'playlist_not_found') {
