@@ -48,3 +48,4 @@ Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com 
 | #15 | Base para a interface: itens com estado no job, `GET /jobs`, login volta para a interface |
 | #16 | Interface web (React + Vite): logo, entrada e lista de playlists com repetidos |
 | #17 | Interface: revisão do dry-run, remoção ao vivo com o risco de spray, lista de remoções |
+| #18 | Logo novo "chiclete e grafite" (Anton, bloco 3D, adesivo), escolhido num protótipo do app |

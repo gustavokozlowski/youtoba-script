@@ -1,121 +1,96 @@
-// Gera o logo do youtoba (peça de grafite) e o favicon com as letras convertidas em vetor.
+// Gera o logo do youtoba ("chiclete e grafite", letra Anton) e o favicon com as letras em vetor.
 // As saídas ficam commitadas; rode só quando mudar o desenho: `npm run build:logo`.
 const fs = require('node:fs');
 const path = require('node:path');
 const opentype = require('opentype.js');
 
-const font = opentype.loadSync(path.join(__dirname, 'fonts/Knewave-Regular.ttf'));
+const loadFont = (file) => opentype.loadSync(path.join(__dirname, 'fonts', file));
+// Anton (alta) no logo; Archivo Black (larga) no favicon, que precisa ler em 16 px.
+const ANTON = loadFont('Anton-Regular.woff');
+const ARCHIVO = loadFont('ArchivoBlack-Regular.woff');
 
+// Rosa chiclete manda (face), grafite sustenta (bloco), creme de adesivo separa do fundo.
 const COLORS = {
-    fill: ['#FFF25A', '#FFB321', '#FF6B2C', '#FF2E88'],
-    cut: '#FFFFFF', // contorno interno e brilhos
-    side: '#3B0F5C', // face da extrusão
-    line: '#0E0716', // contorno externo
+    face: ['#FFA6D2', '#FF4FA3'], // degradê de cima para baixo
+    bevel: '#FFE0EF', // chanfro de luz na borda de cima/esquerda da letra
+    side: ['#5C5C6B', '#1F1F27'], // bloco: claro perto da face, escuro no fundo
+    sticker: '#F5EFE3', // borda de adesivo em volta da peça
+    ink: '#0B0B12', // contorno
 };
 
-// Por letra: deslocamento vertical, rotação (graus) e escala. É o "pulo" das letras da peça.
-const BOUNCE = [
-    { dy: 6, rot: -10, s: 1.12 },
-    { dy: -8, rot: -4, s: 0.96 },
-    { dy: 4, rot: 5, s: 0.95 },
-    { dy: -14, rot: -6, s: 1.05 },
-    { dy: 2, rot: 4, s: 0.96 },
-    { dy: -10, rot: -3, s: 1.04 },
-    { dy: 4, rot: 8, s: 1.0 },
-];
-const SIZE = 220;
-const OVERLAP = 0.07;
-const BASELINE = 300;
-const OUTLINE = 22;
-const DEPTH = 16;
-// Escorridos: índice da letra → [onde, na largura da letra; comprimento]. Só no "u" e no "a",
-// para não transformar o "o" num "q".
-const DRIPS = { 2: [0.8, 44], 6: [0.84, 36] };
+const hex = (h) => [1, 3, 5].map((i) => Number.parseInt(h.slice(i, i + 2), 16));
+const mix = (a, b, t) =>
+    `#${hex(a)
+        .map((v, i) =>
+            Math.round(v + (hex(b)[i] - v) * t)
+                .toString(16)
+                .padStart(2, '0'),
+        )
+        .join('')}`;
 
-function layout(text, bounce) {
-    let x = 60;
-    return [...text].map((char, i) => {
-        const glyph = font.charToGlyph(char);
-        const { dy, rot, s } = bounce[i];
-        const size = SIZE * s;
-        const glyphPath = glyph.getPath(x, BASELINE + dy, size);
-        const bb = glyphPath.getBoundingBox();
-        x += (glyph.advanceWidth / font.unitsPerEm) * size * (1 - OVERLAP);
-        return { i, d: glyphPath.toPathData(2), bb, cx: (bb.x1 + bb.x2) / 2, cy: (bb.y1 + bb.y2) / 2, rot, end: x };
+function wordPath(font, text, size, track) {
+    let x = 40;
+    const parts = [...text].map((ch) => {
+        const glyph = font.charToGlyph(ch);
+        const d = glyph.getPath(x, 40 + size, size).toPathData(2);
+        x += (glyph.advanceWidth / font.unitsPerEm) * size + track;
+        return d;
     });
+    const bb = font.getPath(text, 40, 40 + size, size, { letterSpacing: track / size }).getBoundingBox();
+    return { d: parts.join(' '), bb, right: x - track };
 }
 
-const drip = (l) => {
-    const [at, len] = DRIPS[l.i];
-    const w = 22;
-    const x = l.bb.x1 + (l.bb.x2 - l.bb.x1) * at;
-    const top = l.bb.y2 - 16;
-    return `M${x - w / 2},${top} L${x - w / 2},${top + len} A${w / 2},${w / 2} 0 0 0 ${x + w / 2},${top + len} L${x + w / 2},${top} Z`;
-};
+const [dx, dy] = [0.75, 1]; // extrusão para baixo e à direita
 
-const arrow = (l) => {
-    const sx = l.bb.x2 - 18;
-    const sy = l.cy - 6;
-    return `M${sx},${sy} C${sx + 60},${sy - 10} ${sx + 80},${sy - 60} ${sx + 70},${sy - 110} L${sx + 46},${sy - 104} L${sx + 92},${sy - 170} L${sx + 118},${sy - 92} L${sx + 94},${sy - 100} C${sx + 104},${sy - 40} ${sx + 74},${sy + 18} ${sx},${sy + 22} Z`;
-};
+/** Caixa que cabe a palavra, o bloco e o adesivo; quadrada para o favicon. */
+function viewBox(bb, right, depth, pad, square) {
+    const w = right - bb.x1 + dx * depth + pad * 2;
+    const h = bb.y2 - bb.y1 + dy * depth + pad * 2;
+    if (!square) return [bb.x1 - pad, bb.y1 - pad, w, h];
+    const side = Math.max(w, h);
+    return [bb.x1 - pad - (side - w) / 2, bb.y1 - pad - (side - h) / 2, side, side];
+}
 
-const shine = (l) => {
-    const w = l.bb.x2 - l.bb.x1;
-    const h = l.bb.y2 - l.bb.y1;
-    const x = l.bb.x1 + w * 0.2;
-    const y = l.bb.y1 + h * 0.28;
-    return `<g transform="rotate(${l.rot} ${l.cx} ${l.cy})"><path d="M${x},${y + 18} Q${x + 2},${y} ${x + 20},${y - 6}" fill="none" stroke="${COLORS.cut}" stroke-width="7" stroke-linecap="round"/><circle cx="${x - 1}" cy="${y + 34}" r="4.2" fill="${COLORS.cut}"/></g>`;
-};
+/** Peça em camadas: adesivo, contorno, bloco sombreado, chanfro e face. */
+function render({ font, text, size, track, depth, outline, id, square = false }) {
+    const { d, bb, right } = wordPath(font, text, size, track);
+    const border = outline * 1.4;
+    const box = viewBox(bb, right, depth, outline + border + 10, square);
+    const steps = Array.from({ length: depth + 1 }, (_, k) => k);
+    const use = (attrs, k = 0, shift = 0) =>
+        `<use href="#${id}-w" x="${(k * dx + shift).toFixed(1)}" y="${(k * dy + shift).toFixed(1)}" ${attrs}/>`;
+    const stroke = (color, width) =>
+        `fill="${color}" stroke="${color}" stroke-width="${width}" stroke-linejoin="round"`;
 
-const star = (cx, cy, r) =>
-    `<path d="M${cx},${cy - r} Q${cx + r * 0.18},${cy - r * 0.18} ${cx + r},${cy} Q${cx + r * 0.18},${cy + r * 0.18} ${cx},${cy + r} Q${cx - r * 0.18},${cy + r * 0.18} ${cx - r},${cy} Q${cx - r * 0.18},${cy - r * 0.18} ${cx},${cy - r} Z" fill="${COLORS.cut}" stroke="${COLORS.line}" stroke-width="5" stroke-linejoin="round"/>`;
-
-/** Cada peça (letra ou seta) é desenhada inteira, em camadas, por cima da anterior. */
-function stack(ref) {
-    const offsets = Array.from({ length: DEPTH }, (_, k) => k + 1);
-    const use = (attrs, k = 0) => `<use href="#${ref}"${k ? ` x="${(k * 0.9).toFixed(1)}" y="${k}"` : ''} ${attrs}/>`;
-    return [
-        ...[0, ...offsets].map((k) =>
-            use(`fill="${COLORS.line}" stroke="${COLORS.line}" stroke-width="${OUTLINE}" stroke-linejoin="round"`, k),
+    const layers = [
+        ...steps.map((k) => use(stroke(COLORS.sticker, (outline + border) * 2), k)),
+        ...steps.map((k) => use(stroke(COLORS.ink, outline * 2), k)),
+        // do fundo para a frente, clareando: a luz vem de cima à esquerda
+        ...steps
+            .slice(1)
+            .reverse()
+            .map((k) => use(`fill="${mix(COLORS.side[0], COLORS.side[1], (k - 1) / (depth - 1))}"`, k)),
+        use(
+            `fill="none" stroke="${COLORS.ink}" stroke-width="${Math.max(3, outline * 0.45)}" stroke-linejoin="round"`,
+            1,
         ),
-        ...offsets.map((k) => use(`fill="${COLORS.side}"`, k)),
-        use(`fill="none" stroke="${COLORS.cut}" stroke-width="6" stroke-linejoin="round"`),
-        use('fill="url(#yt-fill)"'),
-    ].join('');
+        `<g clip-path="url(#${id}-c)">${use(`fill="${COLORS.bevel}"`)}${use(`fill="url(#${id}-f)"`, 0, Math.max(3, size * 0.022))}</g>`,
+    ];
+    const [top, low] = COLORS.face;
+    const defs = `<linearGradient id="${id}-f" x1="0" y1="${bb.y1}" x2="0" y2="${bb.y2}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${top}"/><stop offset="1" stop-color="${low}"/></linearGradient><path id="${id}-w" d="${d}"/><clipPath id="${id}-c"><use href="#${id}-w"/></clipPath>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${box.map((n) => n.toFixed(0)).join(' ')}" role="img" aria-label="youtoba"><defs>${defs}</defs>${layers.join('')}</svg>\n`;
 }
 
-function render({ text, bounce, withArrow, viewBox }) {
-    const letters = layout(text, bounce);
-    const defs = letters.map((l) => {
-        const d = DRIPS[l.i] && withArrow ? `${l.d} ${drip(l)}` : l.d;
-        return `<path id="yt-l${l.i}" d="${d}" transform="rotate(${l.rot} ${l.cx} ${l.cy})"/>`;
-    });
-    if (withArrow) defs.push(`<path id="yt-arrow" d="${arrow(letters.at(-1))}"/>`);
-    const [f1, f2, f3, f4] = COLORS.fill;
-    const pieces = [withArrow ? stack('yt-arrow') : '', ...letters.map((l) => stack(`yt-l${l.i}`) + shine(l))];
-    const stars = [star(letters[0].bb.x1 + 6, letters[0].bb.y1 + 10, 26)];
-    if (letters[3]) stars.push(star(letters[3].bb.x2 + 4, letters[3].bb.y1 - 6, 16));
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox(letters)}" role="img" aria-label="youtoba">
-<defs>${defs.join('')}<linearGradient id="yt-fill" x1="0" y1="120" x2="40" y2="350" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${f1}"/><stop offset=".42" stop-color="${f2}"/><stop offset=".42" stop-color="${f3}"/><stop offset="1" stop-color="${f4}"/></linearGradient></defs>
-${pieces.join('')}${stars.join('')}
-</svg>
-`;
-}
-
-const logo = render({
-    text: 'youtoba',
-    bounce: BOUNCE,
-    withArrow: true,
-    viewBox: (letters) => `20 40 ${Math.ceil(letters.at(-1).end + 120)} 380`,
-});
+const logo = render({ font: ANTON, text: 'YOUTOBA', size: 230, track: 6, depth: 36, outline: 12, id: 'yt' });
 const favicon = render({
-    text: 'y',
-    bounce: [{ dy: 0, rot: -8, s: 1 }],
-    withArrow: false,
-    viewBox: ([y]) => {
-        const side = Math.max(y.bb.x2 - y.bb.x1, y.bb.y2 - y.bb.y1) + 90;
-        return `${y.bb.x1 - 40} ${y.bb.y1 - 40} ${side} ${side}`;
-    },
+    font: ARCHIVO,
+    text: 'Y',
+    size: 200,
+    track: 0,
+    depth: 24,
+    outline: 10,
+    id: 'yf',
+    square: true,
 });
 
 const web = path.join(__dirname, '..');

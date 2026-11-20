@@ -551,17 +551,19 @@
     },
     "logoPalette": {
       "source": "web/scripts/build-logo.cjs (COLORS)",
-      "note": "Só no logo e no favicon; não é token de CSS. Regenerar com `npm run build:logo`, nunca editar o SVG à mão.",
-      "fill": [
-        "#FFF25A",
-        "#FFB321",
-        "#FF6B2C",
-        "#FF2E88"
+      "note": "Chiclete e grafite (escolhido em 20/11/2026). Só no logo e no favicon; a névoa da entrada usa --logo-face e --logo-block. Regenerar com `npm run build:logo`, nunca editar o SVG à mão.",
+      "face": [
+        "#FFA6D2",
+        "#FF4FA3"
       ],
-      "cut": "#FFFFFF",
-      "side": "#3B0F5C",
-      "line": "#0E0716",
-      "font": "Knewave Regular (OFL), web/scripts/fonts/"
+      "bevel": "#FFE0EF",
+      "side": [
+        "#5C5C6B",
+        "#1F1F27"
+      ],
+      "sticker": "#F5EFE3",
+      "ink": "#0B0B12",
+      "font": "Anton (logo) e Archivo Black (favicon), OFL, web/scripts/fonts/"
     },
     "typographyMeta": {
       "display": {
@@ -800,8 +802,8 @@
         "section": "colors"
       },
       {
-        "name": "The Calor Mora no Logo Rule",
-        "body": "Amarelo, laranja e roxo pertencem ao logo. A interface fica em neutros, rosa e as três cores de estado.",
+        "name": "The Grafite Mora no Logo Rule",
+        "body": "O grafite do bloco e o creme do adesivo pertencem ao logo (e à névoa da entrada). A interface fica em neutros, rosa e as três cores de estado.",
         "section": "colors"
       },
       {
@@ -843,7 +845,7 @@
       "**Don't** usar o vermelho, o logo ou a marca do YouTube como identidade.",
       "**Don't** transformar linhas de playlist ou de vídeo em cards com capa, sombra e botão.",
       "**Don't** desenhar o risco de spray em algo que não foi apagado de fato, nem animá-lo mais de uma vez por item.",
-      "**Don't** levar amarelo, laranja ou roxo do logo para controles, textos ou fundos da interface.",
+      "**Don't** levar o grafite ou o creme do logo para controles, textos ou fundos da interface.",
       "**Don't** usar Big Shoulders em botões, navegação, rótulos ou texto corrido.",
       "**Don't** pôr sombra em nada além do painel lateral, e nunca no turno escuro.",
       "**Don't** editar `web/src/assets/logo.svg` à mão."

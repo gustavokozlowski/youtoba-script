@@ -195,14 +195,14 @@ h2 {
 }
 .brand {
     display: block;
-    width: 168px;
     flex: none;
     margin-block: 4px;
 }
+/* O logo é largo e baixo: a barra mede pela altura. */
 .brand img {
     display: block;
-    width: 100%;
-    height: auto;
+    height: 50px;
+    width: auto;
 }
 .nav {
     display: flex;
@@ -344,12 +344,13 @@ main {
     filter: blur(70px);
     opacity: 0.5;
     background:
-        radial-gradient(40% 50% at 30% 45%, var(--spray), transparent 70%),
-        radial-gradient(30% 40% at 62% 38%, var(--spray-warm), transparent 70%);
+        radial-gradient(40% 50% at 30% 45%, var(--logo-face), transparent 70%),
+        radial-gradient(30% 40% at 62% 38%, var(--logo-block), transparent 70%);
 }
 .hero-logo {
     display: block;
     width: 100%;
+    max-width: 680px;
     height: auto;
 }
 .wall .copy {
@@ -621,8 +622,8 @@ main {
         flex-wrap: wrap;
         padding-block: 8px;
     }
-    .brand {
-        width: 118px;
+    .brand img {
+        height: 32px;
     }
     .nav {
         order: 3;
