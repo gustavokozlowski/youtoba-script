@@ -2,7 +2,7 @@
 
 O que falta para dar o projeto por encerrado, em ordem de prioridade. Atualize este arquivo no mesmo PR que resolver um item: risque o item e anote o número do PR.
 
-Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 128 testes passando (95 da API, 33 da interface).
+Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 132 testes passando (99 da API, 33 da interface).
 
 ## 1. Segurança (fazer primeiro)
 
@@ -14,7 +14,7 @@ Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com 
 ## 2. Qualidade e manutenção
 
 - [x] ~~**CI no GitHub Actions**~~ (#22, #23): `biome ci`, typecheck da API e do `web/`, testes, build da interface e `npm audit --audit-level=high` em todo PR e na `main` (`.github/workflows/ci.yml`, actions pinadas por SHA, permissão só de leitura). O vitest subiu para a 4.1.12 para tirar 2 vulnerabilidades críticas. A `main` passa a exigir o check `checks` verde.
-- [ ] **Validar o `.env` com `zod` no boot** (`src/config/env.ts`): o servidor não sobe se faltar `CLIENT_ID`, `CLIENT_SECRET_KEY`, `REDIRECT_URL`, `API_KEY` ou `TOKEN_ENCRYPTION_KEY`, e diz qual falta.
+- [x] ~~**Validar o `.env` com `zod` no boot**~~ (#27): `src/config/env.ts` confere as obrigatórias (`API_KEY`, `CLIENT_ID`, `CLIENT_SECRET_KEY`, `REDIRECT_URL`, `YOUTUBE_BASE_URL`, `TOKEN_ENCRYPTION_KEY`) e o formato das opcionais; o servidor sai com uma linha por variável, sem mostrar valores. Ler toda configuração por esse módulo entra na refatoração final.
 - [ ] **Middleware de erro único** no fim do `createApp()` e **logs estruturados** (`pino`), sem token nem dados pessoais.
 - [ ] **`biome.json` → `biome.jsonc`** com o motivo escrito ao lado de cada regra desligada (hoje `noExplicitAny` está desligada sem explicação). Ligar `vcs.useIgnoreFile`.
 - [ ] **Remover dependências sem uso:** `@googleapis/docs`, `body-parser`, `express-session` (o item de `state` não precisou dela), `jsonwebtoken`, `nodemon`. Alinhar `@types/express` (v5) com o `express` (v4).
@@ -71,3 +71,4 @@ Pedido do dono em 20/11/2026: nenhum code smell no projeto. Passar a code base i
 | #24 | Login com `state` preso ao navegador e PKCE (S256) |
 | #25 | Cookie do `state` lido pelo `cookie-parser` que o app já tinha |
 | #26 | `helmet` com CSP, limite de tentativas de login e JSON até 64 KB |
+| #27 | `.env` validado com `zod` no boot |

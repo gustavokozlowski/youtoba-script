@@ -1,11 +1,21 @@
 require('dotenv').config();
 
+import { EnvError, loadEnv } from '../config/env';
 import { googleAuth } from '../services/google';
 import { createApp } from './app';
 
-const { PORT } = process.env;
+/** Sobe só com o .env válido; senão diz o que falta e sai, sem mostrar nenhum valor. */
+function envOrExit() {
+    try {
+        return loadEnv();
+    } catch (error) {
+        if (!(error instanceof EnvError)) throw error;
+        console.error(error.message);
+        process.exit(1);
+    }
+}
 
-// Falha cedo se a chave de criptografia do token estiver ausente ou inválida.
+const { PORT } = envOrExit();
 const auth = googleAuth();
 
 createApp().listen(PORT, () => {
