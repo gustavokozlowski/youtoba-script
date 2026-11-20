@@ -236,14 +236,16 @@ Neutros quentes de asfalto e concreto, um rosa de spray como única cor de açã
 - **Vermelho Erro** (`danger` / `danger-dark`, com `danger-soft`): só erro e item que falhou. Não é cor de marca.
 
 ### Cores do logo
-O logo usa uma paleta própria que não existe como token de CSS e não deve vazar para a interface: amarelo `#FFF25A`, âmbar `#FFB321`, laranja `#FF6B2C` e rosa `#FF2E88` no degradê das letras, roxo `#3B0F5C` na extrusão, `#0E0716` no contorno externo e branco no corte interno. A fonte de verdade é `COLORS` em `web/scripts/build-logo.cjs`. A névoa da tela Entrar empresta o laranja do logo (token `--spray-warm`, `#ff8a1f`) ao lado do Jato, e é o único lugar da interface onde isso acontece.
+"Chiclete e grafite", escolhido pelo dono em 20/11/2026 depois de testar três paletas num protótipo do app. O rosa chiclete manda (face em degradê `#FFA6D2` → `#FF4FA3`, chanfro de luz `#FFE0EF`), o grafite sustenta (bloco sombreado de `#5C5C6B` perto da face a `#1F1F27` no fundo) e o creme de adesivo `#F5EFE3` separa a peça de qualquer fundo; o contorno é `#0B0B12`. O rosa do logo é da mesma família do Jato e do Rosa de Spray, então o logo e a ação principal falam a mesma cor sem precisar de uma segunda. A fonte de verdade é `COLORS` em `web/scripts/build-logo.cjs`. A névoa da tela Entrar usa o rosa e o grafite do logo (tokens `--logo-face`, `#ff6fb8`, e `--logo-block`, `#5c5c6b`), e é o único lugar da interface onde esses tokens aparecem.
+
+Contraste medido: face contra o contorno 6,4:1; face contra o bloco 2,2:1 (a separação vem do contorno, não da cor); bloco contra o asfalto 2,9:1, abaixo de 3, e por isso a borda de adesivo (16,7:1 contra o asfalto) garante a silhueta no escuro.
 
 ### Named Rules
 **The Spray Marca o Que Sai Rule.** O rosa só aparece no que vai sair ou saiu e na ação que faz isso acontecer (mais o anel de foco). Um número rosa numa tela significa "isto vai ser apagado"; não use rosa para decorar, destacar seção ou enfeitar vazio.
 
 **The Não É o YouTube Rule.** O vermelho, o logo e a marca do YouTube nunca são identidade. O vermelho do sistema (`danger`) é só erro.
 
-**The Calor Mora no Logo Rule.** Amarelo, laranja e roxo pertencem ao logo. A interface fica em neutros, rosa e as três cores de estado.
+**The Grafite Mora no Logo Rule.** O grafite do bloco e o creme do adesivo pertencem ao logo (e à névoa da entrada). A interface fica em neutros, rosa e as três cores de estado.
 
 ## Typography
 
@@ -274,7 +276,7 @@ As fontes vêm do `@fontsource` (importadas em `web/src/main.tsx`), sem CDN.
 
 ## Layout
 
-Coluna única centrada, `max-width: 1240px`, com calha lateral de 16 px que respeita `safe-area-inset`. A página abre com 36 px de respiro no topo e fecha com 72 px. A barra de topo é fixa (`sticky`), com 68 px de altura mínima: logo (168 px; 118 px no celular), navegação Playlists/Remoções, cota do dia empurrada à direita e a conta.
+Coluna única centrada, `max-width: 1240px`, com calha lateral de 16 px que respeita `safe-area-inset`. A página abre com 36 px de respiro no topo e fecha com 72 px. A barra de topo é fixa (`sticky`), com 68 px de altura mínima: logo (50 px de altura; 32 px no celular), navegação Playlists/Remoções, cota do dia empurrada à direita e a conta.
 
 - **Lista de playlists:** linhas em grade de cinco colunas (capa 128 px, título, antes→depois 210 px, repetidos 130 px, ação 230 px), 24 px entre colunas e 18 px de respiro vertical por linha. Até 1020 px vira uma grade de três áreas (capa, título em cima, números no meio, ação embaixo).
 - **Revisão e Remoção:** conteúdo à esquerda e painel lateral de 360 px à direita, 32 px de vão. O painel é `sticky` a 92 px do topo. Até 1020 px tudo empilha e o painel deixa de ser fixo; um botão "Ir para confirmar" aparece no topo da lista.
@@ -352,7 +354,7 @@ O gesto do sistema, em `web/src/components/TrackRow.tsx`. Cada vídeo com estado
 O número de vídeos que ainda faltam, em Display, com "ainda faltam" e "7 de 75 apagados" ao lado. Embaixo, a barra de progresso de 14 px em `spray` (largura animada em 400 ms) e a linha "Apagando <título> (#posição)" com o ponto pulsante.
 
 ### Logo
-A peça de grafite "youtoba": letras Knewave (fonte OFL, em `web/scripts/fonts/`) convertidas em vetor, com pulo por letra, contorno grosso, extrusão roxa, degradê amarelo → laranja → rosa, dois escorridos (no "u" e no "a") e uma seta. `web/src/assets/logo.svg` e o favicon são gerados por `web/scripts/build-logo.cjs`. Para mudar o desenho, edite o script e rode `npm run build:logo`; nunca edite o SVG à mão. Na barra de topo tem 168 px de largura; na tela Entrar ocupa a coluna da esquerda com a névoa de spray por trás.
+A peça "YOUTOBA" em caixa-alta: letras Anton (fonte OFL, em `web/scripts/fonts/`) convertidas em vetor, com contorno grosso, bloco 3D sombreado para baixo e à direita, chanfro de luz na borda de cima das letras e borda de adesivo creme em volta de tudo. O favicon é o "Y" no mesmo desenho, em Archivo Black (também OFL), porque a Anton fica fina demais em 16 px. `web/src/assets/logo.svg` e o favicon são gerados por `web/scripts/build-logo.cjs`. Para mudar o desenho, edite o script e rode `npm run build:logo`; nunca edite o SVG à mão. Na barra de topo o logo tem 50 px de altura (32 px no celular); na tela Entrar ocupa a coluna da esquerda, até 680 px, com a névoa de spray por trás.
 
 ## Do's and Don'ts
 

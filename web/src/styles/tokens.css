@@ -11,8 +11,9 @@
     --accent-hover: #a90c53;
     --accent-fg: #ffffff;
     --spray: #e4167a;
-    /* Laranja do logo, usado só na névoa de spray da entrada. */
-    --spray-warm: #ff8a1f;
+    /* Rosa chiclete e grafite do logo, usados só na névoa de spray da entrada. */
+    --logo-face: #ff6fb8;
+    --logo-block: #5c5c6b;
     --ok: #157a4c;
     --warn: #7a4f00;
     --warn-soft: #ffc83d33;
