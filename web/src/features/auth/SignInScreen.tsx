@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import logo from '../../assets/logo.svg';
 import { Icon } from '../../shared/ui/Icon';
 import { Notice } from '../../shared/ui/Notice';
@@ -6,6 +6,7 @@ import type { SignInScreenProps } from './SignInScreen.types';
 
 export function SignInScreen({ expired }: SignInScreenProps) {
     const titleId = useId();
+    const [signingIn, setSigningIn] = useState(false);
     return (
         <main>
             {expired && (
@@ -26,9 +27,14 @@ export function SignInScreen({ expired }: SignInScreenProps) {
                         </p>
                     </div>
                     {/* Navegação de verdade: o servidor redireciona para o login do Google. */}
-                    <a className="btn btn-ink btn-google" href="/auth/login">
-                        <Icon name="google" />
-                        Entrar com o Google
+                    <a
+                        className={`btn btn-ink btn-google${signingIn ? ' is-loading' : ''}`}
+                        href="/auth/login"
+                        aria-busy={signingIn}
+                        onClick={() => setSigningIn(true)}
+                    >
+                        <Icon name="google" className={signingIn ? 'spin' : ''} />
+                        {signingIn ? 'Abrindo o Google…' : 'Entrar com o Google'}
                     </a>
                 </div>
                 <div className="facts">

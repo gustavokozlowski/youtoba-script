@@ -24,14 +24,31 @@ export function App() {
 
     if (auth.isPending) return <main aria-busy="true" />;
     if (auth.error?.code === 'offline') return <ServerDown onRetry={() => void auth.refetch()} />;
-    if (expired || !auth.data?.connected) return <SignInScreen expired={expired} />;
+    if (expired || !auth.data?.connected) {
+        return (
+            <div className="screen-transition" key={expired ? 'signin-expired' : 'signin'}>
+                <SignInScreen expired={expired} />
+            </div>
+        );
+    }
 
     return (
-        <>
+        <div className="screen-transition" key={screenKey(route)}>
             <TopBar route={route} onSignOut={() => signOut.mutate()} signingOut={signOut.isPending} />
             <Screen route={route} />
-        </>
+        </div>
     );
+}
+
+function screenKey(route: ScreenProps['route']) {
+    switch (route.name) {
+        case 'review':
+            return `${route.name}-${route.playlistId}`;
+        case 'removal':
+            return `${route.name}-${route.jobId}`;
+        default:
+            return route.name;
+    }
 }
 
 /** Qualquer 401 no meio do uso: o login expirou (modo Testing do Google: 7 dias). */
