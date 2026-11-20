@@ -4,8 +4,55 @@
 *::after {
     box-sizing: border-box;
 }
+@keyframes mist-drift {
+    from {
+        opacity: 0;
+        transform: translate3d(-12px, 12px, 0) scale(0.96);
+    }
+    to {
+        opacity: 0.5;
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+}
+@keyframes wall-mark {
+    from {
+        opacity: 0;
+        transform: translate3d(-18px, 10px, 0) rotate(-1deg) scale(0.97);
+        filter: blur(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) rotate(0) scale(1);
+        filter: blur(0);
+    }
+}
+@keyframes wall-copy-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+@keyframes screen-enter {
+    from {
+        opacity: 0.7;
+        transform: translateY(8px);
+        filter: blur(2px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+}
 html {
     -webkit-text-size-adjust: 100%;
+}
+.btn.is-loading {
+    cursor: wait;
 }
 body {
     margin: 0;
@@ -161,12 +208,30 @@ h2 {
 
 /* Movimento só para quem não pediu movimento reduzido. */
 @media (prefers-reduced-motion: no-preference) {
+    .wall .mist {
+        animation: mist-drift 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .hero-logo {
+        animation: wall-mark 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
+    }
+    .wall .copy {
+        animation: wall-copy-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both;
+    }
+    .facts {
+        animation: wall-copy-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.38s both;
+    }
+    .screen-transition {
+        animation: screen-enter 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
     .btn {
         transition:
             transform 0.15s ease-out,
             background-color 0.15s ease-out;
     }
     .spin {
+        animation: spin 0.9s linear infinite;
+    }
+    .btn.is-loading .icon {
         animation: spin 0.9s linear infinite;
     }
     .skeleton {
