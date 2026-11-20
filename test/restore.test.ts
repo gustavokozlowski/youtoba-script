@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { PlaylistBackup } from '../src/modules/playlist/playlist.types';
+import type { PlaylistBackup } from '../src/modules/removal/removal.types';
 import { restoreRemoved } from '../src/modules/removal/restore';
 import { playlistItem } from './helpers/youtube-fixtures';
 

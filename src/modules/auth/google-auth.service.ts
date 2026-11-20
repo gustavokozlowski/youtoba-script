@@ -4,7 +4,7 @@ import { parseEncryptionKey } from '../../infra/crypto';
 import { dbPath } from '../../infra/storage/db-path';
 import { createSqliteTokenStore } from '../../infra/storage/token.store';
 import type { TokenStore } from '../../infra/storage/token.store.types';
-import { errorMessage, httpErrorLike } from '../../shared/errors';
+import { isInvalidGrant, MissingRefreshTokenError } from './google-auth.errors';
 import type { GoogleAuthConfig } from './google-auth.service.types';
 import type { PendingLogin } from './pending-logins.types';
 
@@ -12,17 +12,6 @@ export const DEFAULT_ACCOUNT = 'default';
 
 // force-ssl cobre leitura e escrita de playlists; os outros dois escopos eram redundantes.
 export const SCOPES = ['https://www.googleapis.com/auth/youtube.force-ssl'];
-
-export class MissingRefreshTokenError extends Error {
-    constructor() {
-        super('O Google não devolveu um refresh token');
-        this.name = 'MissingRefreshTokenError';
-    }
-}
-
-const isInvalidGrant = (error: unknown): boolean =>
-    httpErrorLike<{ error?: string }>(error).response?.data?.error === 'invalid_grant' ||
-    errorMessage(error).includes('invalid_grant');
 
 /**
  * Mantém a conexão com o Google de uma conta.

@@ -1,8 +1,6 @@
 require('dotenv').config();
 
-import { setting } from '../config/settings';
-import { googleAuth } from '../modules/auth/google-auth.service';
-import { createTrackedClient } from '../modules/quota/tracked-client';
+import { connectedClient } from '../modules/quota/tracked-client';
 import { readBackup } from '../modules/removal/backup';
 import { restoreRemoved } from '../modules/removal/restore';
 import { errorMessage } from '../shared/errors';
@@ -26,16 +24,15 @@ async function main() {
         return;
     }
 
-    const token = await googleAuth().getAccessToken();
-    const apiKey = setting('API_KEY');
-    if (!token || !apiKey) {
+    const client = await connectedClient();
+    if (!client) {
         console.error(
             'Conta não conectada. Abra http://localhost:3000/auth/login com o servidor rodando e tente de novo.',
         );
         process.exit(1);
     }
 
-    const result = await restoreRemoved(createTrackedClient({ apiKey, token }), backup);
+    const result = await restoreRemoved(client, backup);
     console.log(
         `Restaurados: ${result.restored.length} (fora da posição original: ${result.restored.filter((r) => !r.atOriginalPosition).length})`,
     );

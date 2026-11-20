@@ -1,7 +1,7 @@
 import { dbPath } from '../../infra/storage/db-path';
 import { createSqliteQuotaStore } from '../../infra/storage/quota.store';
 import type { QuotaStore } from '../../infra/storage/quota.store.types';
-import type { QuotaSnapshot } from '../playlist/playlist.types';
+import type { QuotaSnapshot } from './quota.types';
 import { dailyQuotaLimit } from './quota-estimate';
 
 // A quota da YouTube Data API zera à meia-noite no horário do Pacífico.

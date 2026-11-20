@@ -5,7 +5,6 @@ import {
     getPlaylistsWithDuplicates,
     listPlaylistItems,
     previewDuplicates,
-    removeDuplicatedItems,
 } from './playlist.controller';
 
 const playlistRouter = Router();
@@ -16,6 +15,5 @@ playlistRouter.get('/with-duplicates', getPlaylistsWithDuplicates);
 playlistRouter.get('/:playlistId', getPlaylistInfoById);
 playlistRouter.get('/:playlistId/items', listPlaylistItems);
 playlistRouter.get('/:playlistId/duplicates', previewDuplicates);
-playlistRouter.delete('/:playlistId/remove-duplicates', removeDuplicatedItems);
 
 export { playlistRouter };

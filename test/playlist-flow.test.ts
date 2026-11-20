@@ -5,7 +5,7 @@ import path from 'node:path';
 import nock from 'nock';
 import request from 'supertest';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { PlaylistBackup } from '../src/modules/playlist/playlist.types';
+import type { PlaylistBackup } from '../src/modules/removal/removal.types';
 import { login } from './helpers/login';
 import type { EntryBody, JobBody, OverviewBody, PreviewBody, UnmatchedRequest } from './playlist-flow.types';
 

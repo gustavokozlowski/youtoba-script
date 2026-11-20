@@ -1,32 +1,11 @@
-import type { NextFunction, Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { setting } from '../../config/settings';
-import { googleAuth, MissingRefreshTokenError } from './google-auth.service';
+import { asyncHandler } from '../../shared/async-handler';
+import type { LoginCallback } from './auth.types';
+import { googleRefused, loginFailed } from './auth-pages';
+import { MissingRefreshTokenError } from './google-auth.errors';
+import { googleAuth } from './google-auth.service';
 import { LOGIN_TTL_MS, pendingLogins } from './pending-logins';
-
-const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
-
-const renderPage = (title: string, body: string) => `<!doctype html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${title} · youtoba</title>
-<style>
-  body { font-family: system-ui, sans-serif; max-width: 32rem; margin: 4rem auto; padding: 0 1rem; line-height: 1.5; }
-  a { color: #2563eb; }
-  code { background: #f1f5f9; padding: 0.1rem 0.3rem; border-radius: 4px; }
-</style>
-</head>
-<body>
-<h1>${title}</h1>
-${body}
-</body>
-</html>`;
-
-const retryLink = '<p><a href="/auth/login">Tentar de novo</a> · <a href="/">Voltar ao youtoba</a></p>';
-
-const loginFailed = (res: Response, status: number, body: string) =>
-    res.status(status).send(renderPage('Login não concluído', `${body}\n${retryLink}`));
 
 // O state do login fica num cookie deste navegador. Lax: volta na navegação vinda do Google.
 // Sem `secure` porque o servidor roda em http://localhost.
@@ -46,51 +25,38 @@ function verifierFor(req: Request): string | undefined {
     return pendingLogins().consume(state);
 }
 
-export const getAuthorizationToken = async (req: Request, res: Response, next: NextFunction) => {
+/** O code e o verifier da volta do Google, ou o motivo (HTML) de não dar para concluir o login. */
+function readCallback(req: Request): LoginCallback {
     const { code, error } = req.query;
-    res.clearCookie(STATE_COOKIE, stateCookie);
-
-    if (typeof error === 'string') {
-        loginFailed(
-            res,
-            400,
-            `<p>O Google respondeu: <code>${escapeHtml(error)}</code>.</p>
-<p>Se foi <code>access_denied</code>, confira se a conta está em <em>Usuários de teste</em> no Google Cloud.</p>`,
-        );
-        return;
-    }
+    if (typeof error === 'string') return { problem: googleRefused(error) };
     if (typeof code !== 'string' || code.length === 0) {
-        loginFailed(res, 400, '<p>O Google não enviou o código de autorização.</p>');
-        return;
+        return { problem: '<p>O Google não enviou o código de autorização.</p>' };
     }
     const codeVerifier = verifierFor(req);
-    if (!codeVerifier) {
-        loginFailed(res, 400, '<p>Este login não começou neste navegador ou levou mais de 10 minutos.</p>');
-        return;
-    }
+    if (!codeVerifier) return { problem: '<p>Este login não começou neste navegador ou levou mais de 10 minutos.</p>' };
+    return { code, codeVerifier };
+}
+
+export const getAuthorizationToken = asyncHandler(async (req, res) => {
+    res.clearCookie(STATE_COOKIE, stateCookie);
+    const callback = readCallback(req);
+    if ('problem' in callback) return loginFailed(res, 400, callback.problem);
 
     try {
-        await googleAuth().connect(code, codeVerifier);
-        // Volta para a interface. WEB_URL só é preciso quando ela roda no Vite (outra porta).
-        res.redirect(setting('WEB_URL') ?? '/');
-    } catch (err) {
-        if (err instanceof MissingRefreshTokenError) {
-            loginFailed(res, 502, '<p>O Google não enviou o token de acesso contínuo.</p>');
-            return;
-        }
-        next(err);
+        await googleAuth().connect(callback.code, callback.codeVerifier);
+    } catch (error) {
+        if (!(error instanceof MissingRefreshTokenError)) throw error;
+        return loginFailed(res, 502, '<p>O Google não enviou o token de acesso contínuo.</p>');
     }
-};
+    // Volta para a interface. WEB_URL só é preciso quando ela roda no Vite (outra porta).
+    return res.redirect(setting('WEB_URL') ?? '/');
+});
 
 export const authStatus = (_req: Request, res: Response) => {
     res.json({ connected: googleAuth().isConnected() });
 };
 
-export const logout = async (_req: Request, res: Response, next: NextFunction) => {
-    try {
-        await googleAuth().disconnect();
-        res.json({ connected: false });
-    } catch (err) {
-        next(err);
-    }
-};
+export const logout = asyncHandler(async (_req, res) => {
+    await googleAuth().disconnect();
+    res.json({ connected: false });
+});

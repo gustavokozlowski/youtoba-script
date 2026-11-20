@@ -1,9 +1,10 @@
 import { Router } from 'express';
-import { getRemovalJob, listRemovalJobs } from '../playlist/playlist.controller';
+import { getRemovalJob, listRemovalJobs, removeDuplicatedItems } from './removal.controller';
 
-const jobsRouter = Router();
+const removalRouter = Router();
 
-jobsRouter.get('/', listRemovalJobs);
-jobsRouter.get('/:jobId', getRemovalJob);
+removalRouter.delete('/playlist/:playlistId/remove-duplicates', removeDuplicatedItems);
+removalRouter.get('/jobs', listRemovalJobs);
+removalRouter.get('/jobs/:jobId', getRemovalJob);
 
-export { jobsRouter };
+export { removalRouter };

@@ -1,4 +1,5 @@
-import { apiFailure, type YoutubeClient } from '../../infra/youtube/youtube.client';
+import { apiFailure } from '../../infra/youtube/api-failure';
+import type { YoutubeClient } from '../../infra/youtube/youtube.client';
 import { PAGE_SIZE } from '../../infra/youtube/youtube.constants';
 import type { SeedResult } from './test-playlist.seed.types';
 
