@@ -1,10 +1,11 @@
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import nock from 'nock';
 import request from 'supertest';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { login, startLogin } from './helpers/login';
 
 const GOOGLE_OAUTH = 'https://oauth2.googleapis.com';
 const YOUTUBE = 'https://youtube.googleapis.com';
@@ -22,6 +23,8 @@ const tokenResponse = (body: Record<string, unknown>) =>
     nock(GOOGLE_OAUTH)
         .post('/token')
         .reply(200, { token_type: 'Bearer', expires_in: 3599, ...body });
+
+const s256 = (verifier: string) => createHash('sha256').update(verifier).digest('base64url');
 
 const playlistsCalledWith = (accessToken: string) =>
     nock(YOUTUBE)
@@ -75,7 +78,7 @@ describe('login com Google', () => {
         const app = await bootApp();
         tokenResponse({ access_token: 'at-1', refresh_token: 'rt-1' });
 
-        const callback = await request(app).get('/auth?code=codigo-valido');
+        const callback = await login(app);
         // Volta para a interface; nenhum token vai na resposta.
         expect(callback.status).toBe(302);
         expect(callback.headers.location).toBe('/');
@@ -94,7 +97,7 @@ describe('login com Google', () => {
         try {
             const app = await bootApp();
             tokenResponse({ access_token: 'at-1', refresh_token: 'rt-1' });
-            const callback = await request(app).get('/auth?code=codigo-valido');
+            const callback = await login(app);
             expect(callback.headers.location).toBe('http://localhost:5173/');
         } finally {
             delete process.env.WEB_URL;
@@ -103,7 +106,7 @@ describe('login com Google', () => {
 
     it('continua conectado depois de reiniciar o servidor, renovando o access token sozinho', async () => {
         tokenResponse({ access_token: 'at-1', refresh_token: 'rt-1' });
-        await request(await bootApp()).get('/auth?code=codigo-valido');
+        await login(await bootApp());
 
         const restarted = await bootApp();
         expect((await request(restarted).get('/auth/status')).body).toEqual({ connected: true });
@@ -118,7 +121,7 @@ describe('login com Google', () => {
 
     it('guarda o refresh token novo quando o Google rotaciona', async () => {
         tokenResponse({ access_token: 'at-1', refresh_token: 'rt-1' });
-        await request(await bootApp()).get('/auth?code=codigo-valido');
+        await login(await bootApp());
 
         const restarted = await bootApp();
         tokenResponse({ access_token: 'at-2', refresh_token: 'rt-rotacionado' });
@@ -135,7 +138,7 @@ describe('login com Google', () => {
 
     it('quando o Google invalida o refresh token (7 dias em Testing), desconecta e pede novo login', async () => {
         tokenResponse({ access_token: 'at-1', refresh_token: 'rt-1' });
-        await request(await bootApp()).get('/auth?code=codigo-valido');
+        await login(await bootApp());
 
         const restarted = await bootApp();
         nock(GOOGLE_OAUTH)
@@ -149,7 +152,7 @@ describe('login com Google', () => {
     it('logout revoga o token no Google e apaga o login local', async () => {
         const app = await bootApp();
         tokenResponse({ access_token: 'at-1', refresh_token: 'rt-1' });
-        await request(app).get('/auth?code=codigo-valido');
+        await login(app);
 
         nock(GOOGLE_OAUTH).post('/revoke').query({ token: 'rt-1' }).reply(200, {});
         expect((await request(app).post('/auth/logout')).body).toEqual({ connected: false });
@@ -161,8 +164,64 @@ describe('login com Google', () => {
         const app = await bootApp();
         tokenResponse({ access_token: 'at-1' });
 
-        expect((await request(app).get('/auth?code=codigo-valido')).status).toBe(502);
+        expect((await login(app)).status).toBe(502);
         expect((await request(app).get('/auth/status')).body).toEqual({ connected: false });
+    });
+
+    it('/auth/login manda state e PKCE (S256) ao Google e prende o state a este navegador num cookie HttpOnly', async () => {
+        const { res, state, challenge } = await startLogin(request.agent(await bootApp()));
+        const url = new URL(res.headers.location);
+        expect(state).toMatch(/^[\w-]{43}$/);
+        expect(challenge).toMatch(/^[\w-]{43}$/);
+        expect(url.searchParams.get('code_challenge_method')).toBe('S256');
+
+        const cookie = String(res.headers['set-cookie']);
+        expect(cookie).toContain(`youtoba_oauth_state=${state}`);
+        expect(cookie).toMatch(/HttpOnly/);
+        expect(cookie).toMatch(/SameSite=Lax/);
+        expect(cookie).toMatch(/Path=\/auth/);
+    });
+
+    it('troca o code mandando o code_verifier que corresponde ao code_challenge', async () => {
+        const agent = request.agent(await bootApp());
+        const { state, challenge } = await startLogin(agent);
+        nock(GOOGLE_OAUTH)
+            .post('/token', (body) => body.code === 'codigo-valido' && s256(body.code_verifier) === challenge)
+            .reply(200, { access_token: 'at-1', refresh_token: 'rt-1', token_type: 'Bearer', expires_in: 3599 });
+
+        expect((await agent.get(`/auth?code=codigo-valido&state=${state}`)).status).toBe(302);
+    });
+
+    it('recusa a volta do Google vinda de outro navegador (CSRF de login): sem o cookie, não troca o code', async () => {
+        const app = await bootApp();
+        const { state } = await startLogin(request.agent(app));
+
+        const res = await request(app).get(`/auth?code=codigo-do-atacante&state=${state}`);
+        expect(res.status).toBe(400);
+        expect(res.text).toContain('Tentar de novo');
+        expect((await request(app).get('/auth/status')).body).toEqual({ connected: false });
+    });
+
+    it('recusa quando o state da volta não é o deste navegador', async () => {
+        const app = await bootApp();
+        const agent = request.agent(app);
+        await startLogin(agent);
+        const other = await startLogin(request.agent(app));
+
+        expect((await agent.get(`/auth?code=codigo-valido&state=${other.state}`)).status).toBe(400);
+    });
+
+    it('o state vale uma vez só: repetir a volta do Google é recusado', async () => {
+        const app = await bootApp();
+        const agent = request.agent(app);
+        const { state } = await startLogin(agent);
+        tokenResponse({ access_token: 'at-1', refresh_token: 'rt-1' });
+        expect((await agent.get(`/auth?code=codigo-valido&state=${state}`)).status).toBe(302);
+
+        const replay = await request(app)
+            .get(`/auth?code=codigo-valido&state=${state}`)
+            .set('Cookie', `youtoba_oauth_state=${state}`);
+        expect(replay.status).toBe(400);
     });
 
     it('mostra o erro do Google escapado quando o login é negado', async () => {

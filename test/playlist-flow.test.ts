@@ -6,6 +6,7 @@ import nock from 'nock';
 import request from 'supertest';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PlaylistBackup } from '../src/services/youtube/youtube.types';
+import { login } from './helpers/login';
 
 const GOOGLE_OAUTH = 'https://oauth2.googleapis.com';
 const YOUTUBE = 'https://youtube.googleapis.com';
@@ -121,7 +122,7 @@ beforeEach(async () => {
     nock(GOOGLE_OAUTH)
         .post('/token')
         .reply(200, { access_token: 'at-1', refresh_token: 'rt-1', token_type: 'Bearer', expires_in: 3599 });
-    await request(app).get('/auth?code=codigo-valido').expect(302);
+    expect((await login(app)).status).toBe(302);
 });
 
 afterEach(() => {
