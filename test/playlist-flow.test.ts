@@ -7,7 +7,15 @@ import request from 'supertest';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PlaylistBackup } from '../src/modules/removal/removal.types';
 import { login } from './helpers/login';
-import type { EntryBody, JobBody, OverviewBody, PreviewBody, UnmatchedRequest } from './playlist-flow.types';
+import type {
+    ApiItemFixture,
+    EntryBody,
+    JobBody,
+    OverviewBody,
+    PreviewBody,
+    UnavailableBody,
+    UnmatchedRequest,
+} from './playlist-flow.types';
 
 const GOOGLE_OAUTH = 'https://oauth2.googleapis.com';
 const YOUTUBE = 'https://youtube.googleapis.com';
@@ -29,16 +37,16 @@ const bigPlaylist = Array.from({ length: 1_000 }, (_, position) => ({
     position,
 }));
 
-const apiItem = (item: { id: string; videoId: string; position: number }) => ({
+const apiItem = (item: ApiItemFixture) => ({
     kind: 'youtube#playlistItem',
     etag: 'e',
     id: item.id,
-    snippet: { title: `Vídeo ${item.videoId}`, position: item.position, videoOwnerChannelTitle: 'Canal' },
-    contentDetails: { videoId: item.videoId },
+    snippet: { title: item.title ?? `Vídeo ${item.videoId}`, position: item.position, videoOwnerChannelTitle: 'Canal' },
+    contentDetails: { videoId: item.videoId, videoPublishedAt: item.videoPublishedAt ?? '2020-01-01T00:00:00Z' },
 });
 
 /** Simula a listagem paginada (50 por página) e conta as chamadas. */
-function mockListing(items = bigPlaylist, playlistId = PLAYLIST) {
+function mockListing(items: ApiItemFixture[] = bigPlaylist, playlistId = PLAYLIST) {
     const calls = { count: 0 };
     const pages = Math.ceil(items.length / 50);
     nock(YOUTUBE)
@@ -63,6 +71,17 @@ function mockListing(items = bigPlaylist, playlistId = PLAYLIST) {
         });
     return calls;
 }
+
+// 6 itens: apagados nas posições 1 e 3, privado na 2, e a 5 é cópia do apagado da 1 (duplicado, não "apagado").
+const SMALL = 'PLsmall';
+const smallPlaylist: ApiItemFixture[] = [
+    { id: 'item-0', videoId: 'r0', position: 0 },
+    { id: 'item-1', videoId: 'dx', position: 1, title: 'Deleted video', videoPublishedAt: '' },
+    { id: 'item-2', videoId: 'pv', position: 2, title: 'Private video', videoPublishedAt: '' },
+    { id: 'item-3', videoId: 'dy', position: 3, title: 'Deleted video', videoPublishedAt: '' },
+    { id: 'item-4', videoId: 'r4', position: 4 },
+    { id: 'item-5', videoId: 'dx', position: 5, title: 'Deleted video', videoPublishedAt: '' },
+];
 
 const backups = () => (fs.existsSync(backupDir) ? fs.readdirSync(backupDir) : []);
 
@@ -549,5 +568,165 @@ describe('playlists com duplicados', () => {
         expect(res.body.resumo.aviso).toContain('incompleta');
         expect(res.body.resumo.falhas).toEqual([{ playlistId: 'PLb', titulo: 'Beta', motivo: 'quotaExceeded' }]);
         expect((await request(app).get('/quota')).body.restante).toBe(0);
+    });
+});
+
+describe('deleted videos dry-run', () => {
+    it('lists only deleted videos (not the private one nor the duplicate copy) and deletes nothing', async () => {
+        mockListing(smallPlaylist, SMALL);
+
+        const res = await request(app).get(`/playlist/${SMALL}/unavailable`);
+
+        expect(res.status).toBe(200);
+        const body = res.body as UnavailableBody;
+        expect(body).toMatchObject({ playlistId: SMALL, totalItens: 6, apagados: 2, cabemHoje: 2 });
+        expect(body.itensApagados).toEqual([
+            { posicao: 1, titulo: 'Deleted video', canal: 'Canal', videoId: 'dx', playlistItemId: 'item-1' },
+            { posicao: 3, titulo: 'Deleted video', canal: 'Canal', videoId: 'dy', playlistItemId: 'item-3' },
+        ]);
+        expect(body.quota).toMatchObject({ unidadesLeitura: 1, unidadesRemocao: 100, cabeEmUmDia: true });
+        expect(body.quotaHoje).toMatchObject({ usado: 1, restante: 9_999, limite: 10_000 });
+        expect(body.aviso).toMatch(/adicion/i);
+        expect(backups()).toEqual([]);
+    });
+
+    it('the copy of a deleted video stays only in the duplicates list', async () => {
+        mockListing(smallPlaylist, SMALL);
+        const res = await request(app).get(`/playlist/${SMALL}/duplicates`);
+        expect(res.body.itensDuplicados.map((d: PreviewBody['itensDuplicados'][number]) => d.posicao)).toEqual([5]);
+    });
+
+    it('returns zero when nothing is deleted', async () => {
+        mockListing(bigPlaylist.slice(0, 40), SMALL);
+        const res = await request(app).get(`/playlist/${SMALL}/unavailable`);
+        expect(res.status).toBe(200);
+        expect(res.body).toMatchObject({ apagados: 0, itensApagados: [] });
+    });
+
+    it('unknown playlist returns 404', async () => {
+        nock(YOUTUBE)
+            .get('/youtube/v3/playlistItems')
+            .query(true)
+            .reply(404, { error: { errors: [{ reason: 'playlistNotFound' }], message: 'not found' } });
+        const res = await request(app).get('/playlist/PLnaoexiste/unavailable');
+        expect(res.status).toBe(404);
+    });
+
+    it('Google quotaExceeded returns 429', async () => {
+        nock(YOUTUBE)
+            .get('/youtube/v3/playlistItems')
+            .query(true)
+            .reply(403, { error: { errors: [{ reason: 'quotaExceeded' }], message: 'quota' } });
+        const res = await request(app).get(`/playlist/${SMALL}/unavailable`);
+        expect(res.status).toBe(429);
+        expect(res.body.erro).toBe('quota_exceeded');
+    });
+});
+
+describe('deleted videos removal', () => {
+    const url = (confirm?: number) =>
+        `/playlist/${SMALL}/remove-unavailable${confirm === undefined ? '' : `?confirm=${confirm}`}`;
+
+    it('without confirmation, returns 409 with the preview and deletes nothing', async () => {
+        mockListing(smallPlaylist, SMALL);
+        const res = await request(app).delete(url());
+        expect(res.status).toBe(409);
+        expect(res.body).toMatchObject({ erro: 'confirmation_required', apagados: 2 });
+        expect(backups()).toEqual([]);
+    });
+
+    it('with a confirm different from the current count, deletes nothing', async () => {
+        mockListing(smallPlaylist, SMALL);
+        const res = await request(app).delete(url(3));
+        expect(res.status).toBe(409);
+        expect(res.body.erro).toBe('confirmation_required');
+        expect(backups()).toEqual([]);
+    });
+
+    it('with no deleted videos, returns 200 without backup or deletes', async () => {
+        mockListing(bigPlaylist.slice(0, 40), SMALL);
+        const res = await request(app).delete(url(0));
+        expect(res.status).toBe(200);
+        expect(res.body).toMatchObject({ totalItens: 40, removidos: 0 });
+        expect(typeof res.body.mensagem).toBe('string');
+        expect(backups()).toEqual([]);
+    });
+
+    it('confirmed: writes the backup first and deletes only the deleted videos (not the private one nor the duplicate copy)', async () => {
+        mockListing(smallPlaylist, SMALL);
+        const backupExistedBeforeDelete: boolean[] = [];
+        for (const position of [1, 3]) {
+            mockDelete(position, () => {
+                backupExistedBeforeDelete.push(backups().length === 1);
+                return [204, ''];
+            });
+        }
+
+        const res = await request(app).delete(url(2));
+        expect(res.status).toBe(202);
+        expect(res.body).toMatchObject({ total: 2, cabemHoje: 2, acompanhar: `/jobs/${res.body.jobId}` });
+
+        const job = await waitForJob(res.body.jobId);
+        expect(job).toMatchObject({
+            tipo: 'apagados',
+            status: 'done',
+            progresso: '2 de 2 itens apagados',
+            percentual: 100,
+            pendentes: 0,
+        });
+        expect(backupExistedBeforeDelete).toEqual([true, true]);
+
+        const backup = JSON.parse(fs.readFileSync(job.backup, 'utf8')) as PlaylistBackup;
+        expect(backup.items).toHaveLength(6);
+        expect(backup.removal?.removed).toEqual(['item-1', 'item-3']);
+
+        // 1 página lida + 2 remoções (50 cada)
+        expect((await request(app).get('/quota')).body).toMatchObject({ usado: 101, restante: 9_899 });
+    });
+
+    it('duplicate removal on the same playlist deletes only the copy and the job type is "duplicados"', async () => {
+        mockListing(smallPlaylist, SMALL);
+        mockDelete(5);
+
+        const res = await request(app).delete(`/playlist/${SMALL}/remove-duplicates?confirm=1`);
+        expect(res.status).toBe(202);
+
+        const job = await waitForJob(res.body.jobId);
+        expect(job).toMatchObject({ tipo: 'duplicados', status: 'done', progresso: '1 de 1 itens apagados' });
+    });
+
+    it('rejects a second removal on the same playlist while the first runs', async () => {
+        mockListing(smallPlaylist, SMALL);
+        for (const position of [1, 3]) mockDelete(position, undefined, 100);
+
+        const first = await request(app).delete(url(2));
+        const second = await request(app).delete(url(2));
+
+        expect(second.status).toBe(409);
+        expect(second.body).toMatchObject({ erro: 'already_running', jobId: first.body.jobId });
+        await waitForJob(first.body.jobId);
+    });
+
+    it('two simultaneous removals on the same playlist start only one job', async () => {
+        // As duas leem a playlist antes de qualquer job começar: a checagem precisa valer também na hora de iniciar.
+        mockListing(smallPlaylist, SMALL);
+        mockListing(smallPlaylist, SMALL);
+        for (const position of [1, 3]) mockDelete(position);
+
+        const replies = await Promise.all([request(app).delete(url(2)), request(app).delete(url(2))]);
+
+        expect(replies.map((reply) => reply.status).sort()).toEqual([202, 409]);
+        const started = replies.find((reply) => reply.status === 202);
+        await waitForJob(started?.body.jobId);
+        expect(backups()).toHaveLength(1);
+    });
+
+    it('with no quota for any deletion, returns 429 without backup', async () => {
+        await rebootWithQuota(30);
+        mockListing(smallPlaylist, SMALL);
+        const res = await request(app).delete(url(2));
+        expect(res.status).toBe(429);
+        expect(res.body.erro).toBe('daily_budget_exhausted');
+        expect(backups()).toEqual([]);
     });
 });

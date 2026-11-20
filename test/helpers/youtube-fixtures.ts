@@ -4,7 +4,14 @@ import type { PlaylistFixture, PlaylistItemFixture } from './youtube-fixtures.ty
 export const thumbnail = (url: string) => ({ url, width: 1, height: 1 });
 
 /** Item de playlist completo, como a API devolve, com só o que o teste quer mudar. */
-export function playlistItem({ id, videoId, position = 0, title, thumbnails = {} }: PlaylistItemFixture): PlaylistItem {
+export function playlistItem({
+    id,
+    videoId,
+    position = 0,
+    title,
+    videoPublishedAt = '',
+    thumbnails = {},
+}: PlaylistItemFixture): PlaylistItem {
     const item: PlaylistItem = {
         kind: 'youtube#playlistItem',
         etag: '',
@@ -23,7 +30,7 @@ export function playlistItem({ id, videoId, position = 0, title, thumbnails = {}
             resourceId: { kind: 'youtube#video', videoId: videoId ?? '' },
         },
     };
-    if (videoId !== undefined) item.contentDetails = { videoId, videoPublishedAt: '' };
+    if (videoId !== undefined) item.contentDetails = { videoId, videoPublishedAt };
     return item;
 }
 

@@ -5,9 +5,17 @@ import { type QuotaTracker, quotaTracker } from '../quota/quota-tracker.service'
 import { connectedClient } from '../quota/tracked-client';
 import type { ClientFactory } from '../quota/tracked-client.types';
 import { findDuplicates, toEntries } from './duplicates';
-import type { DuplicatesOverviewResult, DuplicatesPreview, PlaylistEntry, ReadFailure } from './playlist.types';
+import type {
+    DuplicatesOverviewResult,
+    DuplicatesPreview,
+    PlaylistEntry,
+    QuotaToday,
+    ReadFailure,
+    UnavailablePreview,
+} from './playlist.types';
 import { analysisEstimate, analyzable, overviewTotals, summarizeEach } from './playlist-overview';
 import { readFailure } from './read-failure';
+import { findDeleted } from './unavailable';
 
 /** Leituras de playlists: listas, itens, dry-run dos duplicados e a análise de todas as playlists. */
 export class PlaylistService {
@@ -46,6 +54,13 @@ export class PlaylistService {
         const listed = await this.listItems(playlistId);
         if (listed.status !== 'ok') return listed;
         return { status: 'ok', ...this.preview(playlistId, listed.items) };
+    }
+
+    /** Dry-run dos vídeos apagados: o que seria removido e quanto custaria, sem apagar nada. */
+    async previewUnavailable(playlistId: string): Promise<ReadFailure | ({ status: 'ok' } & UnavailablePreview)> {
+        const listed = await this.listItems(playlistId);
+        if (listed.status !== 'ok') return listed;
+        return { status: 'ok', ...this.unavailablePreview(playlistId, listed.items) };
     }
 
     /**
@@ -88,15 +103,31 @@ export class PlaylistService {
     /** Os duplicados de uma playlist já lida, com a estimativa de custo e o saldo de hoje. */
     preview(playlistId: string, entries: PlaylistEntry[]): DuplicatesPreview {
         const { unique, duplicates } = findDuplicates(entries);
-        const today = this.tracker().snapshot();
         return {
             playlistId,
             itemCount: entries.length,
             unique: unique.length,
             duplicates,
             quota: estimateRemovalQuota(entries.length, duplicates.length),
-            quotaToday: { ...today, deletesPossible: Math.floor(today.remaining / QUOTA_COST.delete) },
+            quotaToday: this.quotaToday(),
         };
+    }
+
+    /** Os vídeos apagados de uma playlist já lida, com a estimativa de custo e o saldo de hoje. */
+    unavailablePreview(playlistId: string, entries: PlaylistEntry[]): UnavailablePreview {
+        const deleted = findDeleted(entries);
+        return {
+            playlistId,
+            itemCount: entries.length,
+            deleted,
+            quota: estimateRemovalQuota(entries.length, deleted.length),
+            quotaToday: this.quotaToday(),
+        };
+    }
+
+    private quotaToday(): QuotaToday {
+        const today = this.tracker().snapshot();
+        return { ...today, deletesPossible: Math.floor(today.remaining / QUOTA_COST.delete) };
     }
 
     private budgetExhausted(estimate: number) {

@@ -3,9 +3,6 @@ import type { Playlist, PlaylistItem, YouTubeThumbnails } from '../../infra/yout
 import { findDuplicates, toEntries } from './duplicates';
 import type { PlaylistDuplicateSummary } from './playlist.types';
 
-// Títulos que a API devolve para itens cujo vídeo foi apagado ou ficou privado.
-const UNAVAILABLE_TITLES = new Set(['Deleted video', 'Private video']);
-
 const THUMBNAIL_PREFERENCE: (keyof YouTubeThumbnails)[] = ['maxres', 'standard', 'high', 'medium', 'default'];
 
 /** A maior imagem disponível. */
@@ -56,7 +53,7 @@ export function summarizePlaylist(playlist: Playlist, items: PlaylistItem[]): Pl
         afterRemoval: unique.length,
         duplicates: duplicates.length,
         duplicatePercent: entries.length === 0 ? 0 : Math.round((duplicates.length / entries.length) * 1000) / 10,
-        unavailable: entries.filter((entry) => UNAVAILABLE_TITLES.has(entry.title)).length,
+        unavailable: entries.filter((entry) => entry.unavailable).length,
         mostRepeated,
         removalCost: duplicates.length * QUOTA_COST.delete,
     };

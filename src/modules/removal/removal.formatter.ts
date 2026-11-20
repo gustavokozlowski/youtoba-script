@@ -1,7 +1,7 @@
-import { formatDuplicate } from '../playlist/playlist.formatter';
+import { formatEntry } from '../playlist/playlist.formatter';
 import { brasiliaDateTime, formatQuotaSnapshot } from '../quota/quota.formatter';
 import type { QuotaSnapshot } from '../quota/quota.types';
-import type { JobItemState, RemovalJob } from './removal.types';
+import type { JobItemState, RemovalJob, RemovalKind, RemovalTarget } from './removal.types';
 
 const isSkip = (reason?: string) => reason?.startsWith('skipped_') ?? false;
 const safeCount = (value: number) => (Number.isFinite(value) ? Math.max(0, value) : 0);
@@ -13,6 +13,17 @@ const STATUS_TEXT: Record<RemovalJob['status'], string> = {
     failed: 'interrompida por erro',
 };
 
+const KIND_TEXT: Record<RemovalKind, 'duplicados' | 'apagados'> = {
+    duplicates: 'duplicados',
+    unavailable: 'apagados',
+};
+
+/** O item na resposta; `primeiraOcorrencia` só aparece nos duplicados. */
+const formatTarget = (target: RemovalTarget) => ({
+    ...formatEntry(target),
+    ...(target.firstPosition === undefined ? {} : { primeiraOcorrencia: target.firstPosition }),
+});
+
 /** Estado de cada item para a interface. Pulado por falta de saldo conta como pendente: sai na próxima rodada. */
 function itemStates(job: RemovalJob) {
     const removed = new Set(job.removed);
@@ -22,7 +33,7 @@ function itemStates(job: RemovalJob) {
         if (failed.has(id)) return 'falhou';
         return 'pendente';
     };
-    return job.items.map((entry) => ({ ...formatDuplicate(entry), estado: stateOf(entry.playlistItemId) }));
+    return job.items.map((entry) => ({ ...formatTarget(entry), estado: stateOf(entry.playlistItemId) }));
 }
 
 /** O que fazer depois de uma parada por cota, com a hora em que ela zera. */
@@ -36,6 +47,7 @@ const STOP_TEXT: Record<NonNullable<RemovalJob['stopReason']>, (resetsAt: string
 export const formatJobSummary = (job: RemovalJob) => ({
     jobId: job.id,
     playlistId: job.playlistId,
+    tipo: KIND_TEXT[job.kind],
     status: job.status,
     situacao: STATUS_TEXT[job.status],
     removidos: job.removed.length,
@@ -53,6 +65,7 @@ export function formatJob(job: RemovalJob, quota: QuotaSnapshot) {
     return {
         jobId: job.id,
         playlistId: job.playlistId,
+        tipo: KIND_TEXT[job.kind],
         status: job.status,
         situacao: STATUS_TEXT[job.status],
         progresso: `${job.removed.length} de ${total} itens apagados`,

@@ -1,4 +1,5 @@
 import type { PlaylistItem } from '../../infra/youtube/youtube-api.types';
+import { availabilityOf } from './availability';
 import type { DuplicateEntry, PlaylistEntry } from './playlist.types';
 
 export function toEntry(item: PlaylistItem, fallbackPosition: number): PlaylistEntry | undefined {
@@ -6,12 +7,14 @@ export function toEntry(item: PlaylistItem, fallbackPosition: number): PlaylistE
     if (!videoId) {
         return undefined;
     }
+    const unavailable = availabilityOf(item);
     return {
         playlistItemId: item.id,
         videoId,
         title: item.snippet?.title ?? '',
         position: item.snippet?.position ?? fallbackPosition,
         channel: item.snippet?.videoOwnerChannelTitle,
+        ...(unavailable ? { unavailable } : {}),
     };
 }
 
