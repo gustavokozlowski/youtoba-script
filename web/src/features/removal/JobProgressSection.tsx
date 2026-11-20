@@ -19,6 +19,8 @@ export function JobProgressSection({ job, fresh, onRestore, restoring }: JobView
     const undoRef = useRef<HTMLElement>(null);
     const goToUndo = () => undoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     const { running, errors, current, rows } = useRemovalWindow(job);
+    const pending = Math.max(0, job.pendentes);
+    const completedCopy = job.status === 'done' ? 'todos saíram' : pending === 1 ? 'ainda falta' : 'ainda faltam';
 
     return (
         <>
@@ -27,10 +29,10 @@ export function JobProgressSection({ job, fresh, onRestore, restoring }: JobView
                 <section>
                     <div className="counter">
                         <span className="big num" aria-hidden="true">
-                            {num(job.pendentes)}
+                            {num(pending)}
                         </span>
                         <span className="big-l" aria-live="polite">
-                            {job.pendentes === 1 ? 'ainda falta' : 'ainda faltam'}
+                            {completedCopy}
                             <b className="num">
                                 {num(job.removidos)} de {num(job.total)} apagados
                             </b>

@@ -6,6 +6,10 @@ describe('format', () => {
     it('números no padrão brasileiro', () => {
         expect(num(16050)).toBe('16.050');
     });
+    it('não transforma números inválidos em NaN ou em negativo', () => {
+        expect(num(Number.NaN)).toBe('0');
+        expect(num(-2)).toBe('0');
+    });
     it('unidade no singular e no plural', () => {
         expect(units(1)).toBe('1 unidade');
         expect(units(3750)).toBe('3.750 unidades');
