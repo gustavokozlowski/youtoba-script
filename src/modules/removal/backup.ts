@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { setting } from '../../config/settings';
 import type { DeleteItemsResult } from '../../infra/youtube/youtube-api.types';
-import type { PlaylistBackup, PlaylistEntry } from './youtube.types';
+import type { PlaylistBackup, PlaylistEntry } from '../playlist/playlist.types';
 
 export const backupDir = () => setting('BACKUP_DIR');
 

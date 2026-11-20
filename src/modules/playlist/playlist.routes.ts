@@ -6,7 +6,7 @@ import {
     listPlaylistItems,
     previewDuplicates,
     removeDuplicatedItems,
-} from '../controllers/playlist.controller';
+} from './playlist.controller';
 
 const playlistRouter = Router();
 

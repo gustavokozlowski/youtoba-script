@@ -1,7 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
-import { quotaTracker } from '../services/youtube/quota-tracker';
-import type { ReadFailure } from '../services/youtube/youtube.types';
-import { YoutubeService } from '../services/youtube/youtube-playlist.services';
+import { quotaTracker } from '../quota/quota-tracker.service';
 import {
     formatEntry,
     formatJob,
@@ -9,7 +7,9 @@ import {
     formatOverview,
     formatPreview,
     formatQuotaSnapshot,
-} from './formatters';
+} from './playlist.formatter';
+import { YoutubeService } from './playlist.service';
+import type { ReadFailure } from './playlist.types';
 
 const youtubeService = new YoutubeService();
 

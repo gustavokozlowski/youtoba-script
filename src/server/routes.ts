@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import { setting } from '../config/settings';
-import { getQuota } from '../controllers/playlist.controller';
-import { authRouter } from '../routes/auth.routes';
-import { devRouter } from '../routes/dev.routes';
-import { jobsRouter } from '../routes/jobs.routes';
-import { playlistRouter } from '../routes/playlist.routes';
+import { authRouter } from '../modules/auth/auth.routes';
+import { devRouter } from '../modules/dev/dev.routes';
+import { getQuota } from '../modules/playlist/playlist.controller';
+import { playlistRouter } from '../modules/playlist/playlist.routes';
+import { jobsRouter } from '../modules/removal/removal.routes';
 
 const routes = Router();
 

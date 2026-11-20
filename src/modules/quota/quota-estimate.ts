@@ -1,6 +1,6 @@
 import { setting } from '../../config/settings';
 import { PAGE_SIZE, QUOTA_COST } from '../../infra/youtube/youtube.constants';
-import type { RemovalQuotaEstimate } from './youtube.types';
+import type { RemovalQuotaEstimate } from '../playlist/playlist.types';
 
 export const dailyQuotaLimit = () => setting('YOUTUBE_DAILY_QUOTA');
 

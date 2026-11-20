@@ -1,4 +1,4 @@
-import { QUOTA_COST } from '../infra/youtube/youtube.constants';
+import { QUOTA_COST } from '../../infra/youtube/youtube.constants';
 import type {
     DuplicateEntry,
     DuplicatesOverview,
@@ -7,7 +7,7 @@ import type {
     QuotaSnapshot,
     RemovalJob,
     RemovalQuotaEstimate,
-} from '../services/youtube/youtube.types';
+} from './playlist.types';
 
 const brasilia = (iso: string) =>
     new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' }).format(

@@ -1,6 +1,9 @@
 import { createHash, randomBytes } from 'node:crypto';
 import type { PendingLogin, PendingLogins, PendingLoginsOptions } from './pending-logins.types';
 
+/** Tempo para voltar do Google; também é a validade do cookie do state. */
+export const LOGIN_TTL_MS = 10 * 60_000;
+
 const randomToken = () => randomBytes(32).toString('base64url');
 const s256 = (verifier: string) => createHash('sha256').update(verifier).digest('base64url');
 
@@ -34,4 +37,12 @@ export function createPendingLogins({ ttlMs, now }: PendingLoginsOptions): Pendi
         },
         size: () => pending.size,
     };
+}
+
+let logins: PendingLogins | undefined;
+
+/** Os logins pendentes deste servidor. */
+export function pendingLogins(): PendingLogins {
+    logins ??= createPendingLogins({ ttlMs: LOGIN_TTL_MS, now: Date.now });
+    return logins;
 }

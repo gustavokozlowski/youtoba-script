@@ -3,14 +3,13 @@ import { apiFailure } from '../../infra/youtube/youtube.client';
 import { PAGE_SIZE, QUOTA_COST } from '../../infra/youtube/youtube.constants';
 import type { PlaylistsResponse } from '../../infra/youtube/youtube-api.types';
 import { logger } from '../../shared/logger';
-import { googleAuth } from '../google';
-import { writeBackup } from './backup';
-import { createTrackedClient } from './client/tracked-client';
+import { googleAuth } from '../auth/google-auth.service';
+import { estimateRemovalQuota } from '../quota/quota-estimate';
+import { type QuotaTracker, quotaTracker } from '../quota/quota-tracker.service';
+import { createTrackedClient } from '../quota/tracked-client';
+import { writeBackup } from '../removal/backup';
+import { type RemovalJobs, removalJobs } from '../removal/removal-jobs.service';
 import { findDuplicates, toEntries } from './duplicates';
-import { summarizePlaylist } from './playlist-summary';
-import { estimateRemovalQuota } from './quota';
-import { type QuotaTracker, quotaTracker } from './quota-tracker';
-import { type RemovalJobs, removalJobs } from './removal-jobs';
 import type {
     ClientFactory,
     DuplicatesOverview,
@@ -20,7 +19,8 @@ import type {
     ReadFailure,
     RemovalJob,
     RemoveDuplicatesResult,
-} from './youtube.types';
+} from './playlist.types';
+import { summarizePlaylist } from './playlist-summary';
 
 // Um client por chamada: o service não guarda token nem client entre requisições.
 const defaultClientFactory: ClientFactory = async () => {

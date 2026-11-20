@@ -1,5 +1,9 @@
 import { type Request, type Response, Router } from 'express';
-import { setting } from '../config/settings';
+import { setting } from '../../config/settings';
+import { apiFailure } from '../../infra/youtube/youtube.client';
+import { logger } from '../../shared/logger';
+import { googleAuth } from '../auth/google-auth.service';
+import { createTrackedClient } from '../quota/tracked-client';
 import {
     expectedFor,
     LARGE_TEST_PLAYLIST_TITLE,
@@ -7,11 +11,7 @@ import {
     seedPlaylist,
     TEST_PLAYLIST_SEQUENCE,
     TEST_PLAYLIST_TITLE,
-} from '../dev/test-playlist.seed';
-import { apiFailure } from '../infra/youtube/youtube.client';
-import { googleAuth } from '../services/google';
-import { createTrackedClient } from '../services/youtube/client/tracked-client';
-import { logger } from '../shared/logger';
+} from './test-playlist.seed';
 
 const devRouter = Router();
 

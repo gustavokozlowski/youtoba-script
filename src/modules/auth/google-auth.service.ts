@@ -1,7 +1,11 @@
 import { CodeChallengeMethod, OAuth2Client } from 'google-auth-library';
+import { setting } from '../../config/settings';
+import { parseEncryptionKey } from '../../infra/crypto';
+import { dbPath } from '../../infra/storage/db-path';
+import { createSqliteTokenStore } from '../../infra/storage/token.store';
 import type { TokenStore } from '../../infra/storage/token.store.types';
 import { errorMessage, httpErrorLike } from '../../shared/errors';
-import type { GoogleAuthConfig } from './google-auth.types';
+import type { GoogleAuthConfig } from './google-auth.service.types';
 import type { PendingLogin } from './pending-logins.types';
 
 export const DEFAULT_ACCOUNT = 'default';
@@ -117,4 +121,19 @@ export class GoogleAuth {
         this.store.delete(this.account);
         this.client = undefined;
     }
+}
+
+let instance: GoogleAuth | undefined;
+
+/** A conexão com o Google da conta padrão, criada na primeira vez que alguém precisa dela. */
+export function googleAuth(): GoogleAuth {
+    instance ??= new GoogleAuth(
+        {
+            clientId: setting('CLIENT_ID'),
+            clientSecret: setting('CLIENT_SECRET_KEY'),
+            redirectUrl: setting('REDIRECT_URL'),
+        },
+        createSqliteTokenStore(dbPath(), parseEncryptionKey(setting('TOKEN_ENCRYPTION_KEY'))),
+    );
+    return instance;
 }

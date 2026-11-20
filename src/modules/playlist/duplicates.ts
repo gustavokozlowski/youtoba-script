@@ -1,5 +1,5 @@
 import type { PlaylistItem } from '../../infra/youtube/youtube-api.types';
-import type { DuplicateEntry, PlaylistEntry } from './youtube.types';
+import type { DuplicateEntry, PlaylistEntry } from './playlist.types';
 
 export function toEntry(item: PlaylistItem, fallbackPosition: number): PlaylistEntry | undefined {
     const videoId = item.contentDetails?.videoId ?? item.snippet?.resourceId?.videoId;

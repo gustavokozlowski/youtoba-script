@@ -1,6 +1,6 @@
-import { apiFailure, type YoutubeClient } from '../infra/youtube/youtube.client';
-import { PAGE_SIZE } from '../infra/youtube/youtube.constants';
-import type { SeedResult } from './test-playlist.types';
+import { apiFailure, type YoutubeClient } from '../../infra/youtube/youtube.client';
+import { PAGE_SIZE } from '../../infra/youtube/youtube.constants';
+import type { SeedResult } from './test-playlist.seed.types';
 
 export const TEST_PLAYLIST_TITLE = 'youtoba-teste';
 export const LARGE_TEST_PLAYLIST_TITLE = 'youtoba-teste-grande';

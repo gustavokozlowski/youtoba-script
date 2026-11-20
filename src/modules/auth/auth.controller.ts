@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
-import { setting } from '../config/settings';
-import { googleAuth, LOGIN_TTL_MS, MissingRefreshTokenError, pendingLogins } from '../services/google';
+import { setting } from '../../config/settings';
+import { googleAuth, MissingRefreshTokenError } from './google-auth.service';
+import { LOGIN_TTL_MS, pendingLogins } from './pending-logins';
 
 const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
 

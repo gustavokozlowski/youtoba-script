@@ -1,4 +1,4 @@
-import type { formatEntry, formatJob, formatOverview, formatPreview } from '../src/controllers/formatters';
+import type { formatEntry, formatJob, formatOverview, formatPreview } from '../src/modules/playlist/playlist.formatter';
 
 // As respostas da API vêm dos formatadores; os testes leem o corpo com o mesmo tipo.
 export type PreviewBody = ReturnType<typeof formatPreview>;

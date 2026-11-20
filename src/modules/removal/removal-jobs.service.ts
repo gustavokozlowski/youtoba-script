@@ -2,9 +2,9 @@ import { randomUUID } from 'node:crypto';
 import type { YoutubeClient } from '../../infra/youtube/youtube.client';
 import { errorMessage } from '../../shared/errors';
 import { logger } from '../../shared/logger';
+import type { DuplicateEntry, RemovalJob } from '../playlist/playlist.types';
+import type { QuotaTracker } from '../quota/quota-tracker.service';
 import { recordRemoval } from './backup';
-import type { QuotaTracker } from './quota-tracker';
-import type { DuplicateEntry, RemovalJob } from './youtube.types';
 
 /**
  * Remoções em segundo plano, com progresso consultável. Fica em memória: se o servidor cair,

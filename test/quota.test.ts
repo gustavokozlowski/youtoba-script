@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { estimateRemovalQuota } from '../src/services/youtube/quota';
+import { estimateRemovalQuota } from '../src/modules/quota/quota-estimate';
 
 describe('estimateRemovalQuota', () => {
     it('playlist de 1.000 itens com 150 duplicados cabe em um dia', () => {

@@ -1,6 +1,6 @@
 import { apiFailure, type YoutubeClient } from '../../infra/youtube/youtube.client';
-import { toEntries } from './duplicates';
-import type { PlaylistBackup, RestoreResult } from './youtube.types';
+import { toEntries } from '../playlist/duplicates';
+import type { PlaylistBackup, RestoreResult } from '../playlist/playlist.types';
 
 /**
  * Devolve à playlist os itens que a remoção apagou, na posição original quando a playlist permite.

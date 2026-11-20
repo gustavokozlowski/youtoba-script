@@ -1,10 +1,10 @@
 require('dotenv').config();
 
 import { setting } from '../config/settings';
-import { googleAuth } from '../services/google';
-import { readBackup } from '../services/youtube/backup';
-import { createTrackedClient } from '../services/youtube/client/tracked-client';
-import { restoreRemoved } from '../services/youtube/restore';
+import { googleAuth } from '../modules/auth/google-auth.service';
+import { createTrackedClient } from '../modules/quota/tracked-client';
+import { readBackup } from '../modules/removal/backup';
+import { restoreRemoved } from '../modules/removal/restore';
 import { errorMessage } from '../shared/errors';
 
 // Uso: npm run restore:playlist -- backups/<arquivo>.json

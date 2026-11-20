@@ -1,6 +1,6 @@
-import { YoutubeClient } from '../../../infra/youtube/youtube.client';
-import type { YoutubeClientConfig, YoutubeClientOptions } from '../../../infra/youtube/youtube-api.types';
-import { type QuotaTracker, quotaTracker } from '../quota-tracker';
+import { YoutubeClient } from '../../infra/youtube/youtube.client';
+import type { YoutubeClientConfig, YoutubeClientOptions } from '../../infra/youtube/youtube-api.types';
+import { type QuotaTracker, quotaTracker } from './quota-tracker.service';
 
 /** Client que registra o custo de cada chamada na quota do dia. Use este em vez de `new YoutubeClient`. */
 export function createTrackedClient(

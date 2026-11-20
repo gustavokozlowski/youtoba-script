@@ -1,7 +1,7 @@
 import { QUOTA_COST } from '../../infra/youtube/youtube.constants';
 import type { Playlist, PlaylistItem, YouTubeThumbnails } from '../../infra/youtube/youtube-api.types';
 import { findDuplicates, toEntries } from './duplicates';
-import type { PlaylistDuplicateSummary } from './youtube.types';
+import type { PlaylistDuplicateSummary } from './playlist.types';
 
 // Títulos que a API devolve para itens cujo vídeo foi apagado ou ficou privado.
 const UNAVAILABLE_TITLES = new Set(['Deleted video', 'Private video']);
