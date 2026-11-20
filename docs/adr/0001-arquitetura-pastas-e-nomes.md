@@ -101,7 +101,7 @@ web/src/
 ## Alternativas consideradas
 
 - **Manter as camadas técnicas e só renomear arquivos:** resolve os nomes, mas mantém um assunto espalhado em 4 pastas, e os arquivos grandes continuam juntando assuntos.
-- **Hexagonal completo (portas e adaptadores para tudo):** o projeto tem um só provedor (YouTube) e nenhum plano de trocar. Interfaces com uma implementação só seriam indireção sem retorno. A separação `modules`/`infra` já isola o que importa: a regra não importa axios nem SQLite.
+- **Hexagonal completo (portas e adaptadores para tudo):** o projeto tem um só provedor (YouTube) e nenhum plano de trocar. Interfaces com uma implementação só seriam indireção sem retorno. A separação `modules`/`infra` já isola o que importa: a regra não importa o cliente HTTP do provedor nem SQLite.
 - **Barrels (`index.ts`) por módulo:** escondem de onde vem cada coisa e criam ciclos de import fáceis de causar. Ficam de fora.
 
 ## Consequências

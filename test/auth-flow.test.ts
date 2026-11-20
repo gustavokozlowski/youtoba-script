@@ -43,7 +43,6 @@ beforeAll(() => {
         CLIENT_SECRET_KEY: 'test-secret',
         REDIRECT_URL: 'http://localhost:3000/auth',
         API_KEY: 'test-api-key',
-        YOUTUBE_BASE_URL: `${YOUTUBE}/youtube/v3/`,
     });
     nock.disableNetConnect();
     nock.enableNetConnect('127.0.0.1');

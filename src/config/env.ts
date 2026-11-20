@@ -19,7 +19,6 @@ export const envSchema = z.object({
     CLIENT_ID: required().regex(/\.apps\.googleusercontent\.com$/, 'não parece um client id do Google'),
     CLIENT_SECRET_KEY: required(),
     REDIRECT_URL: url('http://localhost:3000/auth'),
-    YOUTUBE_BASE_URL: url('https://youtube.googleapis.com/youtube/v3/'),
     TOKEN_ENCRYPTION_KEY: required().refine(
         (value) => Buffer.from(value, 'base64').length === ENCRYPTION_KEY_BYTES,
         `precisa ter 32 bytes em base64. ${KEY_HELP}`,

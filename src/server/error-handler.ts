@@ -15,7 +15,7 @@ const clientErrorOf = (error: unknown) =>
 
 /**
  * Último middleware do app: todo erro passa por aqui. O log leva só método, caminho, status e
- * mensagem; o objeto do erro nunca vai para o log (um erro do axios carrega o header Authorization).
+ * mensagem; o objeto do erro nunca vai para o log (ele pode carregar o header Authorization).
  */
 export const errorHandler =
     (log: ErrorLog): ErrorRequestHandler =>
