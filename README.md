@@ -28,8 +28,8 @@ Este projeto é uma API REST desenvolvida em Node.js com TypeScript que permite:
 - **Node.js** - Runtime JavaScript
 - **TypeScript** - Superset JavaScript com tipagem
 - **Express** - Framework web
-- **Google APIs** - Integração com YouTube Data API v3
-- **Axios** - Cliente HTTP
+- **@googleapis/youtube** - SDK oficial da YouTube Data API v3
+- **google-auth-library** - Autenticação OAuth2 com o Google
 - **Biome** - Linter e formatter
 - **ts-node-dev** - Execução e hot-reload em desenvolvimento
 
@@ -79,9 +79,6 @@ API_KEY=sua_api_key_aqui
 CLIENT_ID=seu_client_id_aqui
 CLIENT_SECRET_KEY=seu_client_secret_aqui
 REDIRECT_URL=http://localhost:3000/auth
-
-# URLs
-YOUTUBE_BASE_URL=https://youtube.googleapis.com/youtube/v3/
 
 # Chave para cifrar o refresh token salvo em disco (32 bytes em base64)
 # node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"

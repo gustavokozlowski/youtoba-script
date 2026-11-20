@@ -8,8 +8,8 @@ import { createLogger } from '../src/shared/logger';
 
 const TOKEN = 'ya29.token-que-nao-pode-vazar';
 
-/** Um erro como o do axios: carrega o header Authorization na config. */
-const axiosLikeError = () =>
+/** Um erro HTTP: carrega o header Authorization na config. */
+const httpLikeError = () =>
     Object.assign(new Error('Request failed with status code 503'), {
         config: { headers: { Authorization: `Bearer ${TOKEN}` } },
         response: { status: 503, data: { error: { message: 'Backend Error' } } },
@@ -27,7 +27,7 @@ function appThatThrows(error: unknown) {
 
 describe('tratador de erro único', () => {
     it('erro inesperado vira 500 genérico, e o log leva a mensagem e o status, nunca o token', async () => {
-        const { app, log } = appThatThrows(axiosLikeError());
+        const { app, log } = appThatThrows(httpLikeError());
         const res = await request(app).get('/quebra');
 
         expect(res.status).toBe(500);

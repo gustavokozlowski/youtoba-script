@@ -1,7 +1,7 @@
 import pino, { type DestinationStream, type LoggerOptions } from 'pino';
 
 /**
- * Defesa extra: mesmo que alguém logue o objeto inteiro de um erro do axios ou a resposta do
+ * Defesa extra: mesmo que alguém logue o objeto inteiro de um erro HTTP ou a resposta do
  * Google, o header de autorização e os tokens saem como [omitido].
  */
 const REDACT_PATHS = [

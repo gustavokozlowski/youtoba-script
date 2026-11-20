@@ -127,90 +127,6 @@ export interface PlaylistItem {
     status?: PlaylistItemStatus;
 }
 
-export interface PlaylistDetailsResponse {
-    kind: string;
-    etag: string;
-    nextPageToken?: string;
-    prevPageToken?: string;
-    pageInfo: PageInfo;
-    items: PlaylistItem[];
-}
-
-export interface PlaylistResponse extends PlaylistDetailsResponse {}
-
-// API Error Types
-// ============================================
-
-export interface YouTubeErrorDetail {
-    message: string;
-    domain: string;
-    reason: string;
-}
-
-export interface YouTubeError {
-    code: number;
-    message: string;
-    errors: YouTubeErrorDetail[];
-}
-
-export interface YouTubeErrorResponse {
-    error: YouTubeError;
-}
-
-// API Request Parameter Types
-// ============================================
-
-export interface PlaylistsListParams {
-    part: string | string[]; // e.g., "snippet,contentDetails,status"
-    id?: string | string[]; // Playlist IDs
-    channelId?: string;
-    mine?: boolean;
-    maxResults?: number; // 0-50, default 5
-    pageToken?: string;
-}
-
-export interface PlaylistItemsListParams {
-    part: string | string[]; // e.g., "snippet,contentDetails,status"
-    playlistId: string;
-    id?: string | string[]; // Playlist Item IDs
-    maxResults?: number; // 0-50, default 5
-    pageToken?: string;
-    videoId?: string;
-}
-
-export interface PlaylistItemsDeleteParams {
-    id: string; // Playlist Item ID (não o Video ID!)
-}
-
-export interface PlaylistItemsInsertParams {
-    part: string | string[]; // e.g., "snippet"
-    resource: {
-        snippet: {
-            playlistId: string;
-            resourceId: {
-                kind: 'youtube#video';
-                videoId: string;
-            };
-            position?: number; // opcional, posição na playlist
-        };
-    };
-}
-
-export interface PlaylistItemsUpdateParams {
-    part: string | string[];
-    resource: {
-        id: string; // Playlist Item ID
-        snippet?: {
-            playlistId: string;
-            resourceId: {
-                kind: 'youtube#video';
-                videoId: string;
-            };
-            position?: number;
-        };
-    };
-}
-
 export type DeleteItemsResult = {
     removed: string[];
     failed: { id: string; status?: number; reason?: string }[];
@@ -241,17 +157,6 @@ export interface DeleteOptions {
     /** Diz se ainda dá para gastar `units` hoje. Sem isso, apaga até o Google recusar. */
     canSpend?: (units: number) => boolean;
     onProgress?: (event: DeleteProgressEvent) => void;
-}
-
-/** Resposta do search.list, só com o que o projeto lê. */
-export interface SearchResponse {
-    items: { id: { videoId?: string } }[];
-}
-
-/** Uma página de qualquer listagem da API. */
-export interface Page<T> {
-    items: T[];
-    nextPageToken?: string;
 }
 
 export interface RetryOptions {

@@ -21,7 +21,7 @@ O que falta fazer está em @docs/PENDENCIAS.md. Leia antes de propor trabalho no
 - **Chamadas ao YouTube só pelo `createTrackedClient`**, nunca `new YoutubeClient` direto: é ele que soma o custo na quota do dia.
 - **Interface em `web/`** (React + Vite, mesmo `package.json`): rotas por hash (`#/playlists`, `#/p/:id`, `#/remocao/:jobId`), cores e fontes só pelos tokens de `web/src/styles/tokens.css`, tipos das respostas em `web/src/api/api.types.ts`. Dados do servidor só pelos hooks de `web/src/api/queries.ts` (TanStack Query, uma chave por dado); nada de `useEffect` + `fetch` nas telas. Leitura que gasta cota não relê sozinha (sem refetch ao focar a janela, retry só em erro de rede), e a resposta que traz `quotaHoje` atualiza a barra de cota direto. Animação de lista usa a Motion (`motion/react`, com `LazyMotion` e `MotionConfig reducedMotion="user"`), só em tela carregada com `lazy`; o resto é CSS. O logo é gerado por `npm run build:logo` (não edite o SVG à mão). Produto e público em `PRODUCT.md`.
 - **Respostas da API em português** (`mensagem`, `erro`, `totalItens`...); código e nomes internos em inglês.
-- **Logs sem token e sem o objeto de erro do axios** (ele carrega o header `Authorization`): use `apiFailure(error)`.
+- **Logs sem token e sem o objeto completo do erro HTTP** (ele pode carregar o header `Authorization`): use `apiFailure(error)`.
 - Commits e PRs pequenos, um assunto por PR, merge com squash. O dono autorizou o Claude a mergear quando testes, `tsc` e Biome passam.
 
 ## Regras de segurança ao operar

@@ -20,6 +20,9 @@ let unmatched: string[] = [];
 
 // 1.000 itens, 3 duplicados: posição 50 repete a 2 (página 1 → página 2), 700 repete a 3, 999 repete a 500.
 const DUPLICATE_OF: Record<number, number> = { 50: 2, 700: 3, 999: 500 };
+const hasParts = (actual: unknown, expected: string) =>
+    (Array.isArray(actual) ? actual.join(',') : actual) === expected;
+
 const bigPlaylist = Array.from({ length: 1_000 }, (_, position) => ({
     id: `item-${position}`,
     videoId: `v${DUPLICATE_OF[position] ?? position}`,
@@ -40,7 +43,9 @@ function mockListing(items = bigPlaylist, playlistId = PLAYLIST) {
     const pages = Math.ceil(items.length / 50);
     nock(YOUTUBE)
         .get('/youtube/v3/playlistItems')
-        .query((q) => q.playlistId === playlistId && q.part === 'snippet,contentDetails' && q.maxResults === '50')
+        .query(
+            (q) => q.playlistId === playlistId && hasParts(q.part, 'snippet,contentDetails') && q.maxResults === '50',
+        )
         .times(pages)
         .reply((uri) => {
             calls.count++;
@@ -69,7 +74,6 @@ beforeAll(() => {
         CLIENT_SECRET_KEY: 'test-secret',
         REDIRECT_URL: 'http://localhost:3000/auth',
         API_KEY: 'test-api-key',
-        YOUTUBE_BASE_URL: `${YOUTUBE}/youtube/v3/`,
     });
     nock.disableNetConnect();
     nock.enableNetConnect('127.0.0.1');
@@ -239,7 +243,7 @@ describe('leitura da playlist', () => {
     it('conta os itens com uma única chamada', async () => {
         nock(YOUTUBE)
             .get('/youtube/v3/playlistItems')
-            .query((q) => q.part === 'id' && q.maxResults === '1')
+            .query((q) => hasParts(q.part, 'id') && q.maxResults === '1')
             .reply(200, { pageInfo: { totalResults: 1_000, resultsPerPage: 1 }, items: [] });
         const res = await request(app).get(`/playlist/${PLAYLIST}`);
         expect(res.body).toEqual({ playlistId: PLAYLIST, totalItens: 1_000 });
@@ -425,7 +429,7 @@ describe('playlists com duplicados', () => {
     const mockMyPlaylists = () =>
         nock(YOUTUBE)
             .get('/youtube/v3/playlists')
-            .query((q) => q.mine === 'true' && q.part === 'snippet,contentDetails,status' && !q.pageToken)
+            .query((q) => q.mine === 'true' && hasParts(q.part, 'snippet,contentDetails,status') && !q.pageToken)
             .reply(200, {
                 pageInfo: { totalResults: 5, resultsPerPage: 50 },
                 items: [playlistMeta('PLa', 'Alfa', 3, 'capa-alfa'), playlistMeta('PLb', 'Beta', 5)],

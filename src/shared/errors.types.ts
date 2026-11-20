@@ -1,4 +1,4 @@
-/** O formato que um erro de cliente HTTP (axios, gaxios) pode ter. Tudo opcional: nada é garantido. */
+/** O formato que um erro do cliente HTTP do Google pode ter. Tudo opcional: nada é garantido. */
 export interface HttpErrorLike<Body> {
     message?: unknown;
     response?: { status?: number; data?: Body };

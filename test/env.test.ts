@@ -7,7 +7,6 @@ const valid = () => ({
     CLIENT_ID: '123-abc.apps.googleusercontent.com',
     CLIENT_SECRET_KEY: 'segredo-do-cliente',
     REDIRECT_URL: 'http://localhost:3000/auth',
-    YOUTUBE_BASE_URL: 'https://youtube.googleapis.com/youtube/v3/',
     TOKEN_ENCRYPTION_KEY: randomBytes(32).toString('base64'),
 });
 
@@ -32,14 +31,7 @@ describe('validação do .env no boot', () => {
     it('lista cada variável obrigatória que falta, de uma vez', () => {
         const problems = problemsOf({});
         expect(new Set(problems.map((p) => p.split(':')[0])).size).toBe(problems.length);
-        for (const name of [
-            'API_KEY',
-            'CLIENT_ID',
-            'CLIENT_SECRET_KEY',
-            'REDIRECT_URL',
-            'YOUTUBE_BASE_URL',
-            'TOKEN_ENCRYPTION_KEY',
-        ]) {
+        for (const name of ['API_KEY', 'CLIENT_ID', 'CLIENT_SECRET_KEY', 'REDIRECT_URL', 'TOKEN_ENCRYPTION_KEY']) {
             expect(problems.some((p) => p.startsWith(`${name}:`))).toBe(true);
         }
     });
