@@ -7,3 +7,8 @@ export interface TokenStore {
 export interface ClosableTokenStore extends TokenStore {
     close(): void;
 }
+
+/** Linha da tabela credentials (só o que o SELECT lê). */
+export interface CredentialRow {
+    refresh_token_enc: string;
+}

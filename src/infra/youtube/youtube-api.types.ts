@@ -242,3 +242,19 @@ export interface DeleteOptions {
     canSpend?: (units: number) => boolean;
     onProgress?: (event: DeleteProgressEvent) => void;
 }
+
+/** Resposta do search.list, só com o que o projeto lê. */
+export interface SearchResponse {
+    items: { id: { videoId?: string } }[];
+}
+
+/** Uma página de qualquer listagem da API. */
+export interface Page<T> {
+    items: T[];
+    nextPageToken?: string;
+}
+
+export interface RetryOptions {
+    retries: number;
+    baseDelayMs: number;
+}

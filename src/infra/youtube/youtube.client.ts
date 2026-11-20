@@ -1,51 +1,32 @@
+import axios, { type AxiosInstance } from 'axios';
 import { setting } from '../../config/settings';
 import { logger } from '../../shared/logger';
-
-require('dotenv').config();
-
-import axios, { type AxiosInstance } from 'axios';
-import { httpErrorLike } from '../../shared/errors';
-import type { GoogleApiErrorBody } from '../../shared/errors.types';
+import { apiFailure } from './api-failure';
+import { withRetry } from './retry';
 import { PAGE_SIZE, QUOTA_COST, requestCost } from './youtube.constants';
 import type {
-    ApiFailure,
     DeleteItemsResult,
     DeleteOptions,
+    Page,
     Playlist,
     PlaylistItem,
     PlaylistResponse,
     PlaylistsResponse,
+    RetryOptions,
+    SearchResponse,
     YoutubeClientConfig,
     YoutubeClientOptions,
 } from './youtube-api.types';
 
-const RETRYABLE_STATUS = new Set([409, 429, 500, 503]);
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-// Extrai só o que importa do erro do axios. O objeto inteiro carrega o header Authorization.
-export const apiFailure = (error: unknown): ApiFailure => {
-    const { response, message } = httpErrorLike<GoogleApiErrorBody>(error);
-    const body = response?.data?.error;
-    return {
-        status: response?.status,
-        reason: body?.errors?.[0]?.reason,
-        message: body?.message ?? (typeof message === 'string' ? message : undefined),
-    };
-};
-
+/** Cliente HTTP da YouTube Data API v3. Use pelo createTrackedClient, que soma o custo na quota do dia. */
 export class YoutubeClient {
     private readonly client: AxiosInstance;
     private readonly apiKey: string;
-    private readonly retries: number;
-    private readonly baseDelayMs: number;
+    private readonly retry: RetryOptions;
 
-    constructor(
-        { apiKey, token }: YoutubeClientConfig,
-        { retries = 3, baseDelayMs = 1000, onCost, onQuotaExceeded }: YoutubeClientOptions = {},
-    ) {
+    constructor({ apiKey, token }: YoutubeClientConfig, options: YoutubeClientOptions = {}) {
         this.apiKey = apiKey;
-        this.retries = retries;
-        this.baseDelayMs = baseDelayMs;
+        this.retry = { retries: options.retries ?? 3, baseDelayMs: options.baseDelayMs ?? 1000 };
         this.client = axios.create({
             baseURL: setting('YOUTUBE_BASE_URL'),
             timeout: 15_000,
@@ -55,21 +36,7 @@ export class YoutubeClient {
                 Authorization: `Bearer ${token}`,
             },
         });
-
-        // Toda chamada que chega ao Google conta na quota, inclusive as que falham e as repetições.
-        this.client.interceptors.response.use(
-            (response) => {
-                onCost?.(requestCost(response.config.method, response.config.url));
-                return response;
-            },
-            (error) => {
-                if (error?.response) {
-                    onCost?.(requestCost(error.config?.method, error.config?.url));
-                    if (apiFailure(error).reason === 'quotaExceeded') onQuotaExceeded?.();
-                }
-                return Promise.reject(error);
-            },
-        );
+        this.countCosts(options);
     }
 
     async playlists(): Promise<PlaylistsResponse | null> {
@@ -86,27 +53,13 @@ export class YoutubeClient {
     }
 
     /** Todas as playlists do usuário, com capa, contagem e privacidade (1 unidade a cada 50 playlists). Lança em erro. */
-    async listMyPlaylists(): Promise<Playlist[]> {
-        const playlists: Playlist[] = [];
-        let pageToken: string | undefined;
+    listMyPlaylists(): Promise<Playlist[]> {
+        return this.allPages<Playlist>('playlists', { part: 'snippet,contentDetails,status', mine: true });
+    }
 
-        do {
-            const { data } = await this.withRetry(() =>
-                this.client.get<PlaylistsResponse>('playlists', {
-                    params: {
-                        part: 'snippet,contentDetails,status',
-                        mine: true,
-                        maxResults: PAGE_SIZE,
-                        pageToken,
-                        key: this.apiKey,
-                    },
-                }),
-            );
-            playlists.push(...data.items);
-            pageToken = data.nextPageToken;
-        } while (pageToken);
-
-        return playlists;
+    /** Todos os itens da playlist, em páginas de 50 (1 unidade de quota por página). Lança em caso de erro. */
+    listPlaylistItems(playlistId: string): Promise<PlaylistItem[]> {
+        return this.allPages<PlaylistItem>('playlistItems', { part: 'snippet,contentDetails', playlistId });
     }
 
     /** Total de itens da playlist, numa única chamada (1 unidade de quota). */
@@ -115,30 +68,6 @@ export class YoutubeClient {
             params: { part: 'id', playlistId, maxResults: 1, key: this.apiKey },
         });
         return data.pageInfo.totalResults;
-    }
-
-    /** Todos os itens da playlist, em páginas de 50 (1 unidade de quota por página). Lança em caso de erro. */
-    async listPlaylistItems(playlistId: string): Promise<PlaylistItem[]> {
-        const items: PlaylistItem[] = [];
-        let pageToken: string | undefined;
-
-        do {
-            const { data } = await this.withRetry(() =>
-                this.client.get<PlaylistResponse>('playlistItems', {
-                    params: {
-                        part: 'snippet,contentDetails',
-                        playlistId,
-                        maxResults: PAGE_SIZE,
-                        pageToken,
-                        key: this.apiKey,
-                    },
-                }),
-            );
-            items.push(...data.items);
-            pageToken = data.nextPageToken;
-        } while (pageToken);
-
-        return items;
     }
 
     async createPrivatePlaylist(title: string, description: string): Promise<Playlist> {
@@ -151,92 +80,109 @@ export class YoutubeClient {
     }
 
     async addVideoToPlaylist(playlistId: string, videoId: string, position?: number): Promise<PlaylistItem> {
-        const { data } = await this.withRetry(() =>
-            this.client.post<PlaylistItem>(
-                'playlistItems',
-                {
-                    snippet: {
-                        playlistId,
-                        resourceId: { kind: 'youtube#video', videoId },
-                        ...(position === undefined ? {} : { position }),
-                    },
-                },
-                { params: { part: 'snippet', key: this.apiKey } },
-            ),
+        const snippet = {
+            playlistId,
+            resourceId: { kind: 'youtube#video', videoId },
+            ...(position === undefined ? {} : { position }),
+        };
+        const { data } = await withRetry(
+            () =>
+                this.client.post<PlaylistItem>(
+                    'playlistItems',
+                    { snippet },
+                    { params: { part: 'snippet', key: this.apiKey } },
+                ),
+            this.retry,
         );
         return data;
     }
 
     /** Ids de vídeos públicos para montar playlists de teste (search.list custa 100 unidades). */
     async searchVideoIds(query: string, max = PAGE_SIZE): Promise<string[]> {
-        const { data } = await this.client.get<{ items: { id: { videoId?: string } }[] }>('search', {
-            params: {
-                part: 'id',
-                type: 'video',
-                safeSearch: 'strict',
-                maxResults: max,
-                q: query,
-                key: this.apiKey,
-            },
+        const { data } = await this.client.get<SearchResponse>('search', {
+            params: { part: 'id', type: 'video', safeSearch: 'strict', maxResults: max, q: query, key: this.apiKey },
         });
         return data.items.map((item) => item.id.videoId).filter((id): id is string => Boolean(id));
     }
 
     /**
-     * Apaga os itens um por vez. Antes de cada item confere se ainda cabe na quota do dia (`canSpend`)
-     * e avisa o progresso (`onProgress`). Para no saldo do dia ou no quotaExceeded do Google.
+     * Apaga os itens um por vez (a API responde 409 a alterações simultâneas na mesma playlist). Antes de cada
+     * item confere se ainda cabe na quota do dia (`canSpend`) e avisa o progresso. Para no saldo do dia ou no
+     * quotaExceeded do Google, e marca o resto como pulado.
      */
     async deleteItemsById(itemIds: string[], { canSpend, onProgress }: DeleteOptions = {}): Promise<DeleteItemsResult> {
         const result: DeleteItemsResult = { removed: [], failed: [] };
-        const skipRest = (from: number, reason: string) => {
-            for (const skipped of itemIds.slice(from)) {
-                result.failed.push({ id: skipped, reason });
-            }
+        const skipFrom = (index: number, reason: string) => {
+            result.failed.push(...itemIds.slice(index).map((id) => ({ id, reason })));
+            return result;
         };
 
-        // Sequencial de propósito: a API responde 409 a alterações simultâneas na mesma playlist.
         for (const [index, itemId] of itemIds.entries()) {
-            if (canSpend && !canSpend(QUOTA_COST.delete)) {
-                skipRest(index, 'skipped_daily_budget');
-                break;
-            }
-
-            try {
-                await this.withRetry(() =>
-                    this.client.delete('playlistItems', { params: { id: itemId, key: this.apiKey } }),
-                );
+            if (canSpend && !canSpend(QUOTA_COST.delete)) return skipFrom(index, 'skipped_daily_budget');
+            const failure = await this.deleteOne(itemId);
+            const progress = { index, total: itemIds.length, itemId };
+            if (!failure) {
                 result.removed.push(itemId);
-                onProgress?.({ index, total: itemIds.length, itemId, outcome: 'removed' });
-            } catch (error) {
-                const { status, reason, message } = apiFailure(error);
-                logger.warn({ item: itemId, status, reason, mensagem: message }, 'Falha ao remover o item');
-                result.failed.push({ id: itemId, status, reason });
-                onProgress?.({ index, total: itemIds.length, itemId, outcome: 'failed', status, reason });
-
-                if (reason === 'quotaExceeded') {
-                    // Sem quota, as próximas tentativas também falhariam: interrompe e reporta o restante.
-                    skipRest(index + 1, 'skipped_quota_exceeded');
-                    break;
-                }
+                onProgress?.({ ...progress, outcome: 'removed' });
+                continue;
             }
+            result.failed.push({ id: itemId, status: failure.status, reason: failure.reason });
+            onProgress?.({ ...progress, outcome: 'failed', status: failure.status, reason: failure.reason });
+            if (failure.reason === 'quotaExceeded') return skipFrom(index + 1, 'skipped_quota_exceeded');
         }
-
         return result;
     }
 
-    // Repete em conflito e instabilidade, com espera exponencial (1 s, 2 s, 4 s por padrão).
-    private async withRetry<T>(request: () => Promise<T>): Promise<T> {
-        for (let attempt = 0; ; attempt++) {
-            try {
-                return await request();
-            } catch (error) {
-                const { status } = apiFailure(error);
-                if (status !== undefined && RETRYABLE_STATUS.has(status) && attempt < this.retries) {
-                    await wait(this.baseDelayMs * 2 ** attempt);
-                    continue;
-                }
-                throw error;
-            }
+    /** Apaga um item; devolve a falha, ou undefined se deu certo. */
+    private async deleteOne(itemId: string) {
+        try {
+            await withRetry(
+                () => this.client.delete('playlistItems', { params: { id: itemId, key: this.apiKey } }),
+                this.retry,
+            );
+            return undefined;
+        } catch (error) {
+            const failure = apiFailure(error);
+            logger.warn(
+                { item: itemId, status: failure.status, reason: failure.reason, mensagem: failure.message },
+                'Falha ao remover o item',
+            );
+            return failure;
         }
+    }
+
+    /** Lê todas as páginas de uma listagem (cada página de 50 conta 1 unidade). */
+    private async allPages<T>(resource: string, params: Record<string, unknown>): Promise<T[]> {
+        const items: T[] = [];
+        let pageToken: string | undefined;
+        do {
+            const { data } = await withRetry(
+                () =>
+                    this.client.get<Page<T>>(resource, {
+                        params: { ...params, maxResults: PAGE_SIZE, pageToken, key: this.apiKey },
+                    }),
+                this.retry,
+            );
+            items.push(...data.items);
+            pageToken = data.nextPageToken;
+        } while (pageToken);
+        return items;
+    }
+
+    /** Toda chamada que chega ao Google conta na quota, inclusive as que falham e as repetições. */
+    private countCosts({ onCost, onQuotaExceeded }: YoutubeClientOptions) {
+        this.client.interceptors.response.use(
+            (response) => {
+                onCost?.(requestCost(response.config.method, response.config.url));
+                return response;
+            },
+            (error) => {
+                if (error?.response) {
+                    onCost?.(requestCost(error.config?.method, error.config?.url));
+                    if (apiFailure(error).reason === 'quotaExceeded') onQuotaExceeded?.();
+                }
+                return Promise.reject(error);
+            },
+        );
     }
 }

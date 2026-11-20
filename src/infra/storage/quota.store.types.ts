@@ -8,3 +8,8 @@ export interface QuotaStore {
 export interface ClosableQuotaStore extends QuotaStore {
     close(): void;
 }
+
+/** Linha da tabela quota_usage. */
+export interface QuotaRow {
+    units: number;
+}

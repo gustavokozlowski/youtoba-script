@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { createPendingLogins } from '../src/services/google/pending-logins';
+import { createPendingLogins } from '../src/modules/auth/pending-logins';
 
 const TEN_MINUTES = 10 * 60_000;
 const s256 = (verifier: string) => createHash('sha256').update(verifier).digest('base64url');

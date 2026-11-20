@@ -2,10 +2,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import cookieParser from 'cookie-parser';
 import express from 'express';
-import { routes } from '../routes';
 import { logger } from '../shared/logger';
 import { errorHandler } from './error-handler';
 import { localOnly } from './local-only';
+import { routes } from './routes';
 import { loginRateLimit, securityHeaders } from './security';
 
 // O build da interface (npm run build:web). Mesmo caminho a partir de src/server e de dist/server.

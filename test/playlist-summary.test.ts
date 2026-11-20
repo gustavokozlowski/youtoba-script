@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pickThumbnail, summarizePlaylist } from '../src/services/youtube/playlist-summary';
+import { pickThumbnail, summarizePlaylist } from '../src/modules/playlist/playlist-summary';
 import { playlist, playlistItem, thumbnail } from './helpers/youtube-fixtures';
 
 const thumb = thumbnail;
