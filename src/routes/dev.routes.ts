@@ -10,6 +10,7 @@ import {
 import { googleAuth } from '../services/google';
 import { createTrackedClient } from '../services/youtube/client/tracked-client';
 import { apiFailure } from '../services/youtube/client/youtube.client';
+import { logger } from '../utils/logger';
 
 const devRouter = Router();
 
@@ -40,7 +41,7 @@ devRouter.post('/seed-test-playlist', async (req: Request, res: Response) => {
         });
     } catch (error) {
         const { status, reason, message } = apiFailure(error);
-        console.error(`Erro ao criar a playlist de teste: HTTP ${status ?? '?'} ${reason ?? message ?? ''}`);
+        logger.error({ status, reason, mensagem: message }, 'Erro ao criar a playlist de teste');
         res.status(502).json({ error: 'seed_failed', reason, detail: message });
     }
 });

@@ -31,6 +31,11 @@ export const envSchema = z.object({
         .transform((value) => value === 'true'),
     TOKEN_DB_PATH: z.string().optional(),
     BACKUP_DIR: z.string().optional(),
+    LOG_LEVEL: z
+        .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'], {
+            error: 'use fatal, error, warn, info, debug, trace ou silent',
+        })
+        .optional(),
     YOUTUBE_DAILY_QUOTA: z.coerce.number({ error: 'precisa ser um número' }).int().positive().default(10_000),
 });
 

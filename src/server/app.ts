@@ -3,6 +3,8 @@ import path from 'node:path';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import { routes } from '../routes';
+import { logger } from '../utils/logger';
+import { errorHandler } from './error-handler';
 import { localOnly } from './local-only';
 import { loginRateLimit, securityHeaders } from './security';
 
@@ -23,5 +25,6 @@ export function createApp({ webDist = WEB_DIST } = {}) {
         app.use(express.static(webDist, { index: 'index.html' }));
     }
     app.use('/', routes);
+    app.use(errorHandler(logger));
     return app;
 }

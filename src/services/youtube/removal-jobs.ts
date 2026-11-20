@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { errorMessage } from '../../utils/errors';
+import { logger } from '../../utils/logger';
 import { recordRemoval } from './backup';
 import type { YoutubeClient } from './client/youtube.client';
 import type { QuotaTracker } from './quota-tracker';
@@ -60,8 +61,8 @@ export class RemovalJobs {
         { duplicates, client, tracker }: { duplicates: DuplicateEntry[]; client: YoutubeClient; tracker: QuotaTracker },
     ) {
         const byId = new Map(duplicates.map((entry) => [entry.playlistItemId, entry]));
-        const tag = `[remoção ${job.id.slice(0, 8)}]`;
-        console.log(`${tag} início: ${job.total} itens · saldo de quota hoje: ${tracker.remaining()} unidades`);
+        const log = logger.child({ remocao: job.id.slice(0, 8) });
+        log.info({ itens: job.total, saldoQuota: tracker.remaining() }, 'Remoção começou');
 
         try {
             const result = await client.deleteItemsById([...byId.keys()], {
@@ -80,10 +81,9 @@ export class RemovalJobs {
                         job.failed.push({ id: event.itemId, status: event.status, reason: event.reason });
                     }
                     recordRemoval(job.backupFile, { removed: job.removed, failed: job.failed }, { finished: false });
-                    const mark = event.outcome === 'removed' ? '' : ` (falhou: ${event.reason ?? event.status})`;
-                    console.log(
-                        `${tag} ${job.removed.length} de ${job.total} itens apagados · ${job.lastItem.title}${mark}`,
-                    );
+                    // Sem o título do vídeo: o log leva só o id do item (o título aparece na interface).
+                    const falha = event.outcome === 'removed' ? undefined : (event.reason ?? event.status);
+                    log.info({ item: event.itemId, apagados: job.removed.length, total: job.total, falha }, 'Item');
                 },
             });
 
@@ -99,8 +99,7 @@ export class RemovalJobs {
         } finally {
             job.finishedAt = new Date().toISOString();
             recordRemoval(job.backupFile, { removed: job.removed, failed: job.failed }, { finished: true });
-            const why = job.stopReason ? ` · parou: ${job.stopReason}` : '';
-            console.log(`${tag} fim: ${job.removed.length} de ${job.total} itens apagados${why}`);
+            log.info({ apagados: job.removed.length, total: job.total, parada: job.stopReason }, 'Remoção terminou');
         }
     }
 }
