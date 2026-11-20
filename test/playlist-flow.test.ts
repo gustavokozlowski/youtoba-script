@@ -7,6 +7,7 @@ import request from 'supertest';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PlaylistBackup } from '../src/services/youtube/youtube.types';
 import { login } from './helpers/login';
+import type { EntryBody, JobBody, OverviewBody, PreviewBody, UnmatchedRequest } from './playlist-flow.types';
 
 const GOOGLE_OAUTH = 'https://oauth2.googleapis.com';
 const YOUTUBE = 'https://youtube.googleapis.com';
@@ -73,7 +74,7 @@ beforeAll(() => {
     nock.disableNetConnect();
     nock.enableNetConnect('127.0.0.1');
     // Qualquer chamada a um host externo sem mock (ex.: um DELETE inesperado) é registrada e falha o teste.
-    nock.emitter.on('no match', (req: any) => {
+    nock.emitter.on('no match', (req: UnmatchedRequest) => {
         const host = req.hostname ?? req.host ?? (req.href ? new URL(req.href).hostname : '');
         if (!['127.0.0.1', 'localhost'].includes(host)) unmatched.push(`${req.method} ${host}${req.path ?? ''}`);
     });
@@ -95,7 +96,7 @@ async function rebootWithQuota(dailyQuota: number) {
 }
 
 /** Consulta o job até ele sair de "running". */
-async function waitForJob(jobId: string) {
+async function waitForJob(jobId: string): Promise<JobBody> {
     for (let i = 0; i < 250; i++) {
         const res = await request(app).get(`/jobs/${jobId}`);
         if (res.body.status !== 'running') return res.body;
@@ -146,7 +147,12 @@ describe('dry-run de duplicados', () => {
         expect(res.status).toBe(200);
         expect(listing.count).toBe(20);
         expect(res.body).toMatchObject({ totalItens: 1_000, ficam: 997, duplicados: 3 });
-        expect(res.body.itensDuplicados.map((d: any) => [d.posicao, d.primeiraOcorrencia])).toEqual([
+        expect(
+            res.body.itensDuplicados.map((d: PreviewBody['itensDuplicados'][number]) => [
+                d.posicao,
+                d.primeiraOcorrencia,
+            ]),
+        ).toEqual([
             [50, 2],
             [700, 3],
             [999, 500],
@@ -223,7 +229,7 @@ describe('leitura da playlist', () => {
         mockListing(bigPlaylist.slice(0, 3));
         const res = await request(app).get(`/playlist/${PLAYLIST}/items`);
         expect(res.status).toBe(200);
-        expect(res.body.itens.map((i: any) => [i.posicao, i.videoId])).toEqual([
+        expect(res.body.itens.map((i: EntryBody) => [i.posicao, i.videoId])).toEqual([
             [0, 'v0'],
             [1, 'v1'],
             [2, 'v2'],
@@ -296,7 +302,7 @@ describe('progresso e quota da remoção', () => {
             falhas: [],
         });
         expect(job.proximoPasso).toContain('quota do dia acabou');
-        expect(job.itens.map((i: any) => [i.posicao, i.estado])).toEqual([
+        expect(job.itens.map((i: JobBody['itens'][number]) => [i.posicao, i.estado])).toEqual([
             [50, 'apagado'],
             [700, 'apagado'],
             [999, 'pendente'],
@@ -334,7 +340,7 @@ describe('progresso e quota da remoção', () => {
             progresso: '1 de 3 itens apagados',
         });
         expect(job.falhas).toEqual([{ id: 'item-700', status: 403, reason: 'quotaExceeded' }]);
-        expect(job.itens.map((i: any) => i.estado)).toEqual(['apagado', 'falhou', 'pendente']);
+        expect(job.itens.map((i: JobBody['itens'][number]) => i.estado)).toEqual(['apagado', 'falhou', 'pendente']);
         expect(job.pendentes).toBe(1);
         expect((await request(app).get('/quota')).body.restante).toBe(0);
     });
@@ -368,7 +374,7 @@ describe('progresso e quota da remoção', () => {
         });
 
         const job = await waitForJob(start.body.jobId);
-        expect(job.itens.map((i: any) => i.estado)).toEqual(['apagado', 'apagado', 'apagado']);
+        expect(job.itens.map((i: JobBody['itens'][number]) => i.estado)).toEqual(['apagado', 'apagado', 'apagado']);
     });
 
     it('GET /jobs lista as remoções desta sessão do servidor, a mais recente primeiro, sem os itens', async () => {
@@ -472,7 +478,7 @@ describe('playlists com duplicados', () => {
         const res = await request(app).get('/playlist/with-duplicates');
 
         expect(res.status).toBe(200);
-        expect(res.body.playlists.map((p: any) => p.playlistId)).toEqual(['PLb', 'PLa']);
+        expect(res.body.playlists.map((p: OverviewBody['playlists'][number]) => p.playlistId)).toEqual(['PLb', 'PLa']);
         expect(res.body.playlists[0]).toMatchObject({
             titulo: 'Beta',
             capa: 'capa-v1',
@@ -506,7 +512,11 @@ describe('playlists com duplicados', () => {
 
         const res = await request(app).get('/playlist/with-duplicates?todas=true');
 
-        expect(res.body.playlists.map((p: any) => p.playlistId)).toEqual(['PLb', 'PLa', 'PLc']);
+        expect(res.body.playlists.map((p: OverviewBody['playlists'][number]) => p.playlistId)).toEqual([
+            'PLb',
+            'PLa',
+            'PLc',
+        ]);
         expect(res.body.playlists[2]).toMatchObject({ duplicados: 0, aposRemocao: 2, comandos: null });
     });
 
@@ -531,7 +541,7 @@ describe('playlists com duplicados', () => {
         const res = await request(app).get('/playlist/with-duplicates');
 
         expect(res.status).toBe(200);
-        expect(res.body.playlists.map((p: any) => p.playlistId)).toEqual(['PLa']);
+        expect(res.body.playlists.map((p: OverviewBody['playlists'][number]) => p.playlistId)).toEqual(['PLa']);
         expect(res.body.resumo.aviso).toContain('incompleta');
         expect(res.body.resumo.falhas).toEqual([{ playlistId: 'PLb', titulo: 'Beta', motivo: 'quotaExceeded' }]);
         expect((await request(app).get('/quota')).body.restante).toBe(0);

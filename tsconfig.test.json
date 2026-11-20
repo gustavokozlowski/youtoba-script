@@ -1,0 +1,9 @@
+{
+    // Só para checar tipos: os testes da API e o código que eles importam (o build usa o tsconfig.json).
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "rootDir": ".",
+        "noEmit": true
+    },
+    "include": ["src/**/*.ts", "test/**/*.ts"]
+}

@@ -1,4 +1,5 @@
 import { CodeChallengeMethod, OAuth2Client } from 'google-auth-library';
+import { errorMessage, httpErrorLike } from '../../utils/errors';
 import type { TokenStore } from '../../utils/repository/token-store.types';
 import type { GoogleAuthConfig } from './google-auth.types';
 import type { PendingLogin } from './pending-logins.types';
@@ -15,8 +16,9 @@ export class MissingRefreshTokenError extends Error {
     }
 }
 
-const isInvalidGrant = (error: any): boolean =>
-    error?.response?.data?.error === 'invalid_grant' || String(error?.message ?? '').includes('invalid_grant');
+const isInvalidGrant = (error: unknown): boolean =>
+    httpErrorLike<{ error?: string }>(error).response?.data?.error === 'invalid_grant' ||
+    errorMessage(error).includes('invalid_grant');
 
 /**
  * Mantém a conexão com o Google de uma conta.
