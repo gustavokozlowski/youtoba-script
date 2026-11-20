@@ -1,6 +1,5 @@
 import { vi } from 'vitest';
-
-type Handler = { status?: number; body: unknown } | (() => { status?: number; body: unknown });
+import type { Handler } from './fake-api.types';
 
 /** Responde fetch por "MÉTODO /caminho" (ou só "/caminho" para GET). Caminho sem rota → 404. */
 export function fakeApi(routes: Record<string, Handler>) {

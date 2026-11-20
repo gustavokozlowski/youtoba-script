@@ -13,7 +13,7 @@ body {
     background: var(--bg);
     color: var(--fg);
     font-family: var(--ui);
-    font-size: 15px;
+    font-size: var(--type-body);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
 }
@@ -73,10 +73,10 @@ h2 {
     text-transform: uppercase;
 }
 h1 {
-    font-size: 48px;
+    font-size: var(--type-title-wide);
 }
 h2 {
-    font-size: 26px;
+    font-size: var(--type-section);
 }
 .lead {
     color: var(--muted);
@@ -230,13 +230,13 @@ h2 {
     display: flex;
     align-items: center;
     gap: 12px;
-    font-size: 13px;
+    font-size: var(--type-caption);
     color: var(--muted);
 }
 .quota strong {
     color: var(--fg);
     font-family: var(--display);
-    font-size: 22px;
+    font-size: var(--type-stat);
     font-weight: 800;
 }
 .meter {
@@ -259,7 +259,7 @@ h2 {
     display: flex;
     gap: 10px;
     align-items: center;
-    font-size: 13px;
+    font-size: var(--type-caption);
     color: var(--muted);
 }
 .dot {
@@ -288,10 +288,10 @@ main {
 }
 .notice p {
     margin: 0;
-    font-size: 14px;
+    font-size: var(--type-meta);
 }
 .notice strong {
-    font-size: 15px;
+    font-size: var(--type-body);
 }
 .notice-warn {
     background: var(--warn-soft);
@@ -359,16 +359,16 @@ main {
     justify-items: start;
 }
 .wall h1 {
-    font-size: clamp(40px, 4.6vw, 64px);
+    font-size: clamp(var(--type-title), 4.6vw, var(--type-hero-max));
     max-width: 14ch;
 }
 .wall .lead {
-    font-size: 18px;
+    font-size: var(--type-lead);
 }
 .btn-google {
     min-height: 52px;
     padding: 0 22px;
-    font-size: 16px;
+    font-size: var(--type-control);
 }
 .facts {
     grid-column: 1 / -1;
@@ -382,12 +382,12 @@ main {
 .facts p {
     margin: 0;
     color: var(--muted);
-    font-size: 14px;
+    font-size: var(--type-meta);
 }
 .facts b {
     display: block;
     color: var(--fg);
-    font-size: 15px;
+    font-size: var(--type-body);
     margin-bottom: 2px;
 }
 
@@ -406,7 +406,7 @@ main {
     gap: 6px;
 }
 .stamp {
-    font-size: 12px;
+    font-size: var(--type-label);
     color: var(--muted);
 }
 .summary {
@@ -420,13 +420,13 @@ main {
 }
 .summary strong {
     font-family: var(--display);
-    font-size: 40px;
+    font-size: var(--type-title);
     font-weight: 900;
     line-height: 1;
 }
 .summary span {
     color: var(--muted);
-    font-size: 13px;
+    font-size: var(--type-caption);
 }
 .list {
     border-top: 1px solid var(--line);
@@ -454,7 +454,7 @@ main {
 }
 .pl-title {
     font-weight: 700;
-    font-size: 17px;
+    font-size: var(--type-row-title);
     overflow-wrap: anywhere;
 }
 .pl-title a {
@@ -465,7 +465,7 @@ main {
 }
 .pl-meta {
     color: var(--muted);
-    font-size: 13px;
+    font-size: var(--type-caption);
     margin-top: 2px;
 }
 .ba {
@@ -476,19 +476,19 @@ main {
     font-weight: 800;
 }
 .ba .from {
-    font-size: 24px;
+    font-size: var(--type-subtitle);
     color: var(--muted);
     text-decoration: line-through;
     text-decoration-color: var(--spray);
     text-decoration-thickness: 2px;
 }
 .ba .to {
-    font-size: 40px;
+    font-size: var(--type-title);
     line-height: 1;
 }
 .ba small {
     font-family: var(--ui);
-    font-size: 12px;
+    font-size: var(--type-label);
     font-weight: 500;
     color: var(--muted);
 }
@@ -511,7 +511,7 @@ main {
 }
 .dup {
     font-family: var(--display);
-    font-size: 28px;
+    font-size: var(--type-emphasis);
     font-weight: 900;
     line-height: 1;
     color: var(--accent);
@@ -519,7 +519,7 @@ main {
 .dup span {
     display: block;
     font-family: var(--ui);
-    font-size: 12px;
+    font-size: var(--type-label);
     font-weight: 500;
     color: var(--muted);
 }
@@ -530,7 +530,7 @@ main {
     gap: 16px;
 }
 .cost {
-    font-size: 13px;
+    font-size: var(--type-caption);
     color: var(--muted);
     text-align: right;
     line-height: 1.3;
@@ -543,7 +543,7 @@ main {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 12px;
+    font-size: var(--type-label);
     font-weight: 600;
     padding: 3px 9px;
     border-radius: 999px;
@@ -560,7 +560,7 @@ main {
 .aside-line {
     padding: 18px 0;
     color: var(--muted);
-    font-size: 14px;
+    font-size: var(--type-meta);
     display: flex;
     gap: 10px;
     align-items: center;
@@ -574,7 +574,7 @@ main {
     border-top: 1px solid var(--line);
 }
 .empty h2 {
-    font-size: 40px;
+    font-size: var(--type-title);
 }
 .empty p {
     margin: 0;
@@ -640,7 +640,7 @@ main {
         gap: 6px;
     }
     h1 {
-        font-size: 38px;
+        font-size: var(--type-title-compact);
     }
     .facts {
         grid-template-columns: 1fr;
@@ -661,7 +661,7 @@ main {
 
 /* Revisão */
 .crumb {
-    font-size: 13px;
+    font-size: var(--type-caption);
     color: var(--muted);
     margin: 0 0 18px;
 }
@@ -695,7 +695,7 @@ main {
 }
 .trio strong {
     font-family: var(--display);
-    font-size: 56px;
+    font-size: var(--type-display);
     font-weight: 900;
     line-height: 0.95;
 }
@@ -703,7 +703,7 @@ main {
     color: var(--accent);
 }
 .trio span {
-    font-size: 13px;
+    font-size: var(--type-caption);
     color: var(--muted);
 }
 .trio-skeleton {
@@ -752,7 +752,7 @@ main {
     outline-offset: 1px;
 }
 .count {
-    font-size: 13px;
+    font-size: var(--type-caption);
     color: var(--muted);
 }
 .to-confirm,
@@ -789,7 +789,7 @@ main {
 }
 .pos {
     font-family: var(--display);
-    font-size: 26px;
+    font-size: var(--type-section);
     font-weight: 800;
     color: var(--muted);
 }
@@ -807,11 +807,11 @@ main {
     overflow-wrap: anywhere;
 }
 .track-channel {
-    font-size: 13px;
+    font-size: var(--type-caption);
     color: var(--muted);
 }
 .first {
-    font-size: 13px;
+    font-size: var(--type-caption);
     color: var(--muted);
     text-align: right;
     white-space: nowrap;
@@ -819,11 +819,11 @@ main {
 .first b {
     color: var(--fg);
     font-family: var(--display);
-    font-size: 20px;
+    font-size: var(--type-index);
     font-weight: 800;
 }
 .state {
-    font-size: 12px;
+    font-size: var(--type-label);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -900,7 +900,7 @@ main {
     display: flex;
     justify-content: space-between;
     gap: 12px;
-    font-size: 14px;
+    font-size: var(--type-meta);
 }
 .panel dt {
     color: var(--muted);
@@ -925,12 +925,12 @@ main {
 }
 .panel-note {
     margin: 0;
-    font-size: 13px;
+    font-size: var(--type-caption);
     color: var(--muted);
 }
 .safe {
     margin: 0;
-    font-size: 13px;
+    font-size: var(--type-caption);
     color: var(--muted);
     display: flex;
     gap: 8px;
@@ -940,14 +940,14 @@ main {
     gap: 6px;
 }
 .confirm label {
-    font-size: 13px;
+    font-size: var(--type-caption);
     font-weight: 600;
 }
 .confirm input {
     caret-color: var(--accent);
     font: inherit;
     font-family: var(--display);
-    font-size: 28px;
+    font-size: var(--type-emphasis);
     font-weight: 800;
     letter-spacing: 0.04em;
     width: 100%;
@@ -968,7 +968,7 @@ main {
 }
 .hint {
     margin: 0 0 10px;
-    font-size: 12px;
+    font-size: var(--type-label);
     color: var(--muted);
 }
 .panel .btn {
@@ -976,7 +976,7 @@ main {
 }
 .confirm .btn-primary {
     min-height: 52px;
-    font-size: 16px;
+    font-size: var(--type-control);
 }
 
 /* Remoção */
@@ -996,19 +996,19 @@ main {
 .counter .big {
     font-family: var(--display);
     font-weight: 900;
-    font-size: clamp(96px, 14vw, 168px);
+    font-size: clamp(var(--type-counter-min), 14vw, var(--type-counter-max));
     line-height: 0.82;
 }
 .counter .big-l {
     color: var(--muted);
-    font-size: 15px;
+    font-size: var(--type-body);
     padding-bottom: 12px;
 }
 .counter .big-l b {
     display: block;
     color: var(--fg);
     font-family: var(--display);
-    font-size: 22px;
+    font-size: var(--type-stat);
     font-weight: 800;
 }
 .track-bar {
@@ -1030,7 +1030,7 @@ main {
     display: flex;
     gap: 10px;
     align-items: center;
-    font-size: 14px;
+    font-size: var(--type-meta);
     color: var(--muted);
     margin: 0 0 24px;
 }
@@ -1048,7 +1048,7 @@ main {
 .command {
     display: block;
     font-family: var(--mono);
-    font-size: 12px;
+    font-size: var(--type-label);
     background: var(--surface-2);
     border: 1px solid var(--line);
     border-radius: 8px;
@@ -1072,7 +1072,7 @@ main {
 }
 .job-count {
     font-family: var(--display);
-    font-size: 24px;
+    font-size: var(--type-subtitle);
     font-weight: 800;
 }
 .pill-live {
@@ -1134,13 +1134,13 @@ main {
         width: 96px;
     }
     .review-head h1 {
-        font-size: 30px;
+        font-size: var(--type-mobile-title);
     }
     .trio {
         gap: 20px;
     }
     .trio strong {
-        font-size: 44px;
+        font-size: var(--type-display-compact);
     }
     .track {
         grid-template-columns: 48px minmax(0, 1fr);
@@ -1160,7 +1160,7 @@ main {
         top: 34%;
     }
     .pos {
-        font-size: 20px;
+        font-size: var(--type-index);
     }
     .job {
         grid-template-columns: minmax(0, 1fr) auto;

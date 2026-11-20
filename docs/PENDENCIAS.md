@@ -41,11 +41,11 @@ Pedido do dono em 20/11/2026: nenhum code smell no projeto. Passar a code base i
     - API por módulo de domínio (`modules/{auth,playlist,quota,removal}`), cada um com rotas, controller, serviço e tipos; infraestrutura (cliente do YouTube, SQLite, cripto) em `infra/`.
     - Nomes: pastas e arquivos em kebab-case com sufixo de papel único (`.controller.ts`, `.service.ts`, `.store.ts`, `.routes.ts`, `.types.ts`, `.test.ts`); componentes React em PascalCase; hooks `use-*.ts` exportando `useAlgo`; tudo em inglês (hoje há `.services.ts` no plural, `index.ts` com lógica e telas em português: `Entrar`, `Revisao`, `Remocao`, `Remocoes`).
 - [x] ~~**API em módulos de domínio.**~~ (#33): auth, playlist, quota, removal e dev ficaram em `src/modules/`; cada assunto separa rotas, controller, serviço, formatter e types; infraestrutura e regras compartilhadas ficaram em `src/infra/` e `src/shared/`.
-- [ ] **Tipagens separadas do código.** Todo `type`/`interface`, inclusive Props de componente e tipos locais, vai para o `*.types.ts` da pasta. Hoje: 9 declarados fora (`TopBar`, `Notice`, `TrackRow`, `LiveTracks`, `Icon`, `router.ts`, `overview-cache.ts`, `formatters.ts`) e Props escritas na assinatura (`{ error: ApiError; onRetry: () => void }`).
-- [ ] **Telas quebradas em seções e hooks.** `Revisao.tsx` (272 linhas), `Remocao.tsx` (214) e `Playlists.tsx` (202) passam do limite de ~120: cada tela vira layout + seções nomeadas, com dados e decisões em hooks (`useReviewConfirmation`, `useRemovalWindow`...) e funções puras testadas.
+- [x] ~~**Tipagens separadas do código.**~~ (#34): Props e tipos locais da interface foram movidos para arquivos `*.types.ts` ao lado dos módulos, incluindo app, features, shared UI e fixtures de teste.
+- [x] ~~**Telas quebradas em seções e hooks.**~~ (#34): `PlaylistsScreen`, `ReviewScreen` e `RemovalScreen` agora orquestram seções menores; decisões e dados ficam em hooks como `useReviewScreen`, `useReviewConfirmation` e `useRemovalWindow`.
 - [ ] **Deduplicação.** Um helper ou componente por regra que hoje aparece repetida: hora de reset da cota (`TopBar` e `Revisao`), título da playlist pelo cache (`Revisao`, `Remocao`, `Remocoes` → `usePlaylistTitle`), datas formatadas fora de `lib/format.ts` (`Playlists`, `Remocoes`), três avisos de erro quase iguais (`AnalysisError`, `LoadError`, `JobError` → um `ApiErrorNotice` com as mensagens por código). Na API: `formatters.ts` (178 linhas) e `youtube-playlist.services.ts` (207) divididos por assunto.
-- [ ] **Testes ao lado do que testam** (`Revisao.test.tsx` junto da tela, não `screens.test.tsx` e `review-removal.test.tsx` agrupando várias).
-- [ ] **Guardas automáticas para não voltar:** regras do Biome para imports entre camadas e features, e um checklist de code smells no template de PR.
+- [x] ~~**Testes ao lado do que testam.**~~ (#34): testes de playlists e revisão acompanham as telas; os testes do shell ficam em `app/App.test.tsx`.
+- [x] ~~**Guardas automáticas para não voltar.**~~ (#34): Biome impede imports de `shared` para `app`/features e de features para outras features ou para `app`.
 
 ## Feito (referência)
 

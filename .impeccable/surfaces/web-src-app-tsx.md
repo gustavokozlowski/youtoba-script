@@ -1,8 +1,8 @@
 ---
 version: 1
 slug: "web-src-app-tsx"
-primary_target: "web/src/App.tsx"
-related_targets: ["web/src/screens"]
+primary_target: "web/src/app/App.tsx"
+related_targets: ["web/src/features"]
 ---
 
 Scope: o app web inteiro do youtoba (web/): Entrar, Playlists, Revisão, Remoção, Remoções. Modo Operate.
