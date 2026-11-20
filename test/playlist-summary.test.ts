@@ -7,6 +7,9 @@ const thumb = thumbnail;
 const item = (position: number, videoId: string, { title, image }: { title?: string; image?: string } = {}) =>
     playlistItem({ id: `it-${position}`, videoId, position, title, thumbnails: image ? { high: thumb(image) } : {} });
 
+const publishedItem = (position: number, videoId: string, title: string) =>
+    playlistItem({ id: `it-${position}`, videoId, position, title, videoPublishedAt: '2020-01-01T00:00:00Z' });
+
 describe('pickThumbnail', () => {
     it('prefere a maior imagem disponível', () => {
         expect(pickThumbnail({ default: thumb('d'), high: thumb('h'), maxres: thumb('m') })).toBe('m');
@@ -68,5 +71,15 @@ describe('summarizePlaylist', () => {
         expect(summary.mostRepeated).toHaveLength(3);
         expect(summary.mostRepeated[0]).toEqual({ videoId: 'a', title: 'Hit', copies: 3 });
         expect(summary.duplicatePercent).toBe(45.5);
+    });
+
+    it('counts deleted and private items, but not a real video the owner titled "Deleted video"', () => {
+        const summary = summarizePlaylist(playlist(), [
+            item(0, 'a'),
+            item(1, 'x', { title: 'Deleted video' }),
+            item(2, 'y', { title: 'Private video' }),
+            publishedItem(3, 'z', 'Deleted video'),
+        ]);
+        expect(summary.unavailable).toBe(2);
     });
 });

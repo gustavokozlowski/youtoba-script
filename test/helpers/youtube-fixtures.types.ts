@@ -6,6 +6,8 @@ export interface PlaylistItemFixture {
     videoId?: string;
     position?: number;
     title?: string;
+    /** Data de publicação do vídeo; vazia (padrão) quando o vídeo foi apagado ou é privado. */
+    videoPublishedAt?: string;
     thumbnails?: YouTubeThumbnails;
 }
 

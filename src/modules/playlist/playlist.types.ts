@@ -1,12 +1,17 @@
 import type { PlaylistItem } from '../../infra/youtube/youtube-api.types';
 import type { QuotaSnapshot, RemovalQuotaEstimate } from '../quota/quota.types';
 
+/** Por que o item não toca: o vídeo foi apagado ou ficou privado. */
+export type Availability = 'deleted' | 'private';
+
 export interface PlaylistEntry {
     playlistItemId: string;
     videoId: string;
     title: string;
     position: number;
     channel?: string;
+    /** Só aparece quando o vídeo foi apagado ou é privado. */
+    unavailable?: Availability;
 }
 
 export interface DuplicateEntry extends PlaylistEntry {
@@ -20,14 +25,25 @@ export type ReadFailure =
     | { status: 'quota_exceeded' }
     | { status: 'fetch_failed' };
 
-export interface DuplicatesPreview {
+/** Saldo real de hoje (depois da leitura) e quantas remoções ainda cabem nele. */
+export type QuotaToday = QuotaSnapshot & { deletesPossible: number };
+
+/** O que todo dry-run de remoção traz: tamanho da playlist, custo estimado e saldo de hoje. */
+export interface RemovalPreviewBase {
     playlistId: string;
     itemCount: number;
+    quota: RemovalQuotaEstimate;
+    quotaToday: QuotaToday;
+}
+
+export interface DuplicatesPreview extends RemovalPreviewBase {
     unique: number;
     duplicates: DuplicateEntry[];
-    quota: RemovalQuotaEstimate;
-    /** Saldo real de hoje (depois da leitura) e quantas remoções ainda cabem nele. */
-    quotaToday: QuotaSnapshot & { deletesPossible: number };
+}
+
+export interface UnavailablePreview extends RemovalPreviewBase {
+    /** Só os vídeos apagados; os privados são contados no resumo, mas nunca removidos. */
+    deleted: PlaylistEntry[];
 }
 
 export interface PlaylistDuplicateSummary {

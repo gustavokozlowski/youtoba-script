@@ -1,16 +1,22 @@
 import { QUOTA_COST } from '../../infra/youtube/youtube.constants';
 import { toEntries } from '../playlist/duplicates';
 import { PlaylistService } from '../playlist/playlist.service';
-import type { PlaylistEntry } from '../playlist/playlist.types';
+import type { PlaylistEntry, RemovalPreviewBase } from '../playlist/playlist.types';
 import { readFailure } from '../playlist/read-failure';
 import { type QuotaTracker, quotaTracker } from '../quota/quota-tracker.service';
 import { connectedClient } from '../quota/tracked-client';
 import type { ClientFactory } from '../quota/tracked-client.types';
 import { writeBackup } from './backup';
-import type { RemovalJob, RemoveDuplicatesResult } from './removal.types';
+import type {
+    RemovalJob,
+    RemovalPlan,
+    RemovalResult,
+    RemoveDuplicatesResult,
+    RemoveUnavailableResult,
+} from './removal.types';
 import { type RemovalJobs, removalJobs } from './removal-jobs.service';
 
-/** Começa remoções de duplicados e consulta as que estão em andamento. */
+/** Começa remoções (de duplicados ou de vídeos apagados) e consulta as que estão em andamento. */
 export class RemovalService {
     private readonly playlists: PlaylistService;
 
@@ -22,13 +28,41 @@ export class RemovalService {
         this.playlists = new PlaylistService(createClient, tracker);
     }
 
+    /** Remove os duplicados (fica a primeira ocorrência). Ver `run` para as regras de confirmação e saldo. */
+    removeDuplicates(playlistId: string, confirm: number | undefined): Promise<RemoveDuplicatesResult> {
+        return this.run(playlistId, confirm, (entries) => {
+            const preview = this.playlists.preview(playlistId, entries);
+            return { kind: 'duplicates', preview, targets: preview.duplicates };
+        });
+    }
+
+    /** Remove os vídeos apagados. Os privados nunca entram. */
+    removeUnavailable(playlistId: string, confirm: number | undefined): Promise<RemoveUnavailableResult> {
+        return this.run(playlistId, confirm, (entries) => {
+            const preview = this.playlists.unavailablePreview(playlistId, entries);
+            return { kind: 'unavailable', preview, targets: preview.deleted };
+        });
+    }
+
+    job(jobId: string): RemovalJob | undefined {
+        return this.jobs.get(jobId);
+    }
+
+    allJobs(): RemovalJob[] {
+        return this.jobs.list();
+    }
+
     /**
-     * Inicia a remoção em segundo plano. Só começa se `confirm` for igual ao número de duplicados encontrados
+     * Inicia a remoção em segundo plano. Só começa se `confirm` for igual ao número de alvos encontrados
      * agora e se houver saldo de quota para ao menos um item. Antes de apagar, grava o backup da playlist inteira.
      */
-    async removeDuplicates(playlistId: string, confirm: number | undefined): Promise<RemoveDuplicatesResult> {
-        const running = this.jobs.runningFor(playlistId);
-        if (running) return { status: 'already_running', job: running };
+    private async run<P extends RemovalPreviewBase>(
+        playlistId: string,
+        confirm: number | undefined,
+        plan: (entries: PlaylistEntry[]) => RemovalPlan<P>,
+    ): Promise<RemovalResult<P>> {
+        const running = this.alreadyRunning(playlistId);
+        if (running) return running;
 
         const tracker = this.tracker();
         if (!tracker.canSpend(QUOTA_COST.list)) return { status: 'budget_exhausted', quota: tracker.snapshot() };
@@ -43,22 +77,23 @@ export class RemovalService {
             return readFailure(error);
         }
 
-        const preview = this.playlists.preview(playlistId, entries);
-        if (preview.duplicates.length === 0) return { status: 'no_duplicates', ...preview };
-        if (confirm !== preview.duplicates.length) return { status: 'confirmation_required', ...preview };
+        const { kind, preview, targets } = plan(entries);
+        if (targets.length === 0) return { status: 'nothing_to_remove', ...preview };
+        if (confirm !== targets.length) return { status: 'confirmation_required', ...preview };
         if (preview.quotaToday.deletesPossible === 0) return { status: 'budget_exhausted', quota: tracker.snapshot() };
 
+        // Outra remoção pode ter começado enquanto esta lia a playlist; daqui até o start não há await.
+        const raced = this.alreadyRunning(playlistId);
+        if (raced) return raced;
+
         const backupFile = writeBackup(playlistId, entries);
-        const job = this.jobs.start({ playlistId, duplicates: preview.duplicates, backupFile, client, tracker });
-        const fitToday = Math.min(preview.duplicates.length, preview.quotaToday.deletesPossible);
+        const job = this.jobs.start({ playlistId, kind, targets, backupFile, client, tracker });
+        const fitToday = Math.min(targets.length, preview.quotaToday.deletesPossible);
         return { status: 'started', job, fitToday, ...preview };
     }
 
-    job(jobId: string): RemovalJob | undefined {
-        return this.jobs.get(jobId);
-    }
-
-    allJobs(): RemovalJob[] {
-        return this.jobs.list();
+    private alreadyRunning(playlistId: string) {
+        const job = this.jobs.runningFor(playlistId);
+        return job ? ({ status: 'already_running', job } as const) : undefined;
     }
 }

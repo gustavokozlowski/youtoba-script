@@ -1,14 +1,23 @@
 import path from 'node:path';
 import { asyncHandler } from '../../shared/async-handler';
-import { formatPreview } from '../playlist/playlist.formatter';
+import { formatPreview, formatUnavailablePreview } from '../playlist/playlist.formatter';
+import type { DuplicatesPreview, RemovalPreviewBase, UnavailablePreview } from '../playlist/playlist.types';
 import { isReadFailure, sendReadFailure } from '../playlist/read-failure';
 import { formatQuotaSnapshot } from '../quota/quota.formatter';
+import type { QuotaSnapshot } from '../quota/quota.types';
 import { quotaTracker } from '../quota/quota-tracker.service';
 import { connectedClient } from '../quota/tracked-client';
 import { backupDir, readBackup } from './backup';
 import { formatJob, formatJobSummary } from './removal.formatter';
 import { RemovalService } from './removal.service';
-import type { PlaylistBackup, RemovalReply, RemovalStarted, RemovalStatusResult } from './removal.types';
+import type {
+    PlaylistBackup,
+    RemovalReply,
+    RemovalReplySpec,
+    RemovalResult,
+    RemovalStarted,
+    RemovalStatusResult,
+} from './removal.types';
 import { restoreRemoved } from './restore';
 
 const removals = new RemovalService();
@@ -16,7 +25,7 @@ const removals = new RemovalService();
 const parseConfirm = (value: unknown): number | undefined =>
     typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : undefined;
 
-function started({ job, fitToday }: RemovalStarted): RemovalReply {
+function started<P extends RemovalPreviewBase>({ job, fitToday }: RemovalStarted<P>): RemovalReply {
     const partialNote =
         fitToday < job.total
             ? ` A quota de hoje cobre ${fitToday} de ${job.total}; o resto fica para depois que ela zerar.`
@@ -33,42 +42,76 @@ function started({ job, fitToday }: RemovalStarted): RemovalReply {
     ];
 }
 
-/** Status HTTP e corpo de cada resultado da tentativa de remoção. */
-function removalReply(result: RemovalStatusResult): RemovalReply {
+const alreadyRunningReply = (jobId: string): RemovalReply => [
+    409,
+    {
+        erro: 'already_running',
+        mensagem: 'Já existe uma remoção em andamento nesta playlist.',
+        jobId,
+        acompanhar: `/jobs/${jobId}`,
+    },
+];
+
+function budgetExhaustedReply(snapshot: QuotaSnapshot): RemovalReply {
+    const quota = formatQuotaSnapshot(snapshot);
+    const mensagem = `A quota de hoje não tem saldo para remover. Tente depois de ${quota.zeraEmBrasilia} (horário de Brasília).`;
+    return [429, { erro: 'daily_budget_exhausted', mensagem, quotaHoje: quota }];
+}
+
+/** Status HTTP e corpo de cada resultado da tentativa de remoção; só os textos e o dry-run mudam por tipo. */
+function removalReply<P extends RemovalPreviewBase>(
+    result: RemovalStatusResult<P>,
+    spec: RemovalReplySpec<P>,
+): RemovalReply {
     switch (result.status) {
         case 'already_running':
-            return [
-                409,
-                {
-                    erro: 'already_running',
-                    mensagem: 'Já existe uma remoção em andamento nesta playlist.',
-                    jobId: result.job.id,
-                    acompanhar: `/jobs/${result.job.id}`,
-                },
-            ];
-        case 'budget_exhausted': {
-            const quota = formatQuotaSnapshot(result.quota);
-            const mensagem = `A quota de hoje não tem saldo para remover. Tente depois de ${quota.zeraEmBrasilia} (horário de Brasília).`;
-            return [429, { erro: 'daily_budget_exhausted', mensagem, quotaHoje: quota }];
-        }
-        case 'no_duplicates':
-            return [200, { mensagem: 'Nenhum duplicado encontrado.', totalItens: result.itemCount, removidos: 0 }];
+            return alreadyRunningReply(result.job.id);
+        case 'budget_exhausted':
+            return budgetExhaustedReply(result.quota);
+        case 'nothing_to_remove':
+            return [200, { mensagem: spec.emptyMessage, totalItens: result.itemCount, removidos: 0 }];
         case 'confirmation_required': {
-            const n = result.duplicates.length;
-            const mensagem = `Confira os ${n} duplicados abaixo e repita com ?confirm=${n}. Nada foi removido.`;
-            return [409, { erro: 'confirmation_required', mensagem, ...formatPreview(result) }];
+            const mensagem = spec.confirmationMessage(spec.count(result));
+            return [409, { erro: 'confirmation_required', mensagem, ...spec.formatPreview(result) }];
         }
         case 'started':
             return started(result);
     }
 }
 
-export const removeDuplicatedItems = asyncHandler(async (req, res) => {
-    const result = await removals.removeDuplicates(req.params.playlistId, parseConfirm(req.query.confirm));
-    if (isReadFailure(result)) return sendReadFailure(res, result);
-    const [status, body] = removalReply(result);
-    return res.status(status).json(body);
-});
+/** Handler de uma rota de remoção: lê o `confirm`, roda a remoção e traduz o resultado. */
+function removalHandler<P extends RemovalPreviewBase>(
+    remove: (playlistId: string, confirm: number | undefined) => Promise<RemovalResult<P>>,
+    spec: RemovalReplySpec<P>,
+) {
+    return asyncHandler(async (req, res) => {
+        const result = await remove(req.params.playlistId, parseConfirm(req.query.confirm));
+        if (isReadFailure(result)) return sendReadFailure(res, result);
+        const [status, body] = removalReply(result, spec);
+        return res.status(status).json(body);
+    });
+}
+
+export const removeDuplicatedItems = removalHandler<DuplicatesPreview>(
+    (playlistId, confirm) => removals.removeDuplicates(playlistId, confirm),
+    {
+        emptyMessage: 'Nenhum duplicado encontrado.',
+        confirmationMessage: (n) => `Confira os ${n} duplicados abaixo e repita com ?confirm=${n}. Nada foi removido.`,
+        count: (preview) => preview.duplicates.length,
+        formatPreview,
+    },
+);
+
+export const removeUnavailableItems = removalHandler<UnavailablePreview>(
+    (playlistId, confirm) => removals.removeUnavailable(playlistId, confirm),
+    {
+        emptyMessage: 'Nenhum vídeo apagado encontrado.',
+        confirmationMessage: (n) =>
+            `Confira os ${n} vídeos apagados abaixo e repita com ?confirm=${n}. Nada foi removido.`,
+        count: (preview) => preview.deleted.length,
+        formatPreview: formatUnavailablePreview,
+    },
+);
 
 export const getRemovalJob = asyncHandler(async (req, res) => {
     const job = removals.job(req.params.jobId);

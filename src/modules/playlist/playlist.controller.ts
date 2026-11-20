@@ -1,6 +1,6 @@
 import { asyncHandler } from '../../shared/async-handler';
 import { formatQuotaSnapshot } from '../quota/quota.formatter';
-import { formatEntry, formatOverview, formatPreview } from './playlist.formatter';
+import { formatEntry, formatOverview, formatPreview, formatUnavailablePreview } from './playlist.formatter';
 import { PlaylistService } from './playlist.service';
 import { isReadFailure, sendReadFailure } from './read-failure';
 
@@ -56,4 +56,10 @@ export const previewDuplicates = asyncHandler(async (req, res) => {
             ? 'Nada a remover.'
             : `DELETE /playlist/${playlistId}/remove-duplicates?confirm=${n} (um backup é gravado antes)`;
     return res.status(200).json({ ...formatPreview(result), paraRemover });
+});
+
+export const previewUnavailable = asyncHandler(async (req, res) => {
+    const result = await playlists.previewUnavailable(req.params.playlistId);
+    if (isReadFailure(result)) return sendReadFailure(res, result);
+    return res.status(200).json(formatUnavailablePreview(result));
 });

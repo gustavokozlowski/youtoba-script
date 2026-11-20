@@ -1,11 +1,8 @@
 import { randomUUID } from 'node:crypto';
-import type { YoutubeClient } from '../../infra/youtube/youtube.client';
 import { errorMessage } from '../../shared/errors';
 import { logger } from '../../shared/logger';
-import type { DuplicateEntry } from '../playlist/playlist.types';
-import type { QuotaTracker } from '../quota/quota-tracker.service';
 import { recordRemoval } from './backup';
-import type { RemovalJob } from './removal.types';
+import type { RemovalJob, StartRemovalParams } from './removal.types';
 
 /**
  * Remoções em segundo plano, com progresso consultável. Fica em memória: se o servidor cair,
@@ -33,19 +30,14 @@ export class RemovalJobs {
         return this.running.get(id) ?? Promise.resolve();
     }
 
-    start(params: {
-        playlistId: string;
-        duplicates: DuplicateEntry[];
-        backupFile: string;
-        client: YoutubeClient;
-        tracker: QuotaTracker;
-    }): RemovalJob {
+    start(params: StartRemovalParams): RemovalJob {
         const job: RemovalJob = {
             id: randomUUID(),
             playlistId: params.playlistId,
+            kind: params.kind,
             status: 'running',
-            total: params.duplicates.length,
-            items: params.duplicates,
+            total: params.targets.length,
+            items: params.targets,
             processed: 0,
             removed: [],
             failed: [],
@@ -57,11 +49,8 @@ export class RemovalJobs {
         return job;
     }
 
-    private async run(
-        job: RemovalJob,
-        { duplicates, client, tracker }: { duplicates: DuplicateEntry[]; client: YoutubeClient; tracker: QuotaTracker },
-    ) {
-        const byId = new Map(duplicates.map((entry) => [entry.playlistItemId, entry]));
+    private async run(job: RemovalJob, { targets, client, tracker }: StartRemovalParams) {
+        const byId = new Map(targets.map((entry) => [entry.playlistItemId, entry]));
         const log = logger.child({ remocao: job.id.slice(0, 8) });
         log.info({ itens: job.total, saldoQuota: tracker.remaining() }, 'Remoção começou');
 
