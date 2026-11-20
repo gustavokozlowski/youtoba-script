@@ -11,10 +11,21 @@ interface TrackRowProps {
 
 const STATE_LABEL = { apagado: 'apagado', falhou: 'falhou', pendente: 'na fila', agora: 'agora' } as const;
 
+/** A linha pronta, num `<li>`. Quem precisa de outro contêiner (a lista animada da remoção) usa as peças abaixo. */
 export function TrackRow({ item, state, fresh = false }: TrackRowProps) {
-    const gone = state === 'apagado';
     return (
-        <li className={`track${gone ? ' gone' : ''}${fresh ? ' fresh' : ''}`}>
+        <li className={trackClassName(state, fresh)}>
+            <TrackRowContent item={item} state={state} />
+        </li>
+    );
+}
+
+export const trackClassName = (state: TrackRowProps['state'], fresh = false) =>
+    `track${state === 'apagado' ? ' gone' : ''}${fresh ? ' fresh' : ''}`;
+
+export function TrackRowContent({ item, state }: Omit<TrackRowProps, 'fresh'>) {
+    return (
+        <>
             <span className="pos num">#{num(item.posicao)}</span>
             <img className="thumb" src={thumbnail(item.videoId)} alt="" loading="lazy" width="96" height="54" />
             <div className="track-text">
@@ -28,8 +39,8 @@ export function TrackRow({ item, state, fresh = false }: TrackRowProps) {
                     1ª vez em <b className="num">#{num(item.primeiraOcorrencia)}</b>
                 </span>
             )}
-            {gone && <SprayStrike seed={item.posicao} />}
-        </li>
+            {state === 'apagado' && <SprayStrike seed={item.posicao} />}
+        </>
     );
 }
 

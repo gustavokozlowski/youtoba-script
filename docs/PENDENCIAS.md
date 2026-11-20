@@ -50,3 +50,4 @@ Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com 
 | #17 | Interface: revisão do dry-run, remoção ao vivo com o risco de spray, lista de remoções |
 | #18 | Logo novo "chiclete e grafite" (Anton, bloco 3D, adesivo), escolhido num protótipo do app |
 | #19 | TanStack Query na interface: cache por chave, polling do job pelo `refetchInterval`, cota da barra vinda das próprias respostas, revisão não relê a playlist por 30 s |
+| #20 | Remoção ao vivo com a Motion: a lista desliza quando a janela anda (FLIP, só transform), barra de progresso por `scaleX`, tela carregada sob demanda |
