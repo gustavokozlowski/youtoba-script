@@ -5,7 +5,7 @@ import { defineConfig } from 'vite';
 // changeOrigin fica desligado de propósito: o Host continua localhost:5173, igual ao Origin,
 // e o localOnly do servidor aceita o pedido como mesma origem.
 const API = 'http://localhost:3000';
-const apiPaths = ['/auth', '/playlist', '/jobs', '/quota', '/dev'];
+const apiPaths = ['/auth', '/playlist', '/jobs', '/quota', '/backups', '/health', '/dev'];
 
 export default defineConfig({
     root: __dirname,

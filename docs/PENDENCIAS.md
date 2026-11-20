@@ -2,7 +2,7 @@
 
 O que falta para dar o projeto por encerrado, em ordem de prioridade. Atualize este arquivo no mesmo PR que resolver um item: risque o item e anote o número do PR.
 
-Situação em 20/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 185 testes passando (135 da API, 50 da interface).
+Situação em 20/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 186 testes passando (136 da API, 50 da interface).
 
 ## 1. Segurança (fazer primeiro)
 
@@ -93,3 +93,4 @@ Pedido do dono em 20/11/2026: nenhum code smell no projeto. Passar a code base i
 | #47 | Análise geral lê duas playlists por vez, na mesma ordem, e para no lote seguinte se a quota acabar |
 | #48 | API para remover vídeos apagados (dry-run e remoção com confirmação), pipeline de remoção único para os dois tipos, e duas remoções simultâneas na mesma playlist não começam dois jobs |
 | #49 | Interface para remover vídeos apagados: revisão própria, painel de confirmação único para os dois tipos, aviso de que apagado não volta, e a análise geral conta os apagados |
+| #50 | `npm run dev:all`: API e interface juntas com um comando; proxy do Vite passa `/backups` e `/health`; `LOG_FORMAT` opcional |

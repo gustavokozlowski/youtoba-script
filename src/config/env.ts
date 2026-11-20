@@ -35,6 +35,8 @@ export const envSchema = z.object({
             error: 'use fatal, error, warn, info, debug, trace ou silent',
         })
         .optional(),
+    // Formato dos logs: legível (pretty) ou uma linha JSON por evento. Sem valor, decide pelo terminal.
+    LOG_FORMAT: z.enum(['pretty', 'json'], { error: 'use pretty ou json' }).optional(),
     YOUTUBE_DAILY_QUOTA: z.coerce.number({ error: 'precisa ser um número' }).int().nonnegative().default(10_000),
 });
 
