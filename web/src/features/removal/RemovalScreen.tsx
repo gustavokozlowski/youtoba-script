@@ -2,7 +2,6 @@ import { useJob, useRestoreBackup } from '../../shared/api/queries';
 import { playlistTitle } from '../../shared/lib/overview-cache';
 import { href } from '../../shared/lib/route-links';
 import { ApiErrorNotice } from '../../shared/ui/ApiErrorNotice';
-import { SprayFilter } from '../../shared/ui/TrackRow';
 import { JobProgressSection } from './JobProgressSection';
 import type { RemovalScreenProps } from './RemovalScreen.types';
 import { useNewlyRemoved } from './use-newly-removed';
@@ -15,7 +14,6 @@ export function RemovalScreen({ jobId }: RemovalScreenProps) {
 
     return (
         <main>
-            <SprayFilter />
             <p className="crumb">
                 <a href={href.removals()}>Remoções</a>
                 {job && (

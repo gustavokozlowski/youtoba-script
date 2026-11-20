@@ -5,12 +5,8 @@ export interface TrackRowProps {
     item: DeletedItem & { primeiraOcorrencia?: number };
     /** Sem estado: linha da revisão (mostra a primeira ocorrência). Com estado: linha da remoção. */
     state?: JobItemState | 'agora';
-    /** Acabou de ser apagado: o risco de spray é desenhado na hora. */
+    /** Acabou de ser apagado: o buff é rolado na hora. */
     fresh?: boolean;
-}
-
-export interface SprayStrikeProps {
-    seed: number;
 }
 
 export interface TrackTailProps {
