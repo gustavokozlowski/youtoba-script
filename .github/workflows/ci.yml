@@ -1,0 +1,50 @@
+# Os mesmos checks que o CLAUDE.md pede antes de dizer que terminou, em todo PR e na main.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Só leitura: o workflow não publica nada nem mexe no repositório.
+permissions:
+  contents: read
+
+# Um push novo no mesmo PR cancela a rodada anterior.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # Actions pinadas por commit (tag entre parênteses): uma tag pode ser movida, o SHA não.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Biome (formato e lint)
+        run: npx @biomejs/biome ci
+
+      - name: Tipos (API e web)
+        run: npm run typecheck
+
+      - name: Testes
+        run: npm test
+
+      - name: Build da interface
+        run: npm run build:web
+
+      - name: Dependências sem vulnerabilidade alta ou crítica
+        run: npm audit --audit-level=high
