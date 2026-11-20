@@ -14,11 +14,6 @@ export interface PlaylistRowProps {
     dailyLimit: number;
 }
 
-export interface AnalysisErrorProps {
-    error: ApiError;
-    onRetry: () => void;
-}
-
 export interface FitLabelProps {
     custoRemocao: PlaylistSummary['custoRemocao'];
 }
