@@ -1,6 +1,6 @@
 const integer = new Intl.NumberFormat('pt-BR');
 
-export const num = (n: number) => integer.format(n);
+export const num = (n: number) => integer.format(Number.isFinite(n) ? Math.max(0, n) : 0);
 
 export const units = (n: number) => `${num(n)} ${n === 1 ? 'unidade' : 'unidades'}`;
 

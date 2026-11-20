@@ -171,6 +171,23 @@ describe('Remoção', () => {
         expect(fetchMock.mock.calls.filter(([url]) => url === '/jobs/job-1').length).toBe(callsWhenDone);
     });
 
+    it('no término não mostra que itens ainda faltam', async () => {
+        fakeApi({
+            '/jobs/job-1': {
+                body: job(1, {
+                    status: 'done',
+                    pendentes: 0,
+                    percentual: 100,
+                }),
+            },
+        });
+        render(<RemovalScreen jobId="job-1" />);
+
+        expect(await screen.findByRole('heading', { name: /pronto, repetidos apagados/i })).toBeInTheDocument();
+        expect(screen.getByText('todos saíram')).toBeInTheDocument();
+        expect(screen.queryByText(/ainda faltam?/i)).not.toBeInTheDocument();
+    });
+
     it('quando para por cota, diz quando continuar e mostra como desfazer', async () => {
         fakeApi({
             '/jobs/job-1': {

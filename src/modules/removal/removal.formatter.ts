@@ -4,6 +4,7 @@ import type { QuotaSnapshot } from '../quota/quota.types';
 import type { JobItemState, RemovalJob } from './removal.types';
 
 const isSkip = (reason?: string) => reason?.startsWith('skipped_') ?? false;
+const safeCount = (value: number) => (Number.isFinite(value) ? Math.max(0, value) : 0);
 
 const STATUS_TEXT: Record<RemovalJob['status'], string> = {
     running: 'em andamento',
@@ -38,14 +39,15 @@ export const formatJobSummary = (job: RemovalJob) => ({
     status: job.status,
     situacao: STATUS_TEXT[job.status],
     removidos: job.removed.length,
-    total: job.total,
+    total: safeCount(job.total),
     iniciadoEm: job.startedAt,
     terminadoEm: job.finishedAt,
 });
 
 export function formatJob(job: RemovalJob, quota: QuotaSnapshot) {
     const errors = job.failed.filter((f) => !isSkip(f.reason));
-    const pending = job.total - job.removed.length - errors.length;
+    const total = safeCount(job.total);
+    const pending = Math.max(0, total - job.removed.length - errors.length);
     const stopText = job.stopReason && STOP_TEXT[job.stopReason](brasiliaDateTime(quota.resetsAt));
 
     return {
@@ -53,8 +55,8 @@ export function formatJob(job: RemovalJob, quota: QuotaSnapshot) {
         playlistId: job.playlistId,
         status: job.status,
         situacao: STATUS_TEXT[job.status],
-        progresso: `${job.removed.length} de ${job.total} itens apagados`,
-        percentual: job.total === 0 ? 100 : Math.round((job.removed.length / job.total) * 100),
+        progresso: `${job.removed.length} de ${total} itens apagados`,
+        percentual: total === 0 ? 100 : Math.round((job.removed.length / total) * 100),
         removidos: job.removed.length,
         falhas: errors,
         pendentes: pending,
