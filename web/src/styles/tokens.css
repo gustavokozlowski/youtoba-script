@@ -27,28 +27,40 @@
     --ui: "Geist Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
     --mono: "Geist Mono Variable", ui-monospace, "SFMono-Regular", monospace;
 
-    /* Escala tipográfica por papel: a interface usa poucos degraus previsíveis. */
-    --type-label: 12px;
-    --type-caption: 13px;
-    --type-meta: 14px;
-    --type-body: 15px;
-    --type-control: 16px;
-    --type-row-title: 17px;
-    --type-lead: 18px;
-    --type-index: 20px;
-    --type-stat: 22px;
-    --type-subtitle: 24px;
-    --type-section: 26px;
-    --type-emphasis: 28px;
-    --type-mobile-title: 30px;
-    --type-title: 40px;
-    --type-title-wide: 48px;
-    --type-title-compact: 38px;
-    --type-display: 56px;
-    --type-display-compact: 44px;
-    --type-hero-max: 64px;
+    /* Escala tipográfica: poucos degraus, com aliases por papel para manter a leitura do CSS. */
+    --type-xs: 12px;
+    --type-sm: 14px;
+    --type-md: 16px;
+    --type-lg: 18px;
+    --type-xl: 24px;
+    --type-2xl: 28px;
+    --type-3xl: 40px;
+    --type-display-sm: 44px;
+    --type-display-md: 48px;
+    --type-display-lg: 56px;
+    --type-hero: 64px;
     --type-counter-min: 96px;
     --type-counter-max: 168px;
+
+    --type-label: var(--type-xs);
+    --type-caption: var(--type-sm);
+    --type-meta: var(--type-sm);
+    --type-body: var(--type-md);
+    --type-control: var(--type-md);
+    --type-row-title: var(--type-lg);
+    --type-lead: var(--type-lg);
+    --type-index: var(--type-xl);
+    --type-stat: var(--type-xl);
+    --type-subtitle: var(--type-xl);
+    --type-section: var(--type-2xl);
+    --type-emphasis: var(--type-2xl);
+    --type-mobile-title: var(--type-3xl);
+    --type-title: var(--type-3xl);
+    --type-title-wide: var(--type-display-md);
+    --type-title-compact: var(--type-3xl);
+    --type-display: var(--type-display-lg);
+    --type-display-compact: var(--type-display-sm);
+    --type-hero-max: var(--type-hero);
 
     --radius: 10px;
     --gutter: max(16px, env(safe-area-inset-left, 0px));

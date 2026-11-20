@@ -2,7 +2,7 @@
 name: youtoba
 description: Faxina de playlists do YouTube; o spray marca o que sai.
 colors: "bg #ecebe6 / bg-dark #0e0f13; surface #fff / surface-dark #16171d; fg #131318 / fg-dark #f2f0ea; muted #5c5d68 / muted-dark #a2a4b0; accent #c70f62 / accent-dark #ff3d93; spray #e4167a; ok #157a4c"
-typography: "Big Shoulders Display para títulos/números; Geist Variable para UI/texto; Geist Mono para comandos; tokens em web/src/styles/tokens.css"
+typography: "Big Shoulders Display para títulos/números; Geist Variable para UI/texto; Geist Mono para comandos; escala de 11 degraus em web/src/styles/tokens.css"
 spacing: "gutter 16px; row 12px; panel 22px; gaps 24/32px; page 36px 72px"
 radius: "bar 3px; thumb 6px; cover 8px; control 10px; notice 12px; panel 14px; pill 999px"
 components: "botões 44px (small 36px); busca 44px; confirmação 52px; listas com fio 1px; só painel com sombra"
