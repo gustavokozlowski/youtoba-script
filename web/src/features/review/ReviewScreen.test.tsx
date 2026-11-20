@@ -71,6 +71,7 @@ describe('Revisão', () => {
         await userEvent.clear(input);
         await userEvent.type(input, '3');
         expect(button).toBeEnabled();
+        expect(input).toHaveClass('is-confirmed');
     });
 
     it('confirmada, inicia a remoção com ?confirm=N e abre a tela de progresso', async () => {
