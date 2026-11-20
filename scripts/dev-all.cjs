@@ -4,7 +4,9 @@
 const { spawn } = require('node:child_process');
 const readline = require('node:readline');
 
-const WINDOWS = process.platform === 'win32';
+// O que muda por sistema é só o jeito de abrir e derrubar processos. Linux e macOS são POSIX (grupos de
+// processos e sinais) e seguem o mesmo caminho; o Windows não tem grupos nem sinais e segue outro.
+const IS_WINDOWS = process.platform === 'win32';
 
 // O login do Google volta para a interface no Vite. Um WEB_URL já definido no terminal continua valendo
 // (o dotenv da API não sobrescreve variáveis que já existem, então isto vence o .env de propósito).
@@ -27,8 +29,8 @@ function start({ name, script, env }) {
     const child = spawn('npm', ['run', script], {
         env: { ...process.env, ...env, FORCE_COLOR: '1' },
         stdio: ['ignore', 'pipe', 'pipe'],
-        detached: !WINDOWS,
-        shell: WINDOWS,
+        detached: !IS_WINDOWS,
+        shell: IS_WINDOWS,
     });
     prefixLines(child.stdout, process.stdout, name);
     prefixLines(child.stderr, process.stderr, name);
@@ -52,12 +54,23 @@ function stopAll(exitCode) {
 
 function stopTree(child) {
     if (child.exitCode !== null || child.signalCode !== null) return;
+    if (IS_WINDOWS) stopWindowsTree(child);
+    else stopPosixGroup(child);
+}
+
+// O sinal vai para o grupo inteiro (pid negativo): o npm e tudo que ele abriu.
+function stopPosixGroup(child) {
     try {
-        if (WINDOWS) child.kill();
-        else process.kill(-child.pid, 'SIGTERM');
+        process.kill(-child.pid, 'SIGTERM');
     } catch {
-        // O processo já saiu entre a checagem e o kill: nada a fazer.
+        // O grupo já saiu entre a checagem e o kill: nada a fazer.
     }
+}
+
+// child.kill() derrubaria só o npm e deixaria o Vite e o ts-node-dev segurando as portas;
+// o taskkill /T leva a árvore inteira. Argumentos fixos e o pid do próprio filho, sem entrada do usuário.
+function stopWindowsTree(child) {
+    spawn('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore' }).on('error', () => child.kill());
 }
 
 process.on('SIGINT', () => stopAll(0));
