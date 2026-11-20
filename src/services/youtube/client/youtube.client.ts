@@ -1,3 +1,5 @@
+import { logger } from '../../../utils/logger';
+
 require('dotenv').config();
 
 import axios, { type AxiosInstance } from 'axios';
@@ -79,7 +81,7 @@ export class YoutubeClient {
             return data;
         } catch (error) {
             const { status, reason } = apiFailure(error);
-            console.error(`Erro ao obter playlists: HTTP ${status ?? '?'} ${reason ?? ''}`);
+            logger.warn({ status, reason }, 'Erro ao obter playlists');
             return null;
         }
     }
@@ -208,7 +210,7 @@ export class YoutubeClient {
                 onProgress?.({ index, total: itemIds.length, itemId, outcome: 'removed' });
             } catch (error) {
                 const { status, reason, message } = apiFailure(error);
-                console.error(`Falha ao remover o item ${itemId}: HTTP ${status ?? '?'} ${reason ?? message ?? ''}`);
+                logger.warn({ item: itemId, status, reason, mensagem: message }, 'Falha ao remover o item');
                 result.failed.push({ id: itemId, status, reason });
                 onProgress?.({ index, total: itemIds.length, itemId, outcome: 'failed', status, reason });
 

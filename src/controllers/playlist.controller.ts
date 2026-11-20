@@ -1,8 +1,7 @@
-import type { Request, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import { quotaTracker } from '../services/youtube/quota-tracker';
 import type { ReadFailure } from '../services/youtube/youtube.types';
 import { YoutubeService } from '../services/youtube/youtube-playlist.services';
-import { errorMessage } from '../utils/errors';
 import {
     formatEntry,
     formatJob,
@@ -36,12 +35,7 @@ const units = (n: number) => `${n} ${n === 1 ? 'unidade' : 'unidades'}`;
 const parseConfirm = (value: unknown): number | undefined =>
     typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : undefined;
 
-const internalError = (res: Response, context: string, error: unknown) => {
-    console.error(`Erro ao ${context}:`, errorMessage(error));
-    return res.status(500).json({ erro: 'internal_error' });
-};
-
-export const getAllPlaylists = async (_req: Request, res: Response) => {
+export const getAllPlaylists = async (_req: Request, res: Response, next: NextFunction) => {
     try {
         const result = await youtubeService.playlists();
         if (!result) {
@@ -49,11 +43,11 @@ export const getAllPlaylists = async (_req: Request, res: Response) => {
         }
         return res.status(200).json({ resultado: result });
     } catch (e) {
-        return internalError(res, 'obter playlists', e);
+        return next(e);
     }
 };
 
-export const getPlaylistsWithDuplicates = async (req: Request, res: Response) => {
+export const getPlaylistsWithDuplicates = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const result = await youtubeService.duplicatesOverview(req.query.todas === 'true');
 
@@ -70,21 +64,21 @@ export const getPlaylistsWithDuplicates = async (req: Request, res: Response) =>
 
         return res.status(200).json(formatOverview(result));
     } catch (e) {
-        return internalError(res, 'listar playlists com duplicados', e);
+        return next(e);
     }
 };
 
-export const getPlaylistInfoById = async (req: Request, res: Response) => {
+export const getPlaylistInfoById = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const result = await youtubeService.itemCount(req.params.playlistId);
         if (isReadFailure(result)) return sendReadFailure(res, result);
         return res.status(200).json({ playlistId: req.params.playlistId, totalItens: result.itemCount });
     } catch (e) {
-        return internalError(res, 'obter detalhes da playlist', e);
+        return next(e);
     }
 };
 
-export const listPlaylistItems = async (req: Request, res: Response) => {
+export const listPlaylistItems = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const result = await youtubeService.listItems(req.params.playlistId);
         if (isReadFailure(result)) return sendReadFailure(res, result);
@@ -94,11 +88,11 @@ export const listPlaylistItems = async (req: Request, res: Response) => {
             itens: result.items.map(formatEntry),
         });
     } catch (e) {
-        return internalError(res, 'listar itens da playlist', e);
+        return next(e);
     }
 };
 
-export const previewDuplicates = async (req: Request, res: Response) => {
+export const previewDuplicates = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { playlistId } = req.params;
         const result = await youtubeService.previewDuplicates(playlistId);
@@ -113,11 +107,11 @@ export const previewDuplicates = async (req: Request, res: Response) => {
                     : `DELETE /playlist/${playlistId}/remove-duplicates?confirm=${n} (um backup é gravado antes)`,
         });
     } catch (e) {
-        return internalError(res, 'procurar duplicados', e);
+        return next(e);
     }
 };
 
-export const removeDuplicatedItems = async (req: Request, res: Response) => {
+export const removeDuplicatedItems = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { playlistId } = req.params;
         const result = await youtubeService.removeDuplicates(playlistId, parseConfirm(req.query.confirm));
@@ -165,7 +159,7 @@ export const removeDuplicatedItems = async (req: Request, res: Response) => {
             ...formatJob(job, quotaTracker().snapshot()),
         });
     } catch (e) {
-        return internalError(res, 'remover duplicados', e);
+        return next(e);
     }
 };
 

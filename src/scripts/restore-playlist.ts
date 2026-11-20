@@ -4,6 +4,7 @@ import { googleAuth } from '../services/google';
 import { readBackup } from '../services/youtube/backup';
 import { createTrackedClient } from '../services/youtube/client/tracked-client';
 import { restoreRemoved } from '../services/youtube/restore';
+import { errorMessage } from '../utils/errors';
 
 // Uso: npm run restore:playlist -- backups/<arquivo>.json
 async function main() {
@@ -48,6 +49,6 @@ async function main() {
 }
 
 main().catch((error) => {
-    console.error('Erro ao restaurar:', error?.message);
+    console.error('Erro ao restaurar:', errorMessage(error));
     process.exit(1);
 });

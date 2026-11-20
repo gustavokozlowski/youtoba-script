@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import { googleAuth } from '../google';
 import { writeBackup } from './backup';
 import type { PlaylistsResponse } from './client/client.types';
@@ -31,7 +32,7 @@ function readFailure(error: unknown): ReadFailure {
     const { status, reason } = apiFailure(error);
     if (status === 404 || reason === 'playlistNotFound') return { status: 'not_found' };
     if (reason === 'quotaExceeded') return { status: 'quota_exceeded' };
-    console.error(`Falha ao ler a playlist: HTTP ${status ?? '?'} ${reason ?? ''}`);
+    logger.warn({ status, reason }, 'Falha ao ler a playlist');
     return { status: 'fetch_failed' };
 }
 
