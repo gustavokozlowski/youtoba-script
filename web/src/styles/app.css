@@ -301,6 +301,11 @@ main {
     background: var(--danger-soft);
     border-color: color-mix(in srgb, var(--danger) 45%, transparent);
 }
+.notice-ok {
+    background: color-mix(in srgb, var(--ok) 12%, transparent);
+    border-color: color-mix(in srgb, var(--ok) 45%, transparent);
+    color: var(--ok);
+}
 .notice-error strong {
     color: var(--danger);
 }

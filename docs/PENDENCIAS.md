@@ -27,7 +27,7 @@ Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com 
 - [x] ~~**Interface web**~~ (#16, #17): entrar, playlists com repetidos, revisão com confirmação pelo número exato, remoção ao vivo e lista de remoções. Trocamos o EJS do plano por React + Vite (decisão do dono, 19/11).
 - [ ] **Escolher itens um a um na revisão** (adiado pelo dono): o backend passa a aceitar a lista de `playlistItemId` escolhidos (TDD), e a revisão ganha caixas de seleção.
 - [x] ~~**Consolidar a escala de tipos da interface.**~~ (#39): `tokens.css` agora define 11 degraus tipográficos e aliases semânticos por papel; `app.css` não usa tamanhos literais e a escala foi registrada no `DESIGN.md`.
-- [ ] **Restaurar pela interface**: hoje a tela de remoção mostra o comando `npm run restore:playlist`; um botão que chama a restauração pelo servidor evita o terminal.
+- [x] ~~**Restaurar pela interface.**~~ (#41): a tela de remoção agora chama a restauração pelo servidor; o comando de terminal continua disponível como alternativa.
 - [ ] **Validação real pela interface** na playlist de teste, antes de usar a interface em playlist real. Em 19/11 a cota do dia já estava zerada; conferido só o estado "sem cota" com dados reais. Fazer depois das 05:00.
 - [x] ~~**Release v1.0.0.**~~ (#40): `GET /health`, `engines` (Node ≥ 22) e workflow de release por tag com changelog. Sem deploy e sem Docker (o projeto roda só localmente).
 - [ ] **Opção para limpar itens indisponíveis** ("Deleted video" / "Private video"), separada da remoção de duplicados.

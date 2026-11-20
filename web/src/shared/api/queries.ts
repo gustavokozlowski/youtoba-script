@@ -127,6 +127,20 @@ export const useJobs = () =>
         refetchInterval: (query) => (query.state.data?.some((job) => job.status === 'running') ? POLL_MS * 2 : false),
     });
 
+export function useRestoreBackup() {
+    const client = useQueryClient();
+    return useMutation({
+        mutationFn: (backup: string) =>
+            api.send<{ restaurados: number; jaPresentes: number; falhas: unknown[] }>(
+                'POST',
+                `/backups/${encodeURIComponent(backup)}/restore`,
+            ),
+        onSuccess: () => {
+            void client.invalidateQueries({ queryKey: keys.jobs });
+        },
+    });
+}
+
 /**
  * Sair não limpa o cache em memória: entrar de novo passa pelo Google e recarrega a página,
  * então nada desta sessão chega à próxima. Só a análise guardada na aba é apagada.

@@ -3,7 +3,7 @@ import { href } from '../../shared/lib/route-links';
 import { Icon } from '../../shared/ui/Icon';
 import type { UndoPanelProps } from './RemovalScreen.types';
 
-export function UndoPanel({ job, panelRef }: UndoPanelProps) {
+export function UndoPanel({ job, panelRef, onRestore, restoring }: UndoPanelProps) {
     const [copied, setCopied] = useState<'idle' | 'copied' | 'select'>('idle');
     const commandRef = useRef<HTMLElement>(null);
 
@@ -31,6 +31,14 @@ export function UndoPanel({ job, panelRef }: UndoPanelProps) {
             <code className="command" ref={commandRef}>
                 {job.restaurar}
             </code>
+            <button
+                type="button"
+                className="btn btn-primary"
+                onClick={onRestore}
+                disabled={restoring || job.status === 'running'}
+            >
+                {restoring ? 'Restaurando…' : 'Restaurar vídeos removidos'}
+            </button>
             <button type="button" className="btn btn-ghost" onClick={copy}>
                 <Icon name={copied === 'copied' ? 'check' : 'copy'} />
                 {copied === 'copied' ? 'Copiado' : copied === 'select' ? 'Selecionado, use Ctrl+C' : 'Copiar comando'}
