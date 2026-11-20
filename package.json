@@ -1,6 +1,9 @@
 {
   "name": "script",
   "version": "1.0.0",
+  "engines": {
+    "node": ">=22"
+  },
   "main": "dist/server/index.js",
   "type": "commonjs",
   "scripts": {

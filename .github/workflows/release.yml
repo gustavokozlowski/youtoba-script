@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Validar release
+        run: npm run check
+
+      - name: Criar release e changelog
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          previous_tag="$(git tag --sort=-version:refname | sed -n '2p')"
+          if [ -n "$previous_tag" ]; then
+            notes="$(git log --pretty=format:'- %s' "$previous_tag"..HEAD)"
+          else
+            notes="$(git log --pretty=format:'- %s' HEAD)"
+          fi
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes "$notes"
