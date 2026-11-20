@@ -36,7 +36,7 @@ Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com 
 
 Pedido do dono em 20/11/2026: nenhum code smell no projeto. Passar a code base inteira (API e `web/`) pelo composition pattern e pela deduplicação, com a arquitetura de pastas e os nomes padronizados. Fazer em PRs pequenos, um assunto por PR, com os testes de comportamento verdes antes e depois de cada passo (refatorar sem mudar o que a tela faz). Abrir com um ADR curto em `docs/adr/` que fixa a estrutura e os nomes.
 
-- [ ] **ADR de arquitetura e nomes.** Proposta a confirmar no ADR:
+- [x] ~~**ADR de arquitetura e nomes.**~~ (#31): `docs/adr/0001-arquitetura-pastas-e-nomes.md` fixa a estrutura, os nomes, a direção das dependências e o plano em 7 PRs. A proposta original era:
     - `web/src` por feature: `features/<feature>/{api,model,ui}` (auth, playlists, review, removal) + `shared/{api,ui,lib}`; uma feature não importa o interior de outra (regra `noRestrictedImports` no Biome).
     - API por módulo de domínio (`modules/{auth,playlist,quota,removal}`), cada um com rotas, controller, serviço e tipos; infraestrutura (cliente do YouTube, SQLite, cripto) em `infra/`.
     - Nomes: pastas e arquivos em kebab-case com sufixo de papel único (`.controller.ts`, `.service.ts`, `.store.ts`, `.routes.ts`, `.types.ts`, `.test.ts`); componentes React em PascalCase; hooks `use-*.ts` exportando `useAlgo`; tudo em inglês (hoje há `.services.ts` no plural, `index.ts` com lógica e telas em português: `Entrar`, `Revisao`, `Remocao`, `Remocoes`).
@@ -76,3 +76,4 @@ Pedido do dono em 20/11/2026: nenhum code smell no projeto. Passar a code base i
 | #28 | Dependências sem uso removidas; `@types/express` alinhado |
 | #29 | `biome.jsonc` comentado, `noExplicitAny` ligada, typecheck dos testes e `npm run check` |
 | #30 | Tratador de erro único e logs `pino` sem token, sem dado pessoal |
+| #31 | ADR 0001: arquitetura de pastas, nomes e tipos |
