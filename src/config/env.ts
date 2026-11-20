@@ -9,7 +9,9 @@ const ENCRYPTION_KEY_BYTES = 32;
 const required = () => z.string({ error: MISSING }).min(1, { error: MISSING, abort: true });
 
 const url = (example: string) =>
-    z.url({ error: (issue) => (issue.input === undefined ? MISSING : `precisa ser uma URL completa, ex.: ${example}`) });
+    z.url({
+        error: (issue) => (issue.input === undefined ? MISSING : `precisa ser uma URL completa, ex.: ${example}`),
+    });
 
 export const envSchema = z.object({
     PORT: z.coerce.number({ error: 'precisa ser um número de porta' }).int().min(1).max(65_535).default(3000),
