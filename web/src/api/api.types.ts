@@ -1,3 +1,5 @@
+import type { ApiError } from './client';
+
 // Formato das respostas da API (em português, como o servidor devolve).
 
 export interface ApiErrorBody {
@@ -119,3 +121,10 @@ export interface RemovalJobSummary {
 
 /** Resposta 202 de DELETE /playlist/:id/remove-duplicates. */
 export type RemovalStarted = RemovalJob & { mensagem: string; cabemHoje: number; acompanhar: string };
+
+// Todo erro de query e mutação é um ApiError: o cliente converte falha de rede e resposta de erro.
+declare module '@tanstack/react-query' {
+    interface Register {
+        defaultError: ApiError;
+    }
+}

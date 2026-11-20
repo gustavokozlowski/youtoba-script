@@ -2,7 +2,7 @@
 
 O que falta para dar o projeto por encerrado, em ordem de prioridade. Atualize este arquivo no mesmo PR que resolver um item: risque o item e anote o número do PR.
 
-Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 113 testes passando (82 da API, 31 da interface).
+Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 115 testes passando (82 da API, 33 da interface).
 
 ## 1. Segurança (fazer primeiro)
 
@@ -49,3 +49,4 @@ Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com 
 | #16 | Interface web (React + Vite): logo, entrada e lista de playlists com repetidos |
 | #17 | Interface: revisão do dry-run, remoção ao vivo com o risco de spray, lista de remoções |
 | #18 | Logo novo "chiclete e grafite" (Anton, bloco 3D, adesivo), escolhido num protótipo do app |
+| #19 | TanStack Query na interface: cache por chave, polling do job pelo `refetchInterval`, cota da barra vinda das próprias respostas, revisão não relê a playlist por 30 s |

@@ -1,7 +1,7 @@
+import { useQuota } from '../api/queries';
 import logo from '../assets/logo.svg';
 import { num } from '../lib/format';
 import { href, type Route } from '../lib/router';
-import { useQuota } from '../lib/use-quota';
 
 interface TopBarProps {
     route: Route;
@@ -13,7 +13,7 @@ interface TopBarProps {
 const resetTime = (zeraEmBrasilia: string) => zeraEmBrasilia.split(' ').at(-1);
 
 export function TopBar({ route, onSignOut, signingOut }: TopBarProps) {
-    const quota = useQuota();
+    const { data: quota } = useQuota();
     const section = route.name === 'remocao' || route.name === 'remocoes' ? 'remocoes' : 'playlists';
     const share = quota ? Math.max(0, Math.min(1, quota.restante / quota.limite)) : 1;
 
@@ -21,7 +21,7 @@ export function TopBar({ route, onSignOut, signingOut }: TopBarProps) {
         <header className="top">
             <div className="top-in">
                 <a className="brand" href={href.playlists()}>
-                    <img src={logo} alt="youtoba, início" width="168" height="67" />
+                    <img src={logo} alt="youtoba, início" width="141" height="50" />
                 </a>
                 <nav className="nav" aria-label="Principal">
                     <a href={href.playlists()} aria-current={section === 'playlists' ? 'page' : undefined}>

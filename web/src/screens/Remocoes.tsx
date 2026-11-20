@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
 import type { RemovalJobSummary } from '../api/api.types';
-import { ApiError, api } from '../api/client';
+import { useJobs } from '../api/queries';
 import { Notice } from '../components/Notice';
 import { num } from '../lib/format';
 import { findPlaylist } from '../lib/overview-cache';
@@ -17,14 +16,7 @@ const STATUS_TONE: Record<RemovalJobSummary['status'], string> = {
 };
 
 export function Remocoes() {
-    const [jobs, setJobs] = useState<RemovalJobSummary[]>();
-    const [error, setError] = useState<ApiError>();
-
-    useEffect(() => {
-        api.get<{ remocoes: RemovalJobSummary[] }>('/jobs')
-            .then(({ remocoes }) => setJobs(remocoes))
-            .catch((e) => setError(e instanceof ApiError ? e : new ApiError(0, 'unknown', 'Algo deu errado.')));
-    }, []);
+    const { data: jobs, error } = useJobs();
 
     return (
         <main>

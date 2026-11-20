@@ -1,9 +1,10 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import { UNAUTHORIZED_EVENT } from '../api/client';
 import { fakeApi, overview, quota, rapNacional } from '../test/fake-api';
+import { render } from '../test/render';
 import { Playlists } from './Playlists';
 
 afterEach(() => vi.restoreAllMocks());
@@ -28,6 +29,21 @@ describe('App', () => {
         act(() => window.dispatchEvent(new Event(UNAUTHORIZED_EVENT)));
         expect(await screen.findByText(/o login expirou/i)).toBeInTheDocument();
         expect(sessionStorage.getItem('youtoba:overview')).toBeNull();
+    });
+
+    it('Sair desconecta e volta para a tela de entrar', async () => {
+        const fetchMock = fakeApi({
+            '/auth/status': { body: { connected: true } },
+            '/quota': { body: quota },
+            '/playlist/with-duplicates': { body: overview() },
+            'POST /auth/logout': { body: { mensagem: 'Desconectado.' } },
+        });
+        render(<App />);
+        await userEvent.click(await screen.findByRole('button', { name: 'Sair' }));
+
+        expect(await screen.findByRole('link', { name: /entrar com o google/i })).toBeInTheDocument();
+        expect(screen.queryByText(/o login expirou/i)).toBeNull();
+        expect(fetchMock).toHaveBeenCalledWith('/auth/logout', expect.objectContaining({ method: 'POST' }));
     });
 
     it('servidor desligado: diz o que fazer', async () => {
