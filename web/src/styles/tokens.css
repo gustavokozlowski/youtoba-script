@@ -27,6 +27,29 @@
     --ui: "Geist Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
     --mono: "Geist Mono Variable", ui-monospace, "SFMono-Regular", monospace;
 
+    /* Escala tipográfica por papel: a interface usa poucos degraus previsíveis. */
+    --type-label: 12px;
+    --type-caption: 13px;
+    --type-meta: 14px;
+    --type-body: 15px;
+    --type-control: 16px;
+    --type-row-title: 17px;
+    --type-lead: 18px;
+    --type-index: 20px;
+    --type-stat: 22px;
+    --type-subtitle: 24px;
+    --type-section: 26px;
+    --type-emphasis: 28px;
+    --type-mobile-title: 30px;
+    --type-title: 40px;
+    --type-title-wide: 48px;
+    --type-title-compact: 38px;
+    --type-display: 56px;
+    --type-display-compact: 44px;
+    --type-hero-max: 64px;
+    --type-counter-min: 96px;
+    --type-counter-max: 168px;
+
     --radius: 10px;
     --gutter: max(16px, env(safe-area-inset-left, 0px));
     --gutter-r: max(16px, env(safe-area-inset-right, 0px));

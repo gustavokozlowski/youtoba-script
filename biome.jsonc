@@ -90,6 +90,53 @@
                     }
                 }
             }
+        },
+        {
+            "includes": ["web/src/shared/**"],
+            "linter": {
+                "rules": {
+                    "style": {
+                        "noRestrictedImports": {
+                            "level": "error",
+                            "options": {
+                                "patterns": [
+                                    {
+                                        "group": ["**/features/**", "**/app/**"],
+                                        "message": "shared/ não importa features/ nem app/ (ADR 0001)."
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "includes": ["web/src/features/**"],
+            "linter": {
+                "rules": {
+                    "style": {
+                        "noRestrictedImports": {
+                            "level": "error",
+                            "options": {
+                                "patterns": [
+                                    {
+                                        "group": [
+                                            "**/features/**",
+                                            "**/app/**",
+                                            "../auth/**",
+                                            "../playlists/**",
+                                            "../review/**",
+                                            "../removal/**"
+                                        ],
+                                        "message": "Uma feature não importa o interior de outra feature (ADR 0001)."
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
         }
     ],
     "javascript": {
