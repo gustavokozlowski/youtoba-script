@@ -102,6 +102,7 @@ Depois do primeiro login, o refresh token fica salvo **cifrado** (AES-256-GCM) e
 | Script | Descrição |
 |--------|-----------|
 | `npm run dev` | Inicia o servidor em modo desenvolvimento |
+| `npm run dev:all` | API e interface juntas, com recarga (abra `http://localhost:5173`) |
 | `npm run build` | Compila o TypeScript para JavaScript |
 | `npm start` | Inicia o servidor em produção |
 | `npm test` | Roda os testes (Vitest) |
@@ -155,7 +156,15 @@ npm run build:web   # uma vez (e depois de atualizar o código)
 npm run dev
 ```
 
-Abra `http://localhost:3000`, entre com o Google e o youtoba mostra suas playlists com vídeos repetidos. Para mexer na interface com recarga automática, rode também `npm run dev:web` e abra `http://localhost:5173` (com `WEB_URL=http://localhost:5173/` no `.env`, o login volta para lá).
+Abra `http://localhost:3000`, entre com o Google e o youtoba mostra suas playlists com vídeos repetidos.
+
+Para mexer na interface com recarga automática, um comando sobe as duas partes:
+
+```bash
+npm run dev:all   # API na 3000 + interface no Vite na 5173; Ctrl+C para as duas
+```
+
+Abra `http://localhost:5173`. O login já volta para lá, sem mudar o `.env`.
 
 ## 📝 Exemplo de Uso
 

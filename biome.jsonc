@@ -14,6 +14,7 @@
             "web/src/**/*.{ts,tsx,css}",
             "web/vite.config.ts",
             "web/scripts/**/*.cjs",
+            "scripts/**/*.cjs",
             "vitest.config.ts"
         ]
     },

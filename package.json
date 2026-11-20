@@ -19,6 +19,7 @@
     "restore:playlist": "ts-node --transpile-only src/scripts/restore-playlist.ts",
     "build:web": "vite build --config web/vite.config.ts",
     "dev:web": "vite --config web/vite.config.ts",
+    "dev:all": "node scripts/dev-all.cjs",
     "build:logo": "node web/scripts/build-logo.cjs",
     "typecheck": "tsc --noEmit && tsc --noEmit -p web && tsc -p tsconfig.test.json",
     "check": "biome ci && npm run typecheck && npm test && npm run build:web"

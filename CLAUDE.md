@@ -8,6 +8,7 @@ O que falta fazer está em @docs/PENDENCIAS.md. Leia antes de propor trabalho no
 
 - `npm run dev`: servidor em `localhost:3000` com recarga automática. Para as rotas de playlist de teste: `ENABLE_DEV_ROUTES=true npm run dev`.
 - `npm run build:web` e depois `npm run dev`: a interface abre em `localhost:3000`.
+- `npm run dev:all`: API e interface juntas (Vite em `localhost:5173`, com recarga), saída marcada com `[api]`/`[web]`; Ctrl+C derruba as duas. O login já volta para a 5173, sem mexer no `.env`.
 - `npm run dev:web`: interface no Vite (`localhost:5173`) com recarga, repassando a API para a 3000. Para o login voltar para lá, use `WEB_URL=http://localhost:5173/` no `.env`.
 - `npm test`: Vitest em dois projetos: `api` (unitários + integração com Supertest e nock) e `web` (componentes com Testing Library, jsdom).
 - `npm run check`: Biome (`biome ci`), typecheck (API, `web/` e `test/`), testes e `build:web`, com um código de saída só. Rode antes de dizer que terminou e confira o código de saída, não só o fim da saída. O CI roda os mesmos passos mais `npm audit --audit-level=high`.

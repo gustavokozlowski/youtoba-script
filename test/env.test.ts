@@ -50,6 +50,13 @@ describe('validação do .env no boot', () => {
         );
     });
 
+    it('accepts LOG_FORMAT pretty or json and rejects anything else', () => {
+        expect(loadEnv({ ...valid(), LOG_FORMAT: 'pretty' }).LOG_FORMAT).toBe('pretty');
+        expect(loadEnv({ ...valid(), LOG_FORMAT: 'json' }).LOG_FORMAT).toBe('json');
+        expect(loadEnv(valid()).LOG_FORMAT).toBeUndefined();
+        expect(problemsOf({ ...valid(), LOG_FORMAT: 'bonito' }).map((p) => p.split(':')[0])).toEqual(['LOG_FORMAT']);
+    });
+
     it('a mensagem de erro nunca mostra o valor (são segredos)', () => {
         const secret = 'segredo-que-nao-pode-aparecer';
         const source = { ...valid(), TOKEN_ENCRYPTION_KEY: secret, CLIENT_ID: secret };
