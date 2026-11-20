@@ -1,10 +1,11 @@
 {
     "root": true,
     "$schema": "https://biomejs.dev/schemas/2.2.6/schema.json",
+    // Respeita o .gitignore: dist/, web/dist/, node_modules/, data/ e backups/ nunca são checados.
     "vcs": {
-        "enabled": false,
+        "enabled": true,
         "clientKind": "git",
-        "useIgnoreFile": false
+        "useIgnoreFile": true
     },
     "files": {
         "includes": [
@@ -24,13 +25,13 @@
     },
     "linter": {
         "enabled": true,
+        // Todas as regras recomendadas valem, inclusive noExplicitAny: erro desconhecido é `unknown`
+        // lido por httpErrorLike/errorMessage (src/utils/errors.ts), nunca `any`.
         "rules": {
             "recommended": true,
             "style": {
+                // Import só de tipo vira `import type`: some do JS gerado e deixa claro o que é tipo.
                 "useImportType": "on"
-            },
-            "suspicious": {
-                "noExplicitAny": "off"
             }
         }
     },

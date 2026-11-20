@@ -16,7 +16,7 @@ Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com 
 - [x] ~~**CI no GitHub Actions**~~ (#22, #23): `biome ci`, typecheck da API e do `web/`, testes, build da interface e `npm audit --audit-level=high` em todo PR e na `main` (`.github/workflows/ci.yml`, actions pinadas por SHA, permissão só de leitura). O vitest subiu para a 4.1.12 para tirar 2 vulnerabilidades críticas. A `main` passa a exigir o check `checks` verde.
 - [x] ~~**Validar o `.env` com `zod` no boot**~~ (#27): `src/config/env.ts` confere as obrigatórias (`API_KEY`, `CLIENT_ID`, `CLIENT_SECRET_KEY`, `REDIRECT_URL`, `YOUTUBE_BASE_URL`, `TOKEN_ENCRYPTION_KEY`) e o formato das opcionais; o servidor sai com uma linha por variável, sem mostrar valores. Ler toda configuração por esse módulo entra na refatoração final.
 - [ ] **Middleware de erro único** no fim do `createApp()` e **logs estruturados** (`pino`), sem token nem dados pessoais.
-- [ ] **`biome.json` → `biome.jsonc`** com o motivo escrito ao lado de cada regra desligada (hoje `noExplicitAny` está desligada sem explicação). Ligar `vcs.useIgnoreFile`.
+- [x] ~~**`biome.json` → `biome.jsonc`**~~ (#29): comentado, `vcs.useIgnoreFile` ligado e `noExplicitAny` de volta (os 18 `any` viraram `unknown` com `httpErrorLike`/`errorMessage` no código e fixtures tipadas nos testes). A pasta `test/` passou a ter typecheck (`tsconfig.test.json`), e `npm run check` roda tudo com um código de saída só.
 - [x] ~~**Remover dependências sem uso**~~ (#28): saíram `googleapis` e `@googleapis/docs` (nenhum import; eram a origem de 3 das 5 vulnerabilidades moderadas), `body-parser`, `express-session`, `jsonwebtoken`, `nodemon` e os tipos de `express-session` e `jsonwebtoken`. `@types/express` 4.17.25, alinhado ao `express` 4.
 - [ ] **`google-auth-library` 10:** a 9 puxa `gaxios` 6 → `uuid` 9 (2 avisos moderados). Não é explorável aqui (o alerta é nas funções v3/v5/v6 do `uuid` com buffer, e o `gaxios` só usa `v4`), mas a versão major nova tira o aviso. Mexe no login: rodar os testes de auth e um login real.
 - [ ] **Arquivar a branch `develop`**, que ficou para trás (as ideias úteis dela já estão na `main`).
@@ -74,3 +74,4 @@ Pedido do dono em 20/11/2026: nenhum code smell no projeto. Passar a code base i
 | #26 | `helmet` com CSP, limite de tentativas de login e JSON até 64 KB |
 | #27 | `.env` validado com `zod` no boot |
 | #28 | Dependências sem uso removidas; `@types/express` alinhado |
+| #29 | `biome.jsonc` comentado, `noExplicitAny` ligada, typecheck dos testes e `npm run check` |

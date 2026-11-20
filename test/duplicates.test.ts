@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { findDuplicates, toEntries } from '../src/services/youtube/duplicates';
 import type { PlaylistEntry } from '../src/services/youtube/youtube.types';
+import { playlistItem } from './helpers/youtube-fixtures';
 
 const entry = (position: number, videoId: string): PlaylistEntry => ({
     playlistItemId: `item-${position}`,
@@ -43,10 +44,7 @@ describe('findDuplicates (mesmo videoId)', () => {
     });
 
     it('ignora itens sem videoId ao converter da API', () => {
-        const entries = toEntries([
-            { id: 'i1', kind: '', etag: '', contentDetails: { videoId: 'a', videoPublishedAt: '' } },
-            { id: 'i2', kind: '', etag: '' },
-        ] as any);
+        const entries = toEntries([playlistItem({ id: 'i1', videoId: 'a' }), playlistItem({ id: 'i2' })]);
         expect(entries.map((e) => e.playlistItemId)).toEqual(['i1']);
     });
 

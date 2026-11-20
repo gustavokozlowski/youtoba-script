@@ -1,6 +1,8 @@
 require('dotenv').config();
 
 import axios, { type AxiosInstance } from 'axios';
+import { httpErrorLike } from '../../../utils/errors';
+import type { GoogleApiErrorBody } from '../../../utils/errors.types';
 import { PAGE_SIZE, QUOTA_COST, requestCost } from '../youtube.constants';
 import type {
     ApiFailure,
@@ -20,11 +22,15 @@ const RETRYABLE_STATUS = new Set([409, 429, 500, 503]);
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Extrai só o que importa do erro do axios. O objeto inteiro carrega o header Authorization.
-export const apiFailure = (error: any): ApiFailure => ({
-    status: error?.response?.status,
-    reason: error?.response?.data?.error?.errors?.[0]?.reason,
-    message: error?.response?.data?.error?.message ?? error?.message,
-});
+export const apiFailure = (error: unknown): ApiFailure => {
+    const { response, message } = httpErrorLike<GoogleApiErrorBody>(error);
+    const body = response?.data?.error;
+    return {
+        status: response?.status,
+        reason: body?.errors?.[0]?.reason,
+        message: body?.message ?? (typeof message === 'string' ? message : undefined),
+    };
+};
 
 export class YoutubeClient {
     private readonly client: AxiosInstance;

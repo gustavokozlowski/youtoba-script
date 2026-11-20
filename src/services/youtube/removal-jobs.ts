@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { errorMessage } from '../../utils/errors';
 import { recordRemoval } from './backup';
 import type { YoutubeClient } from './client/youtube.client';
 import type { QuotaTracker } from './quota-tracker';
@@ -92,9 +93,9 @@ export class RemovalJobs {
             if (reasons.has('skipped_daily_budget')) job.stopReason = 'daily_budget';
             else if (reasons.has('quotaExceeded')) job.stopReason = 'quota_exceeded';
             job.status = result.failed.length === 0 ? 'done' : 'partial';
-        } catch (error: any) {
+        } catch (error) {
             job.status = 'failed';
-            job.error = error?.message ?? String(error);
+            job.error = errorMessage(error);
         } finally {
             job.finishedAt = new Date().toISOString();
             recordRemoval(job.backupFile, { removed: job.removed, failed: job.failed }, { finished: true });

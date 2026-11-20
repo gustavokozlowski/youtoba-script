@@ -1,19 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { pickThumbnail, summarizePlaylist } from '../src/services/youtube/playlist-summary';
+import { playlist, playlistItem, thumbnail } from './helpers/youtube-fixtures';
 
-const thumb = (url: string) => ({ url, width: 1, height: 1 });
+const thumb = thumbnail;
 
 const item = (position: number, videoId: string, { title, image }: { title?: string; image?: string } = {}) =>
-    ({
-        id: `it-${position}`,
-        kind: '',
-        etag: '',
-        snippet: { title: title ?? `Vídeo ${videoId}`, position, thumbnails: image ? { high: thumb(image) } : {} },
-        contentDetails: { videoId },
-    }) as any;
-
-const playlist = (overrides: Record<string, unknown> = {}) =>
-    ({ id: 'PLx', kind: '', etag: '', snippet: { title: 'Minha playlist', thumbnails: {} }, ...overrides }) as any;
+    playlistItem({ id: `it-${position}`, videoId, position, title, thumbnails: image ? { high: thumb(image) } : {} });
 
 describe('pickThumbnail', () => {
     it('prefere a maior imagem disponível', () => {
@@ -37,10 +29,9 @@ describe('summarizePlaylist', () => {
     });
 
     it('usa a capa da playlist quando existe', () => {
-        const summary = summarizePlaylist(
-            playlist({ snippet: { title: 'P', thumbnails: { maxres: thumb('capa') } } }),
-            [item(0, 'a', { image: 'video-a' })],
-        );
+        const summary = summarizePlaylist(playlist({ title: 'P', thumbnails: { maxres: thumb('capa') } }), [
+            item(0, 'a', { image: 'video-a' }),
+        ]);
         expect(summary).toMatchObject({ cover: 'capa', coverSource: 'playlist' });
     });
 

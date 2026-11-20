@@ -17,7 +17,8 @@
     "build:web": "vite build --config web/vite.config.ts",
     "dev:web": "vite --config web/vite.config.ts",
     "build:logo": "node web/scripts/build-logo.cjs",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p web"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p web && tsc -p tsconfig.test.json",
+    "check": "biome ci && npm run typecheck && npm test && npm run build:web"
   },
   "keywords": [],
   "author": "gustavo kozlowski",

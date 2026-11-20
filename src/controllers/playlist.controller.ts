@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import { quotaTracker } from '../services/youtube/quota-tracker';
 import type { ReadFailure } from '../services/youtube/youtube.types';
 import { YoutubeService } from '../services/youtube/youtube-playlist.services';
+import { errorMessage } from '../utils/errors';
 import {
     formatEntry,
     formatJob,
@@ -35,8 +36,8 @@ const units = (n: number) => `${n} ${n === 1 ? 'unidade' : 'unidades'}`;
 const parseConfirm = (value: unknown): number | undefined =>
     typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : undefined;
 
-const internalError = (res: Response, context: string, e: any) => {
-    console.error(`Erro ao ${context}:`, e?.message);
+const internalError = (res: Response, context: string, error: unknown) => {
+    console.error(`Erro ao ${context}:`, errorMessage(error));
     return res.status(500).json({ erro: 'internal_error' });
 };
 

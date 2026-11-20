@@ -1,14 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { restoreRemoved } from '../src/services/youtube/restore';
 import type { PlaylistBackup } from '../src/services/youtube/youtube.types';
+import { playlistItem } from './helpers/youtube-fixtures';
 
-const apiItem = (videoId: string, position: number) => ({
-    id: `now-${position}`,
-    kind: '',
-    etag: '',
-    snippet: { position, title: videoId },
-    contentDetails: { videoId },
-});
+const apiItem = (videoId: string, position: number) =>
+    playlistItem({ id: `now-${position}`, videoId, position, title: videoId });
 
 // Playlist original: A B A C B. A remoção apagou o A da posição 2 e o B da posição 4.
 const backup: PlaylistBackup = {
@@ -29,7 +25,7 @@ function fakeClient(current: string[], { rejectPositions = false } = {}) {
     const inserts: { videoId: string; position?: number }[] = [];
     return {
         inserts,
-        listPlaylistItems: async () => current.map((videoId, position) => apiItem(videoId, position)) as any,
+        listPlaylistItems: async () => current.map((videoId, position) => apiItem(videoId, position)),
         addVideoToPlaylist: async (_playlistId: string, videoId: string, position?: number) => {
             if (rejectPositions && position !== undefined) {
                 throw Object.assign(new Error('400'), {
@@ -38,7 +34,7 @@ function fakeClient(current: string[], { rejectPositions = false } = {}) {
             }
             inserts.push({ videoId, position });
             current.push(videoId);
-            return {} as any;
+            return apiItem(videoId, current.length - 1);
         },
     };
 }
