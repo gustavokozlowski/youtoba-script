@@ -17,7 +17,7 @@ Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com 
 - [ ] **Validar o `.env` com `zod` no boot** (`src/config/env.ts`): o servidor não sobe se faltar `CLIENT_ID`, `CLIENT_SECRET_KEY`, `REDIRECT_URL`, `API_KEY` ou `TOKEN_ENCRYPTION_KEY`, e diz qual falta.
 - [ ] **Middleware de erro único** no fim do `createApp()` e **logs estruturados** (`pino`), sem token nem dados pessoais.
 - [ ] **`biome.json` → `biome.jsonc`** com o motivo escrito ao lado de cada regra desligada (hoje `noExplicitAny` está desligada sem explicação). Ligar `vcs.useIgnoreFile`.
-- [ ] **Remover dependências sem uso:** `@googleapis/docs`, `body-parser`, `express-session` (o item de `state` não precisou dela), `jsonwebtoken`, `nodemon`, `cookie-parser`. Alinhar `@types/express` (v5) com o `express` (v4).
+- [ ] **Remover dependências sem uso:** `@googleapis/docs`, `body-parser`, `express-session` (o item de `state` não precisou dela), `jsonwebtoken`, `nodemon`. Alinhar `@types/express` (v5) com o `express` (v4).
 - [ ] **Arquivar a branch `develop`**, que ficou para trás (as ideias úteis dela já estão na `main`).
 - [ ] **Jobs de remoção ficam só em memória:** se o servidor reiniciar no meio, o progresso some (o backup continua certo). Avaliar guardar o job no SQLite.
 
