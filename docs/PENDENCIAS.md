@@ -31,6 +31,20 @@ Situação em 19/11/2026: a remoção de duplicados funciona e foi validada com 
 - [ ] **Release v1.0.0 (PR 5):** `GET /health`, `engines` (Node ≥ 22), workflow de release por tag com changelog. Sem deploy e sem Docker (o projeto roda só localmente).
 - [ ] **Opção para limpar itens indisponíveis** ("Deleted video" / "Private video"), separada da remoção de duplicados.
 
+## 4. Refatoração final (antes da release v1.0.0)
+
+Pedido do dono em 20/11/2026: nenhum code smell no projeto. Passar a code base inteira (API e `web/`) pelo composition pattern e pela deduplicação, com a arquitetura de pastas e os nomes padronizados. Fazer em PRs pequenos, um assunto por PR, com os testes de comportamento verdes antes e depois de cada passo (refatorar sem mudar o que a tela faz). Abrir com um ADR curto em `docs/adr/` que fixa a estrutura e os nomes.
+
+- [ ] **ADR de arquitetura e nomes.** Proposta a confirmar no ADR:
+    - `web/src` por feature: `features/<feature>/{api,model,ui}` (auth, playlists, review, removal) + `shared/{api,ui,lib}`; uma feature não importa o interior de outra (regra `noRestrictedImports` no Biome).
+    - API por módulo de domínio (`modules/{auth,playlist,quota,removal}`), cada um com rotas, controller, serviço e tipos; infraestrutura (cliente do YouTube, SQLite, cripto) em `infra/`.
+    - Nomes: pastas e arquivos em kebab-case com sufixo de papel único (`.controller.ts`, `.service.ts`, `.store.ts`, `.routes.ts`, `.types.ts`, `.test.ts`); componentes React em PascalCase; hooks `use-*.ts` exportando `useAlgo`; tudo em inglês (hoje há `.services.ts` no plural, `index.ts` com lógica e telas em português: `Entrar`, `Revisao`, `Remocao`, `Remocoes`).
+- [ ] **Tipagens separadas do código.** Todo `type`/`interface`, inclusive Props de componente e tipos locais, vai para o `*.types.ts` da pasta. Hoje: 9 declarados fora (`TopBar`, `Notice`, `TrackRow`, `LiveTracks`, `Icon`, `router.ts`, `overview-cache.ts`, `formatters.ts`) e Props escritas na assinatura (`{ error: ApiError; onRetry: () => void }`).
+- [ ] **Telas quebradas em seções e hooks.** `Revisao.tsx` (272 linhas), `Remocao.tsx` (214) e `Playlists.tsx` (202) passam do limite de ~120: cada tela vira layout + seções nomeadas, com dados e decisões em hooks (`useReviewConfirmation`, `useRemovalWindow`...) e funções puras testadas.
+- [ ] **Deduplicação.** Um helper ou componente por regra que hoje aparece repetida: hora de reset da cota (`TopBar` e `Revisao`), título da playlist pelo cache (`Revisao`, `Remocao`, `Remocoes` → `usePlaylistTitle`), datas formatadas fora de `lib/format.ts` (`Playlists`, `Remocoes`), três avisos de erro quase iguais (`AnalysisError`, `LoadError`, `JobError` → um `ApiErrorNotice` com as mensagens por código). Na API: `formatters.ts` (178 linhas) e `youtube-playlist.services.ts` (207) divididos por assunto.
+- [ ] **Testes ao lado do que testam** (`Revisao.test.tsx` junto da tela, não `screens.test.tsx` e `review-removal.test.tsx` agrupando várias).
+- [ ] **Guardas automáticas para não voltar:** regras do Biome para imports entre camadas e features, e um checklist de code smells no template de PR.
+
 ## Feito (referência)
 
 | PR | O que entrou |
