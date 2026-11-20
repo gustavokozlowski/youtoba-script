@@ -62,6 +62,7 @@ export function RemovePanel({ preview, playlistId, onChanged, confirmRef }: Remo
                     onChange={(event) => setTyped(event.target.value)}
                     aria-describedby={hintId}
                     placeholder={String(n)}
+                    className={confirmed ? 'is-confirmed' : undefined}
                 />
                 <p className="hint" id={hintId}>
                     É o número exato de vídeos que vão sair.
