@@ -1,4 +1,4 @@
-import { useJob } from '../../shared/api/queries';
+import { useJob, useRestoreBackup } from '../../shared/api/queries';
 import { playlistTitle } from '../../shared/lib/overview-cache';
 import { href } from '../../shared/lib/route-links';
 import { ApiErrorNotice } from '../../shared/ui/ApiErrorNotice';
@@ -9,6 +9,7 @@ import { useNewlyRemoved } from './use-newly-removed';
 
 export function RemovalScreen({ jobId }: RemovalScreenProps) {
     const { data: job, error } = useJob(jobId);
+    const restore = useRestoreBackup();
     const fresh = useNewlyRemoved(job);
     const title = job ? playlistTitle(job.playlistId) : '';
 
@@ -37,7 +38,16 @@ export function RemovalScreen({ jobId }: RemovalScreenProps) {
                 />
             )}
             {!job && !error && <div className="skeleton" style={{ height: 220 }} aria-busy="true" />}
-            {job && <JobProgressSection job={job} fresh={fresh} />}
+            {job && (
+                <JobProgressSection
+                    job={job}
+                    fresh={fresh}
+                    onRestore={() => restore.mutate(job.backup)}
+                    restoring={restore.isPending}
+                />
+            )}
+            {restore.isSuccess && <p className="notice notice-ok">Restauração concluída.</p>}
+            {restore.error && <ApiErrorNotice error={restore.error} fallbackTitle="Não consegui restaurar o backup" />}
         </main>
     );
 }

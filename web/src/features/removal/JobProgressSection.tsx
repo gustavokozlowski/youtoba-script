@@ -15,7 +15,7 @@ const HEADINGS: Record<RemovalJob['status'], string> = {
     failed: 'A remoção parou com erro',
 };
 
-export function JobProgressSection({ job, fresh }: JobViewProps) {
+export function JobProgressSection({ job, fresh, onRestore, restoring }: JobViewProps) {
     const undoRef = useRef<HTMLElement>(null);
     const goToUndo = () => undoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     const { running, errors, current, rows } = useRemovalWindow(job);
@@ -60,7 +60,7 @@ export function JobProgressSection({ job, fresh }: JobViewProps) {
                         </p>
                     )}
                 </section>
-                <UndoPanel job={job} panelRef={undoRef} />
+                <UndoPanel job={job} panelRef={undoRef} onRestore={onRestore} restoring={restoring} />
             </div>
         </>
     );

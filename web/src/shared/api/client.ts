@@ -17,10 +17,14 @@ export class ApiError extends Error {
 
 const OFFLINE_MESSAGE = 'O servidor do youtoba não respondeu. Confira se o `npm run dev` está rodando.';
 
-async function request<T>(method: string, path: string): Promise<T> {
+async function request<T>(method: string, path: string, requestBody?: unknown): Promise<T> {
     let response: Response;
     try {
-        response = await fetch(path, { method, headers: { accept: 'application/json' } });
+        response = await fetch(path, {
+            method,
+            headers: { accept: 'application/json', ...(requestBody ? { 'content-type': 'application/json' } : {}) },
+            ...(requestBody ? { body: JSON.stringify(requestBody) } : {}),
+        });
     } catch {
         throw new ApiError(0, 'offline', OFFLINE_MESSAGE);
     }
@@ -40,5 +44,5 @@ async function request<T>(method: string, path: string): Promise<T> {
 
 export const api = {
     get: <T>(path: string) => request<T>('GET', path),
-    send: <T>(method: 'POST' | 'DELETE', path: string) => request<T>(method, path),
+    send: <T>(method: 'POST' | 'DELETE', path: string, body?: unknown) => request<T>(method, path, body),
 };

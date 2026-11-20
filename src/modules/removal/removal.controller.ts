@@ -1,11 +1,15 @@
+import path from 'node:path';
 import { asyncHandler } from '../../shared/async-handler';
 import { formatPreview } from '../playlist/playlist.formatter';
 import { isReadFailure, sendReadFailure } from '../playlist/read-failure';
 import { formatQuotaSnapshot } from '../quota/quota.formatter';
 import { quotaTracker } from '../quota/quota-tracker.service';
+import { connectedClient } from '../quota/tracked-client';
+import { backupDir, readBackup } from './backup';
 import { formatJob, formatJobSummary } from './removal.formatter';
 import { RemovalService } from './removal.service';
-import type { RemovalReply, RemovalStarted, RemovalStatusResult } from './removal.types';
+import type { PlaylistBackup, RemovalReply, RemovalStarted, RemovalStatusResult } from './removal.types';
+import { restoreRemoved } from './restore';
 
 const removals = new RemovalService();
 
@@ -80,4 +84,40 @@ export const getRemovalJob = asyncHandler(async (req, res) => {
 
 export const listRemovalJobs = asyncHandler(async (_req, res) => {
     res.status(200).json({ remocoes: removals.allJobs().map(formatJobSummary) });
+});
+
+export const restoreBackup = asyncHandler(async (req, res) => {
+    const backupId = req.params.backupId;
+    if (!/^[A-Za-z0-9_-]+\.json$/.test(backupId)) {
+        return res.status(400).json({ erro: 'backup_invalid', mensagem: 'Backup inválido.' });
+    }
+
+    const file = path.resolve(backupDir(), backupId);
+    const directory = `${path.resolve(backupDir())}${path.sep}`;
+    if (!file.startsWith(directory)) {
+        return res.status(400).json({ erro: 'backup_invalid', mensagem: 'Backup inválido.' });
+    }
+
+    let backup: PlaylistBackup;
+    try {
+        backup = readBackup(file);
+    } catch {
+        return res.status(404).json({ erro: 'backup_not_found', mensagem: 'Backup não encontrado.' });
+    }
+
+    const client = await connectedClient();
+    if (!client) {
+        return res.status(401).json({
+            erro: 'not_connected',
+            mensagem: 'Conta não conectada. Entre com o Google antes de restaurar.',
+        });
+    }
+
+    const result = await restoreRemoved(client, backup);
+    return res.status(200).json({
+        mensagem: 'Restauração concluída.',
+        restaurados: result.restored.length,
+        jaPresentes: result.skipped.length,
+        falhas: result.failed,
+    });
 });

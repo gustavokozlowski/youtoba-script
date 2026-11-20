@@ -8,6 +8,8 @@ export interface RemovalScreenProps {
 export interface JobViewProps {
     job: RemovalJob;
     fresh: Set<string>;
+    onRestore: () => void;
+    restoring: boolean;
 }
 
 export interface StopNoticeProps {
@@ -18,6 +20,8 @@ export interface StopNoticeProps {
 export interface UndoPanelProps {
     job: RemovalJob;
     panelRef: RefObject<HTMLElement | null>;
+    onRestore: () => void;
+    restoring: boolean;
 }
 
 export interface RemovalWindow {
