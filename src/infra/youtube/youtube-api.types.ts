@@ -1,3 +1,5 @@
+import type { OneByOneFailure } from './one-by-one.types';
+
 export type YoutubeClientConfig = {
     apiKey: string;
     token: string;
@@ -129,7 +131,7 @@ export interface PlaylistItem {
 
 export type DeleteItemsResult = {
     removed: string[];
-    failed: { id: string; status?: number; reason?: string }[];
+    failed: OneByOneFailure[];
 };
 
 export type ApiFailure = { status?: number; reason?: string; message?: string };
@@ -158,6 +160,11 @@ export interface DeleteOptions {
     canSpend?: (units: number) => boolean;
     onProgress?: (event: DeleteProgressEvent) => void;
 }
+
+export type AddVideosResult = {
+    added: { videoId: string; playlistItemId: string }[];
+    failed: OneByOneFailure[];
+};
 
 export interface RetryOptions {
     retries: number;

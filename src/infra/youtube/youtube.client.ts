@@ -2,12 +2,16 @@ import { youtube, type youtube_v3 } from '@googleapis/youtube';
 import { OAuth2Client } from 'google-auth-library';
 import { logger } from '../../shared/logger';
 import { apiFailure } from './api-failure';
+import { runOneByOne } from './one-by-one';
+import type { OneByOneOptions, OneByOneProgressEvent } from './one-by-one.types';
 import { withRetry } from './retry';
 import { PAGE_SIZE, QUOTA_COST } from './youtube.constants';
 import { mapPlaylist, mapPlaylistItem } from './youtube.mapper';
 import type {
+    AddVideosResult,
     DeleteItemsResult,
     DeleteOptions,
+    DeleteProgressEvent,
     Playlist,
     PlaylistItem,
     PlaylistsResponse,
@@ -15,6 +19,12 @@ import type {
     YoutubeClientConfig,
     YoutubeClientOptions,
 } from './youtube-api.types';
+
+/** Traduz o evento genérico para o da remoção (`succeeded` vira `removed`). */
+const toDeleteProgress = (event: OneByOneProgressEvent): DeleteProgressEvent => ({
+    ...event,
+    outcome: event.outcome === 'succeeded' ? 'removed' : 'failed',
+});
 
 /** Cliente HTTP da YouTube Data API v3. Use pelo createTrackedClient, que soma o custo na quota do dia. */
 export class YoutubeClient {
@@ -147,32 +157,45 @@ export class YoutubeClient {
         return (response.data.items ?? []).map((item) => item.id?.videoId).filter((id): id is string => Boolean(id));
     }
 
-    /**
-     * Apaga os itens um por vez (a API responde 409 a alterações simultâneas na mesma playlist). Antes de cada
-     * item confere se ainda cabe na quota do dia (`canSpend`) e avisa o progresso. Para no saldo do dia ou no
-     * quotaExceeded do Google, e marca o resto como pulado.
-     */
+    /** Apaga os itens um por vez, parando no saldo do dia ou no quotaExceeded (ver `runOneByOne`). */
     async deleteItemsById(itemIds: string[], { canSpend, onProgress }: DeleteOptions = {}): Promise<DeleteItemsResult> {
-        const result: DeleteItemsResult = { removed: [], failed: [] };
-        const skipFrom = (index: number, reason: string) => {
-            result.failed.push(...itemIds.slice(index).map((id) => ({ id, reason })));
-            return result;
-        };
+        const { succeeded, failed } = await runOneByOne(itemIds, QUOTA_COST.delete, (id) => this.deleteOne(id), {
+            canSpend,
+            onProgress: onProgress && ((event) => onProgress(toDeleteProgress(event))),
+        });
+        return { removed: succeeded, failed };
+    }
 
-        for (const [index, itemId] of itemIds.entries()) {
-            if (canSpend && !canSpend(QUOTA_COST.delete)) return skipFrom(index, 'skipped_daily_budget');
-            const failure = await this.deleteOne(itemId);
-            const progress = { index, total: itemIds.length, itemId };
-            if (!failure) {
-                result.removed.push(itemId);
-                onProgress?.({ ...progress, outcome: 'removed' });
-                continue;
-            }
-            result.failed.push({ id: itemId, status: failure.status, reason: failure.reason });
-            onProgress?.({ ...progress, outcome: 'failed', status: failure.status, reason: failure.reason });
-            if (failure.reason === 'quotaExceeded') return skipFrom(index + 1, 'skipped_quota_exceeded');
+    /**
+     * Acrescenta os vídeos ao fim da playlist, um por vez, e devolve o id do item criado (o Mix precisa dele
+     * para desfazer). Mesmas regras de quota e de parada da remoção.
+     */
+    async addVideosToPlaylist(
+        playlistId: string,
+        videoIds: string[],
+        { canSpend, onProgress }: OneByOneOptions = {},
+    ): Promise<AddVideosResult> {
+        const added: AddVideosResult['added'] = [];
+        const { failed } = await runOneByOne(
+            videoIds,
+            QUOTA_COST.insert,
+            (videoId) => this.addOne(playlistId, videoId, added),
+            { canSpend, onProgress },
+        );
+        return { added, failed };
+    }
+
+    /** Insere um vídeo no fim e registra o item criado em `added`; devolve a falha, ou undefined se deu certo. */
+    private async addOne(playlistId: string, videoId: string, added: AddVideosResult['added']) {
+        try {
+            const item = await this.addVideoToPlaylist(playlistId, videoId);
+            added.push({ videoId, playlistItemId: item.id });
+            return undefined;
+        } catch (error) {
+            const failure = apiFailure(error);
+            logger.warn({ videoId, status: failure.status, reason: failure.reason }, 'Falha ao adicionar o vídeo');
+            return failure;
         }
-        return result;
     }
 
     /** Apaga um item; devolve a falha, ou undefined se deu certo. */
