@@ -132,13 +132,15 @@ Depois do primeiro login, o refresh token fica salvo **cifrado** (AES-256-GCM) e
 | `GET` | `/playlist/:playlistId/items` | Todos os itens, com posição, título e `videoId` |
 | `GET` | `/playlist/:playlistId/duplicates` | **Dry-run**: o que seria removido e quanto de quota custaria. Não apaga nada. |
 | `DELETE` | `/playlist/:playlistId/remove-duplicates?confirm=N` | Inicia a remoção em segundo plano e responde na hora (`202`) com um `jobId`. Exige `confirm` igual ao número de duplicados encontrados; grava um backup antes. |
+| `GET` | `/playlist/:destino/mix?origem=<id>` | **Dry-run do Mix**: o que entraria no fim do destino vindo da origem e o que seria pulado (já no destino, repetido na origem, apagado ou privado), com o custo. Não escreve nada. |
+| `POST` | `/playlist/:destino/mix?origem=<id>&confirm=N` | Inicia o Mix em segundo plano (`202` com `jobId`). A origem nunca muda; o destino só ganha itens, no fim. Exige `confirm` igual ao número que entra; grava um registro do que entrou (`backups/mix-*.json`) antes do primeiro insert. Detalhes em `docs/specs/mix-api.md`. |
 
 ### Acompanhamento e quota
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `GET` | `/jobs` | Remoções desde que o servidor subiu, a mais recente primeiro (resumo) |
-| `GET` | `/jobs/:jobId` | Progresso da remoção (inclui `itens`, cada um com seu `estado`: `apagado`, `falhou` ou `pendente`): `"12 de 75 itens apagados"`, percentual, último item, falhas e, se parou, o motivo e quando tentar de novo |
+| `GET` | `/jobs` | Remoções (`remocoes`) e Mixes (`mixes`) desde que o servidor subiu, o mais recente primeiro (resumo) |
+| `GET` | `/jobs/:jobId` | Progresso da remoção ou do Mix (`tipo: "mix"`, `"3 de 40 vídeos adicionados"`) (inclui `itens`, cada um com seu `estado`: `apagado`, `falhou` ou `pendente`): `"12 de 75 itens apagados"`, percentual, último item, falhas e, se parou, o motivo e quando tentar de novo |
 | `GET` | `/quota` | Quota do dia: usado, limite, restante, quantas remoções ainda cabem e quando zera |
 
 **Duplicado** é o mesmo vídeo (`videoId`) aparecendo mais de uma vez. Fica sempre a primeira ocorrência pela posição na playlist. Vídeos diferentes com o mesmo título não são tocados.

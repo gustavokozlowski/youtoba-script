@@ -3,11 +3,13 @@ import { OAuth2Client } from 'google-auth-library';
 import { logger } from '../../shared/logger';
 import { apiFailure } from './api-failure';
 import { runOneByOne } from './one-by-one';
-import type { OneByOneOptions, OneByOneProgressEvent } from './one-by-one.types';
+import type { OneByOneProgressEvent } from './one-by-one.types';
 import { withRetry } from './retry';
 import { PAGE_SIZE, QUOTA_COST } from './youtube.constants';
 import { mapPlaylist, mapPlaylistItem } from './youtube.mapper';
 import type {
+    AddOptions,
+    AddProgressEvent,
     AddVideosResult,
     DeleteItemsResult,
     DeleteOptions,
@@ -25,6 +27,10 @@ const toDeleteProgress = (event: OneByOneProgressEvent): DeleteProgressEvent => 
     ...event,
     outcome: event.outcome === 'succeeded' ? 'removed' : 'failed',
 });
+
+/** Junta ao evento o item recém-criado (o último de `added`, já que a adição é em série). */
+const withCreatedItem = (event: OneByOneProgressEvent, added: AddVideosResult['added']): AddProgressEvent =>
+    event.outcome === 'succeeded' ? { ...event, playlistItemId: added[added.length - 1]?.playlistItemId } : event;
 
 /** Cliente HTTP da YouTube Data API v3. Use pelo createTrackedClient, que soma o custo na quota do dia. */
 export class YoutubeClient {
@@ -173,14 +179,14 @@ export class YoutubeClient {
     async addVideosToPlaylist(
         playlistId: string,
         videoIds: string[],
-        { canSpend, onProgress }: OneByOneOptions = {},
+        { canSpend, onProgress }: AddOptions = {},
     ): Promise<AddVideosResult> {
         const added: AddVideosResult['added'] = [];
         const { failed } = await runOneByOne(
             videoIds,
             QUOTA_COST.insert,
             (videoId) => this.addOne(playlistId, videoId, added),
-            { canSpend, onProgress },
+            { canSpend, onProgress: onProgress && ((event) => onProgress(withCreatedItem(event, added))) },
         );
         return { added, failed };
     }
