@@ -1,23 +1,14 @@
 import { asyncHandler } from '../../shared/async-handler';
 import { parseConfirm } from '../jobs/confirm';
-import type { JobReply } from '../jobs/job.types';
-import { alreadyRunningReply, budgetExhaustedReply, sendReply } from '../jobs/job-replies';
+import { sendReply } from '../jobs/job-replies';
 import { formatPreview, formatUnavailablePreview } from '../playlist/playlist.formatter';
 import type { DuplicatesPreview, RemovalPreviewBase, UnavailablePreview } from '../playlist/playlist.types';
 import { isReadFailure, sendReadFailure } from '../playlist/read-failure';
-import { quotaTracker } from '../quota/quota-tracker.service';
 import { connectedClient } from '../quota/tracked-client';
 import { BACKUP_NAME, readBackup, resolveRecordFile } from './backup';
-import { formatJob } from './removal.formatter';
 import { removalReply } from './removal.replies';
 import { RemovalService } from './removal.service';
-import type {
-    PlaylistBackup,
-    RemovalReplySpec,
-    RemovalResult,
-    RemovalStarted,
-    RemovalStatusResult,
-} from './removal.types';
+import type { PlaylistBackup, RemovalReplySpec, RemovalResult } from './removal.types';
 import { restoreRemoved } from './restore';
 
 const removals = new RemovalService();
