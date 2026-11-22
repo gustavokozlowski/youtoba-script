@@ -2,7 +2,7 @@
 
 O que falta para dar o projeto por encerrado, em ordem de prioridade. Atualize este arquivo no mesmo PR que resolver um item: risque o item e anote o número do PR.
 
-Situação em 21/11/2026: a remoção de duplicados funciona e foi validada pela interface numa playlist real, e antes com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 197 testes passando (146 da API, 51 da interface).
+Situação em 21/11/2026: a remoção de duplicados funciona e foi validada pela interface numa playlist real, e antes com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 211 testes passando (160 da API, 51 da interface).
 
 ## 1. Segurança (fazer primeiro)
 
@@ -25,7 +25,7 @@ Situação em 21/11/2026: a remoção de duplicados funciona e foi validada pela
 ## 3. Funcionalidades (opcionais)
 
 - [x] ~~**Interface web**~~ (#16, #17): entrar, playlists com repetidos, revisão com confirmação pelo número exato, remoção ao vivo e lista de remoções. Trocamos o EJS do plano por React + Vite (decisão do dono, 19/11).
-- [ ] **Mix: juntar uma playlist em outra** (pedido do dono em 22/11; plano aprovado: itens entram no fim do destino, com desfazer). Feito: #57 (loop item a item genérico e registro de jobs compartilhado entre tipos). Copia os itens de uma playlist de origem para uma de destino sem criar repetidos: pula todo `videoId` que já está no destino e os repetidos da própria origem, mantendo a ordem da origem. Integridade: a origem nunca é alterada e o destino só ganha itens (nada é apagado nem reordenado). Mesmo pipeline das remoções: dry-run com o que entra e o que é pulado (já no destino, repetido na origem, apagado ou privado), confirmação pelo número exato, quota conferida antes (cada `playlistItems.insert` custa 50 unidades), job com progresso e um registro do que foi adicionado para desfazer. Rodar de novo é seguro: o que já entrou é pulado.
+- [ ] **Mix: juntar uma playlist em outra** (pedido do dono em 22/11; plano aprovado: itens entram no fim do destino, com desfazer). Feito: #57 (loop item a item genérico e registro de jobs compartilhado entre tipos), #58 (regra pura `planMix`). Copia os itens de uma playlist de origem para uma de destino sem criar repetidos: pula todo `videoId` que já está no destino e os repetidos da própria origem, mantendo a ordem da origem. Integridade: a origem nunca é alterada e o destino só ganha itens (nada é apagado nem reordenado). Mesmo pipeline das remoções: dry-run com o que entra e o que é pulado (já no destino, repetido na origem, apagado ou privado), confirmação pelo número exato, quota conferida antes (cada `playlistItems.insert` custa 50 unidades), job com progresso e um registro do que foi adicionado para desfazer. Rodar de novo é seguro: o que já entrou é pulado.
 - [ ] **Mix com escolha um a um** (pedido do dono em 22/11): no dry-run do Mix, caixas de seleção para escolher quais itens da origem entram. A API aceita a lista de `playlistItemId` escolhidos e recusa id que não está na origem ou que já está no destino (TDD).
 - [ ] **Escolher um a um os vídeos para excluir** (pedido do dono em 22/11; antes adiado): a revisão ganha caixas de seleção e o backend passa a aceitar a lista de `playlistItemId` escolhidos (TDD), recusando id que não pertence à playlist. Mesmo pipeline: backup antes, confirmação pelo número exato de escolhidos, quota e job.
 - [x] ~~**Consolidar a escala de tipos da interface.**~~ (#39): `tokens.css` agora define 11 degraus tipográficos e aliases semânticos por papel; `app.css` não usa tamanhos literais e a escala foi registrada no `DESIGN.md`.
@@ -103,3 +103,4 @@ Pedido do dono em 20/11/2026: nenhum code smell no projeto. Passar a code base i
 | #55 | Validação real pela interface concluída; causa do "80 de 0" relatado depois da #51 anotada |
 | #56 | Backlog: Mix de playlists, Mix com escolha um a um e exclusão com escolha um a um |
 | #57 | Mix, parte 1: loop item a item (`runOneByOne`) usado pela remoção e pelo novo `addVideosToPlaylist`; jobs num registro compartilhado (`JobStore`), para remoção e Mix na mesma playlist se bloquearem |
+| #58 | Mix, parte 2: regra pura `planMix` (o que entra e o que é pulado: indisponível, já no destino, repetido na origem), com 14 testes escritos antes |
