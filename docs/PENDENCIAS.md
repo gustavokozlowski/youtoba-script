@@ -2,7 +2,7 @@
 
 O que falta para dar o projeto por encerrado, em ordem de prioridade. Atualize este arquivo no mesmo PR que resolver um item: risque o item e anote o número do PR.
 
-Situação em 20/11/2026: a remoção de duplicados funciona e foi validada com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 187 testes passando (136 da API, 51 da interface).
+Situação em 21/11/2026: a remoção de duplicados funciona e foi validada pela interface numa playlist real, e antes com playlists reais de teste (dry-run, confirmação, backup, restauração, quota contada e progresso). 187 testes passando (136 da API, 51 da interface).
 
 ## 1. Segurança (fazer primeiro)
 
@@ -28,7 +28,7 @@ Situação em 20/11/2026: a remoção de duplicados funciona e foi validada com 
 - [ ] **Escolher itens um a um na revisão** (adiado pelo dono): o backend passa a aceitar a lista de `playlistItemId` escolhidos (TDD), e a revisão ganha caixas de seleção.
 - [x] ~~**Consolidar a escala de tipos da interface.**~~ (#39): `tokens.css` agora define 11 degraus tipográficos e aliases semânticos por papel; `app.css` não usa tamanhos literais e a escala foi registrada no `DESIGN.md`.
 - [x] ~~**Restaurar pela interface.**~~ (#41): a tela de remoção agora chama a restauração pelo servidor; o comando de terminal continua disponível como alternativa.
-- [ ] **Validação real pela interface** na playlist de teste, antes de usar a interface em playlist real. Em 19/11 a cota do dia já estava zerada; conferido só o estado "sem cota" com dados reais. Fazer depois das 05:00.
+- [x] ~~**Validação real pela interface**~~ (#55): em 21/11 o dono removeu 31 repetidos de uma playlist real (60 → 29 itens) pela interface, do começo ao fim: revisão, confirmação, backup gravado antes, progresso ao vivo ("12 de 31", "21 de 31"...) e "31 de 31 apagados, concluída" na tela e em `GET /jobs/:id`. O "80 de 0" relatado depois da #51 vinha de um servidor ainda com o código antigo (o `ts-node-dev` não recarrega depois de um `git checkout`).
 - [x] ~~**Release v1.0.0.**~~ (#40): `GET /health`, `engines` (Node ≥ 22) e workflow de release por tag com changelog. Sem deploy e sem Docker (o projeto roda só localmente).
 - [x] ~~**Opção para limpar itens indisponíveis**~~ (#48, #49), separada da remoção de duplicados. Decisão do dono (20/11): só "Deleted video" sai; "Private video" fica (pode voltar a ser público). API pronta (#48): `GET /playlist/:id/unavailable` (dry-run) e `DELETE /playlist/:id/remove-unavailable?confirm=N`, com o mesmo pipeline dos duplicados (confirmação exata, backup antes, quota, job com `tipo`). Conta como apagado só o item com título "Deleted video" **e** sem `videoPublishedAt`. A cópia de um apagado continua na lista de duplicados. Vídeo apagado não volta pela restauração. Interface (#49): revisão em `#/p/:id/apagados`, links "N apagados" na lista e na revisão de repetidos, e a análise geral passa a mostrar também as playlists que só têm vídeos apagados.
 
@@ -97,3 +97,5 @@ Pedido do dono em 20/11/2026: nenhum code smell no projeto. Passar a code base i
 | #51 | Tela de remoção mostrava "80 de 0 apagados": `GET /jobs/:id` não trazia `total` (só a resposta 202 trazia) |
 | #52 | Marca do vídeo removido: o risco neon rosa virou "buff", uma demão de tinta cinza-concreto (escolha do dono num protótipo com 4 opções) |
 | #53 | `dev:all` no Windows derruba a árvore inteira (`taskkill /T`), não só o npm; Linux e macOS seguem com o grupo de processos |
+| #54 | Registro da #53 nesta lista |
+| #55 | Validação real pela interface concluída; causa do "80 de 0" relatado depois da #51 anotada |
