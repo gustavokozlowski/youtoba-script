@@ -35,4 +35,4 @@ O que falta fazer está em @docs/PENDENCIAS.md. Leia antes de propor trabalho no
 
 - O `ts-node-dev` às vezes para de notar mudanças em arquivos depois de um `git checkout`. Se o servidor responder com código antigo, reinicie o `npm run dev` (o login continua salvo).
 - Em modo *Testing* no Google Cloud, o refresh token expira em 7 dias: a API responde 401 e basta abrir `/auth/login` de novo.
-- Os jobs de remoção (`GET /jobs/:jobId`) ficam em memória e somem quando o servidor reinicia. O arquivo de backup continua registrando o que foi removido.
+- Os jobs de remoção e de Mix (`GET /jobs/:jobId`) ficam em memória e somem quando o servidor reinicia. O arquivo de backup (ou o registro `mix-*.json`) continua registrando o que foi removido ou adicionado.

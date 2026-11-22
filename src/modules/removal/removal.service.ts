@@ -7,13 +7,7 @@ import { type QuotaTracker, quotaTracker } from '../quota/quota-tracker.service'
 import { connectedClient } from '../quota/tracked-client';
 import type { ClientFactory } from '../quota/tracked-client.types';
 import { writeBackup } from './backup';
-import type {
-    RemovalJob,
-    RemovalPlan,
-    RemovalResult,
-    RemoveDuplicatesResult,
-    RemoveUnavailableResult,
-} from './removal.types';
+import type { RemovalPlan, RemovalResult, RemoveDuplicatesResult, RemoveUnavailableResult } from './removal.types';
 import { type RemovalJobs, removalJobs } from './removal-jobs.service';
 
 /** Começa remoções (de duplicados ou de vídeos apagados) e consulta as que estão em andamento. */
@@ -42,14 +36,6 @@ export class RemovalService {
             const preview = this.playlists.unavailablePreview(playlistId, entries);
             return { kind: 'unavailable', preview, targets: preview.deleted };
         });
-    }
-
-    job(jobId: string): RemovalJob | undefined {
-        return this.jobs.get(jobId);
-    }
-
-    allJobs(): RemovalJob[] {
-        return this.jobs.list();
     }
 
     /**

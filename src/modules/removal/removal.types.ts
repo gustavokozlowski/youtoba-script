@@ -1,5 +1,7 @@
 import type { YoutubeClient } from '../../infra/youtube/youtube.client';
 import type { DeleteItemsResult } from '../../infra/youtube/youtube-api.types';
+import type { JobFailure, JobStatus, JobStopReason } from '../jobs/job.types';
+import type { PlaylistJob } from '../jobs/job-store.types';
 import type {
     DuplicatesPreview,
     PlaylistEntry,
@@ -34,7 +36,7 @@ export type RemovalTarget = PlaylistEntry & { firstPosition?: number };
 
 /** Resultado de uma tentativa de remoção que não falhou na leitura, com o dry-run `P` do tipo de remoção. */
 export type RemovalStatusResult<P extends RemovalPreviewBase> =
-    | { status: 'already_running'; job: RemovalJob }
+    | { status: 'already_running'; job: PlaylistJob }
     | { status: 'budget_exhausted'; quota: QuotaSnapshot }
     | ({ status: 'nothing_to_remove' } & P)
     | ({ status: 'confirmation_required' } & P)
@@ -64,22 +66,19 @@ export interface StartRemovalParams {
     tracker: QuotaTracker;
 }
 
-export type RemovalJobStatus = 'running' | 'done' | 'partial' | 'failed';
-
 export interface RemovalJob {
     id: string;
     playlistId: string;
     kind: RemovalKind;
-    status: RemovalJobStatus;
-    /** Por que parou antes de terminar: saldo do dia (parada nossa) ou quotaExceeded do Google. */
-    stopReason?: 'daily_budget' | 'quota_exceeded';
+    status: JobStatus;
+    stopReason?: JobStopReason;
     total: number;
     /** Os itens que esta remoção vai apagar, na ordem em que são tentados. */
     items: RemovalTarget[];
     /** Itens já tentados (removidos ou com falha). */
     processed: number;
     removed: string[];
-    failed: DeleteItemsResult['failed'];
+    failed: JobFailure[];
     lastItem?: { title: string; position: number; outcome: 'removed' | 'failed' };
     startedAt: string;
     finishedAt?: string;
@@ -97,6 +96,3 @@ export interface RemovalReplySpec<P extends RemovalPreviewBase> {
     count: (preview: P) => number;
     formatPreview: (preview: P) => Record<string, unknown>;
 }
-
-/** Status HTTP e corpo JSON da resposta. */
-export type RemovalReply = [number, Record<string, unknown>];

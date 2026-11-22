@@ -1,4 +1,4 @@
-import type { OneByOneFailure } from './one-by-one.types';
+import type { OneByOneFailure, OneByOneOptions, OneByOneProgressEvent } from './one-by-one.types';
 
 export type YoutubeClientConfig = {
     apiKey: string;
@@ -160,6 +160,16 @@ export interface DeleteOptions {
     canSpend?: (units: number) => boolean;
     onProgress?: (event: DeleteProgressEvent) => void;
 }
+
+/** Progresso de uma adição; o item criado já vem junto, para o registro do Mix valer mesmo se o processo cair. */
+export interface AddProgressEvent extends OneByOneProgressEvent {
+    /** Só quando o item foi criado (`outcome: 'succeeded'`). */
+    playlistItemId?: string;
+}
+
+export type AddOptions = Omit<OneByOneOptions, 'onProgress'> & {
+    onProgress?: (event: AddProgressEvent) => void;
+};
 
 export type AddVideosResult = {
     added: { videoId: string; playlistItemId: string }[];

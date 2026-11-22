@@ -1,10 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { errorMessage } from '../../shared/errors';
+import type { DeleteProgressEvent } from '../../infra/youtube/youtube-api.types';
 import { logger } from '../../shared/logger';
 import { type JobStore, playlistJobs } from '../jobs/job-store';
 import type { PlaylistJob } from '../jobs/job-store.types';
+import { runJob } from '../jobs/run-job';
 import { recordRemoval } from './backup';
-import type { RemovalJob, StartRemovalParams } from './removal.types';
+import type { RemovalJob, RemovalTarget, StartRemovalParams } from './removal.types';
 
 /**
  * Remoções em segundo plano, com progresso consultável. Fica em memória: se o servidor cair,
@@ -13,16 +14,7 @@ import type { RemovalJob, StartRemovalParams } from './removal.types';
 export class RemovalJobs {
     constructor(private readonly store: JobStore<PlaylistJob> = playlistJobs) {}
 
-    get(id: string): RemovalJob | undefined {
-        return this.store.get(id);
-    }
-
-    /** Todas as remoções desde que o servidor subiu, a mais recente primeiro. */
-    list(): RemovalJob[] {
-        return this.store.list();
-    }
-
-    runningFor(playlistId: string): RemovalJob | undefined {
+    runningFor(playlistId: string): PlaylistJob | undefined {
         return this.store.runningFor(playlistId);
     }
 
@@ -49,47 +41,47 @@ export class RemovalJobs {
         return job;
     }
 
-    private async run(job: RemovalJob, { targets, client, tracker }: StartRemovalParams) {
+    private run(job: RemovalJob, { targets, client, tracker }: StartRemovalParams) {
         const byId = new Map(targets.map((entry) => [entry.playlistItemId, entry]));
         const log = logger.child({ remocao: job.id.slice(0, 8) });
-        log.info({ itens: job.total, saldoQuota: tracker.remaining() }, 'Remoção começou');
+        const record = (finished: boolean) =>
+            recordRemoval(job.backupFile, { removed: job.removed, failed: job.failed }, { finished });
 
-        try {
-            const result = await client.deleteItemsById([...byId.keys()], {
-                canSpend: (units) => tracker.canSpend(units),
-                onProgress: (event) => {
-                    const entry = byId.get(event.itemId);
-                    job.processed = event.index + 1;
-                    job.lastItem = {
-                        title: entry?.title ?? event.itemId,
-                        position: entry?.position ?? -1,
-                        outcome: event.outcome,
-                    };
-                    if (event.outcome === 'removed') {
-                        job.removed.push(event.itemId);
-                    } else {
-                        job.failed.push({ id: event.itemId, status: event.status, reason: event.reason });
-                    }
-                    recordRemoval(job.backupFile, { removed: job.removed, failed: job.failed }, { finished: false });
-                    // Sem o título do vídeo: o log leva só o id do item (o título aparece na interface).
-                    const falha = event.outcome === 'removed' ? undefined : (event.reason ?? event.status);
-                    log.info({ item: event.itemId, apagados: job.removed.length, total: job.total, falha }, 'Item');
-                },
-            });
+        return runJob(job, {
+            log,
+            messages: { start: 'Remoção começou', end: 'Remoção terminou' },
+            startFields: { itens: job.total, saldoQuota: tracker.remaining() },
+            endFields: () => ({ apagados: job.removed.length, total: job.total, parada: job.stopReason }),
+            record,
+            execute: async (saveProgress) => {
+                const result = await client.deleteItemsById([...byId.keys()], {
+                    canSpend: (units) => tracker.canSpend(units),
+                    onProgress: (event) => {
+                        this.onProgress(job, byId.get(event.itemId), event);
+                        saveProgress();
+                        // Sem o título do vídeo: o log leva só o id do item (o título aparece na interface).
+                        const falha = event.outcome === 'removed' ? undefined : (event.reason ?? event.status);
+                        log.info({ item: event.itemId, apagados: job.removed.length, total: job.total, falha }, 'Item');
+                    },
+                });
+                job.removed = result.removed;
+                job.failed = result.failed;
+                return result.failed;
+            },
+        });
+    }
 
-            job.removed = result.removed;
-            job.failed = result.failed;
-            const reasons = new Set(result.failed.map((f) => f.reason));
-            if (reasons.has('skipped_daily_budget')) job.stopReason = 'daily_budget';
-            else if (reasons.has('quotaExceeded')) job.stopReason = 'quota_exceeded';
-            job.status = result.failed.length === 0 ? 'done' : 'partial';
-        } catch (error) {
-            job.status = 'failed';
-            job.error = errorMessage(error);
-        } finally {
-            job.finishedAt = new Date().toISOString();
-            recordRemoval(job.backupFile, { removed: job.removed, failed: job.failed }, { finished: true });
-            log.info({ apagados: job.removed.length, total: job.total, parada: job.stopReason }, 'Remoção terminou');
+    private onProgress(job: RemovalJob, entry: RemovalTarget | undefined, event: DeleteProgressEvent) {
+        job.processed = event.index + 1;
+        job.lastItem = {
+            title: entry?.title ?? event.itemId,
+            position: entry?.position ?? -1,
+            outcome: event.outcome,
+        };
+        if (event.outcome === 'removed') {
+            job.removed.push(event.itemId);
+        } else {
+            job.failed.push({ id: event.itemId, status: event.status, reason: event.reason });
         }
     }
 }

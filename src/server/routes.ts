@@ -2,11 +2,13 @@ import { Router } from 'express';
 import { setting } from '../config/settings';
 import { authRouter } from '../modules/auth/auth.routes';
 import { devRouter } from '../modules/dev/dev.routes';
+import { jobsRouter } from '../modules/jobs/jobs.routes';
+import { mixRouter } from '../modules/mix/mix.routes';
 import { playlistRouter } from '../modules/playlist/playlist.routes';
 import { quotaRouter } from '../modules/quota/quota.routes';
 import { removalRouter } from '../modules/removal/removal.routes';
 
-/** As rotas de cada módulo. A remoção e a cota declaram os caminhos completos (/playlist/:id/remove-duplicates, /jobs, /quota). */
+/** As rotas de cada módulo. A remoção, o Mix, os jobs e a cota declaram os caminhos completos (/playlist/:id/remove-duplicates, /playlist/:id/mix, /jobs, /quota). */
 const routes = Router();
 
 routes.get('/health', (_req, res) => {
@@ -15,6 +17,8 @@ routes.get('/health', (_req, res) => {
 routes.use('/playlist', playlistRouter);
 routes.use('/auth', authRouter);
 routes.use(removalRouter);
+routes.use(mixRouter);
+routes.use(jobsRouter);
 routes.use(quotaRouter);
 
 // Rotas de apoio para validação manual. Desligadas por padrão.

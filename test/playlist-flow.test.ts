@@ -1,12 +1,13 @@
-import { randomBytes } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import nock from 'nock';
 import request from 'supertest';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { PlaylistBackup } from '../src/modules/removal/removal.types';
+import { bootApp, installNetworkGuard, mockFirstLogin, mockTokenRefresh, YOUTUBE } from './helpers/flow-env';
 import { login } from './helpers/login';
+import { hasParts, mockListing as mockPlaylistListing, waitForJob as waitForJobOf } from './helpers/youtube-listing';
 import type {
     ApiItemFixture,
     EntryBody,
@@ -14,22 +15,17 @@ import type {
     OverviewBody,
     PreviewBody,
     UnavailableBody,
-    UnmatchedRequest,
 } from './playlist-flow.types';
 
-const GOOGLE_OAUTH = 'https://oauth2.googleapis.com';
-const YOUTUBE = 'https://youtube.googleapis.com';
 const PLAYLIST = 'PLbig';
 
 let dir: string;
 let backupDir: string;
 let app: Parameters<typeof request>[0];
-let unmatched: string[] = [];
+let unmatched: string[];
 
 // 1.000 itens, 3 duplicados: posição 50 repete a 2 (página 1 → página 2), 700 repete a 3, 999 repete a 500.
 const DUPLICATE_OF: Record<number, number> = { 50: 2, 700: 3, 999: 500 };
-const hasParts = (actual: unknown, expected: string) =>
-    (Array.isArray(actual) ? actual.join(',') : actual) === expected;
 
 const bigPlaylist = Array.from({ length: 1_000 }, (_, position) => ({
     id: `item-${position}`,
@@ -37,40 +33,8 @@ const bigPlaylist = Array.from({ length: 1_000 }, (_, position) => ({
     position,
 }));
 
-const apiItem = (item: ApiItemFixture) => ({
-    kind: 'youtube#playlistItem',
-    etag: 'e',
-    id: item.id,
-    snippet: { title: item.title ?? `Vídeo ${item.videoId}`, position: item.position, videoOwnerChannelTitle: 'Canal' },
-    contentDetails: { videoId: item.videoId, videoPublishedAt: item.videoPublishedAt ?? '2020-01-01T00:00:00Z' },
-});
-
-/** Simula a listagem paginada (50 por página) e conta as chamadas. */
-function mockListing(items: ApiItemFixture[] = bigPlaylist, playlistId = PLAYLIST) {
-    const calls = { count: 0 };
-    const pages = Math.ceil(items.length / 50);
-    nock(YOUTUBE)
-        .get('/youtube/v3/playlistItems')
-        .query(
-            (q) => q.playlistId === playlistId && hasParts(q.part, 'snippet,contentDetails') && q.maxResults === '50',
-        )
-        .times(pages)
-        .reply((uri) => {
-            calls.count++;
-            const page = Number(new URL(uri, YOUTUBE).searchParams.get('pageToken') ?? 0);
-            const slice = items.slice(page * 50, page * 50 + 50);
-            const hasNext = (page + 1) * 50 < items.length;
-            return [
-                200,
-                {
-                    pageInfo: { totalResults: items.length, resultsPerPage: 50 },
-                    items: slice.map(apiItem),
-                    ...(hasNext ? { nextPageToken: String(page + 1) } : {}),
-                },
-            ];
-        });
-    return calls;
-}
+const mockListing = (items: ApiItemFixture[] = bigPlaylist, playlistId = PLAYLIST) =>
+    mockPlaylistListing(items, playlistId);
 
 // 6 itens: apagados nas posições 1 e 3, privado na 2, e a 5 é cópia do apagado da 1 (duplicado, não "apagado").
 const SMALL = 'PLsmall';
@@ -87,46 +51,20 @@ const backups = () => (fs.existsSync(backupDir) ? fs.readdirSync(backupDir) : []
 
 beforeAll(() => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'youtoba-playlist-'));
-    Object.assign(process.env, {
-        TOKEN_ENCRYPTION_KEY: randomBytes(32).toString('base64'),
-        CLIENT_ID: 'test-client.apps.googleusercontent.com',
-        CLIENT_SECRET_KEY: 'test-secret',
-        REDIRECT_URL: 'http://localhost:3000/auth',
-        API_KEY: 'test-api-key',
-    });
-    nock.disableNetConnect();
-    nock.enableNetConnect('127.0.0.1');
-    // Qualquer chamada a um host externo sem mock (ex.: um DELETE inesperado) é registrada e falha o teste.
-    nock.emitter.on('no match', (req: UnmatchedRequest) => {
-        const host = req.hostname ?? req.host ?? (req.href ? new URL(req.href).hostname : '');
-        if (!['127.0.0.1', 'localhost'].includes(host)) unmatched.push(`${req.method} ${host}${req.path ?? ''}`);
-    });
+    unmatched = installNetworkGuard();
 });
 
 async function boot({ dailyQuota = 10_000 }: { dailyQuota?: number } = {}) {
-    process.env.YOUTUBE_DAILY_QUOTA = String(dailyQuota);
-    vi.resetModules();
-    const { createApp } = await import('../src/server/app');
-    app = createApp();
+    app = await bootApp(dailyQuota);
 }
 
 /** Reinicia o app com outro limite de quota. O login continua salvo; o access token é renovado no Google. */
 async function rebootWithQuota(dailyQuota: number) {
     await boot({ dailyQuota });
-    nock(GOOGLE_OAUTH)
-        .post('/token', (body) => body.grant_type === 'refresh_token')
-        .reply(200, { access_token: 'at-2', token_type: 'Bearer', expires_in: 3599 });
+    mockTokenRefresh();
 }
 
-/** Consulta o job até ele sair de "running". */
-async function waitForJob(jobId: string): Promise<JobBody> {
-    for (let i = 0; i < 250; i++) {
-        const res = await request(app).get(`/jobs/${jobId}`);
-        if (res.body.status !== 'running') return res.body;
-        await new Promise((resolve) => setTimeout(resolve, 20));
-    }
-    throw new Error(`job ${jobId} não terminou`);
-}
+const waitForJob = (jobId: string) => waitForJobOf(app, jobId);
 
 const mockDelete = (position: number, reply: () => [number, unknown] = () => [204, ''], delayMs = 0) =>
     nock(YOUTUBE)
@@ -140,12 +78,10 @@ beforeEach(async () => {
     backupDir = path.join(dir, `backups-${run}`);
     process.env.BACKUP_DIR = backupDir;
     process.env.TOKEN_DB_PATH = path.join(dir, `db-${run}.db`);
-    unmatched = [];
+    unmatched.length = 0;
 
     await boot();
-    nock(GOOGLE_OAUTH)
-        .post('/token')
-        .reply(200, { access_token: 'at-1', refresh_token: 'rt-1', token_type: 'Bearer', expires_in: 3599 });
+    mockFirstLogin();
     expect((await login(app)).status).toBe(302);
 });
 
@@ -404,7 +340,7 @@ describe('progresso e quota da remoção', () => {
     });
 
     it('GET /jobs lista as remoções desta sessão do servidor, a mais recente primeiro, sem os itens', async () => {
-        expect((await request(app).get('/jobs')).body).toEqual({ remocoes: [] });
+        expect((await request(app).get('/jobs')).body).toEqual({ remocoes: [], mixes: [] });
 
         mockListing();
         for (const position of [50, 700, 999]) mockDelete(position);

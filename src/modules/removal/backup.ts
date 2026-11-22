@@ -7,15 +7,23 @@ import type { PlaylistBackup } from './removal.types';
 
 export const backupDir = () => setting('BACKUP_DIR');
 
-/** Grava a playlist inteira antes de qualquer remoção. O YouTube não tem lixeira. */
-export function writeBackup(playlistId: string, items: PlaylistEntry[], now = new Date()): string {
+/**
+ * Cria um arquivo novo em BACKUP_DIR (`<label>-<data>.json`), só do dono (0o600) e sem sobrescrever
+ * nenhum existente (flag 'wx'). Usado pelo backup da remoção e pelo registro do Mix.
+ */
+export function createRecordFile(label: string, content: object, now = new Date()): string {
     const dir = backupDir();
     fs.mkdirSync(dir, { recursive: true });
 
-    const safeId = playlistId.replace(/[^A-Za-z0-9_-]/g, '_');
+    const safeLabel = label.replace(/[^A-Za-z0-9_-]/g, '_');
     const stamp = now.toISOString().replace(/[:.]/g, '-');
-    const file = path.join(dir, `${safeId}-${stamp}.json`);
+    const file = path.join(dir, `${safeLabel}-${stamp}.json`);
+    fs.writeFileSync(file, JSON.stringify(content, null, 2), { mode: 0o600, flag: 'wx' });
+    return file;
+}
 
+/** Grava a playlist inteira antes de qualquer remoção. O YouTube não tem lixeira. */
+export function writeBackup(playlistId: string, items: PlaylistEntry[], now = new Date()): string {
     const backup: PlaylistBackup = {
         version: 1,
         playlistId,
@@ -23,8 +31,7 @@ export function writeBackup(playlistId: string, items: PlaylistEntry[], now = ne
         itemCount: items.length,
         items,
     };
-    fs.writeFileSync(file, JSON.stringify(backup, null, 2), { mode: 0o600, flag: 'wx' });
-    return file;
+    return createRecordFile(playlistId, backup, now);
 }
 
 /** Registra no backup o que já foi removido. Chamado a cada item, para o arquivo valer mesmo se o processo cair. */
