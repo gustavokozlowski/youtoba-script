@@ -8,6 +8,7 @@ import type { PlaylistJob } from './job-store.types';
 const RUNNING_TEXT: Record<PlaylistJob['kind'], string> = {
     duplicates: 'uma remoção',
     unavailable: 'uma remoção',
+    mix_undo: 'um desfazer de Mix',
     mix: 'um Mix',
 };
 

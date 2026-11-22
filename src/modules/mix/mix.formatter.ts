@@ -1,8 +1,10 @@
+import path from 'node:path';
 import { itemStateOf, jobProgress, STATUS_TEXT, safeCount, stopFields } from '../jobs/job.formatter';
 import { formatDuplicate, formatEntry } from '../playlist/playlist.formatter';
 import type { Availability, PlaylistEntry } from '../playlist/playlist.types';
 import { formatQuotaSnapshot } from '../quota/quota.formatter';
 import type { QuotaSnapshot, WriteQuotaEstimate } from '../quota/quota.types';
+import type { MixUndoPreview } from '../removal/removal.types';
 import type { MixJob, MixPreview } from './mix.types';
 
 const UNAVAILABLE_TEXT: Record<Availability, string> = { deleted: 'apagado', private: 'privado' };
@@ -98,7 +100,15 @@ export function formatMixJob(job: MixJob, quota: QuotaSnapshot) {
         iniciadoEm: job.startedAt,
         terminadoEm: job.finishedAt,
         registro: job.recordFile,
+        desfazer: `/mixes/${path.basename(job.recordFile)}/undo`,
         itens: itemStates(job),
         quotaHoje: formatQuotaSnapshot(quota),
     };
 }
+
+/** Corpo do 409 do desfazer: o que sairia do destino agora. */
+export const formatUndoPreview = (preview: MixUndoPreview) => ({
+    destino: { playlistId: preview.playlistId, totalItens: preview.itemCount },
+    itens: preview.items.map(formatEntry),
+    quotaHoje: formatQuotaSnapshot(preview.quotaToday),
+});

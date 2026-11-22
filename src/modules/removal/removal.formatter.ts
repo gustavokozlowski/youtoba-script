@@ -4,9 +4,10 @@ import { formatQuotaSnapshot } from '../quota/quota.formatter';
 import type { QuotaSnapshot } from '../quota/quota.types';
 import type { RemovalJob, RemovalKind, RemovalTarget } from './removal.types';
 
-const KIND_TEXT: Record<RemovalKind, 'duplicados' | 'apagados'> = {
+const KIND_TEXT: Record<RemovalKind, 'duplicados' | 'apagados' | 'desfazer_mix'> = {
     duplicates: 'duplicados',
     unavailable: 'apagados',
+    mix_undo: 'desfazer_mix',
 };
 
 /** O item na resposta; `primeiraOcorrencia` só aparece nos duplicados. */
