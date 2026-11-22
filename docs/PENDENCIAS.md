@@ -25,7 +25,9 @@ Situação em 21/11/2026: a remoção de duplicados funciona e foi validada pela
 ## 3. Funcionalidades (opcionais)
 
 - [x] ~~**Interface web**~~ (#16, #17): entrar, playlists com repetidos, revisão com confirmação pelo número exato, remoção ao vivo e lista de remoções. Trocamos o EJS do plano por React + Vite (decisão do dono, 19/11).
-- [ ] **Escolher itens um a um na revisão** (adiado pelo dono): o backend passa a aceitar a lista de `playlistItemId` escolhidos (TDD), e a revisão ganha caixas de seleção.
+- [ ] **Mix: juntar uma playlist em outra** (pedido do dono em 22/11). Copia os itens de uma playlist de origem para uma de destino sem criar repetidos: pula todo `videoId` que já está no destino e os repetidos da própria origem, mantendo a ordem da origem. Integridade: a origem nunca é alterada e o destino só ganha itens (nada é apagado nem reordenado). Mesmo pipeline das remoções: dry-run com o que entra e o que é pulado (já no destino, repetido na origem, apagado ou privado), confirmação pelo número exato, quota conferida antes (cada `playlistItems.insert` custa 50 unidades), job com progresso e um registro do que foi adicionado para desfazer. Rodar de novo é seguro: o que já entrou é pulado.
+- [ ] **Mix com escolha um a um** (pedido do dono em 22/11): no dry-run do Mix, caixas de seleção para escolher quais itens da origem entram. A API aceita a lista de `playlistItemId` escolhidos e recusa id que não está na origem ou que já está no destino (TDD).
+- [ ] **Escolher um a um os vídeos para excluir** (pedido do dono em 22/11; antes adiado): a revisão ganha caixas de seleção e o backend passa a aceitar a lista de `playlistItemId` escolhidos (TDD), recusando id que não pertence à playlist. Mesmo pipeline: backup antes, confirmação pelo número exato de escolhidos, quota e job.
 - [x] ~~**Consolidar a escala de tipos da interface.**~~ (#39): `tokens.css` agora define 11 degraus tipográficos e aliases semânticos por papel; `app.css` não usa tamanhos literais e a escala foi registrada no `DESIGN.md`.
 - [x] ~~**Restaurar pela interface.**~~ (#41): a tela de remoção agora chama a restauração pelo servidor; o comando de terminal continua disponível como alternativa.
 - [x] ~~**Validação real pela interface**~~ (#55): em 21/11 o dono removeu 31 repetidos de uma playlist real (60 → 29 itens) pela interface, do começo ao fim: revisão, confirmação, backup gravado antes, progresso ao vivo ("12 de 31", "21 de 31"...) e "31 de 31 apagados, concluída" na tela e em `GET /jobs/:id`. O "80 de 0" relatado depois da #51 vinha de um servidor ainda com o código antigo (o `ts-node-dev` não recarrega depois de um `git checkout`).
@@ -99,3 +101,4 @@ Pedido do dono em 20/11/2026: nenhum code smell no projeto. Passar a code base i
 | #53 | `dev:all` no Windows derruba a árvore inteira (`taskkill /T`), não só o npm; Linux e macOS seguem com o grupo de processos |
 | #54 | Registro da #53 nesta lista |
 | #55 | Validação real pela interface concluída; causa do "80 de 0" relatado depois da #51 anotada |
+| #56 | Backlog: Mix de playlists, Mix com escolha um a um e exclusão com escolha um a um |
