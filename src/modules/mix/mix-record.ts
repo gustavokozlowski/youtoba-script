@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import type { JobFailure } from '../jobs/job.types';
 import type { PlaylistEntry } from '../playlist/playlist.types';
+import { isPlaylistId } from '../playlist/playlist-id';
 import { createRecordFile } from '../removal/backup';
 import type { MixAddedVideo, MixRecord } from './mix.types';
 
@@ -47,3 +48,20 @@ export function recordMix(
     };
     fs.writeFileSync(file, JSON.stringify(record, null, 2));
 }
+
+/** Nome aceito para o registro de um Mix. */
+export const MIX_RECORD_NAME = /^mix-[A-Za-z0-9_-]+\.json$/;
+
+/** Lê o registro para o desfazer; arquivo ausente, JSON ruim ou formato errado viram `undefined`. */
+export function tryReadMixRecord(file: string): MixRecord | undefined {
+    try {
+        const record = readMixRecord(file);
+        return isPlaylistId(record.targetId) ? record : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
+/** Os `playlistItemId` que o Mix adicionou, ignorando entradas malformadas. */
+export const addedItemIds = (record: MixRecord): Set<string> =>
+    new Set(record.added.map((item) => item?.playlistItemId).filter((id): id is string => typeof id === 'string'));

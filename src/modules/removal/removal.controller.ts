@@ -1,4 +1,3 @@
-import path from 'node:path';
 import { asyncHandler } from '../../shared/async-handler';
 import { parseConfirm } from '../jobs/confirm';
 import type { JobReply } from '../jobs/job.types';
@@ -8,8 +7,9 @@ import type { DuplicatesPreview, RemovalPreviewBase, UnavailablePreview } from '
 import { isReadFailure, sendReadFailure } from '../playlist/read-failure';
 import { quotaTracker } from '../quota/quota-tracker.service';
 import { connectedClient } from '../quota/tracked-client';
-import { backupDir, readBackup } from './backup';
+import { BACKUP_NAME, readBackup, resolveRecordFile } from './backup';
 import { formatJob } from './removal.formatter';
+import { removalReply } from './removal.replies';
 import { RemovalService } from './removal.service';
 import type {
     PlaylistBackup,
@@ -21,43 +21,6 @@ import type {
 import { restoreRemoved } from './restore';
 
 const removals = new RemovalService();
-
-function started<P extends RemovalPreviewBase>({ job, fitToday }: RemovalStarted<P>): JobReply {
-    const partialNote =
-        fitToday < job.total
-            ? ` A quota de hoje cobre ${fitToday} de ${job.total}; o resto fica para depois que ela zerar.`
-            : '';
-    return [
-        202,
-        {
-            mensagem: `Remoção iniciada.${partialNote}`,
-            cabemHoje: fitToday,
-            acompanhar: `/jobs/${job.id}`,
-            ...formatJob(job, quotaTracker().snapshot()),
-        },
-    ];
-}
-
-/** Status HTTP e corpo de cada resultado da tentativa de remoção; só os textos e o dry-run mudam por tipo. */
-function removalReply<P extends RemovalPreviewBase>(
-    result: RemovalStatusResult<P>,
-    spec: RemovalReplySpec<P>,
-): JobReply {
-    switch (result.status) {
-        case 'already_running':
-            return alreadyRunningReply(result.job);
-        case 'budget_exhausted':
-            return budgetExhaustedReply(result.quota, 'remover');
-        case 'nothing_to_remove':
-            return [200, { mensagem: spec.emptyMessage, totalItens: result.itemCount, removidos: 0 }];
-        case 'confirmation_required': {
-            const mensagem = spec.confirmationMessage(spec.count(result));
-            return [409, { erro: 'confirmation_required', mensagem, ...spec.formatPreview(result) }];
-        }
-        case 'started':
-            return started(result);
-    }
-}
 
 /** Handler de uma rota de remoção: lê o `confirm`, roda a remoção e traduz o resultado. */
 function removalHandler<P extends RemovalPreviewBase>(
@@ -74,6 +37,7 @@ function removalHandler<P extends RemovalPreviewBase>(
 export const removeDuplicatedItems = removalHandler<DuplicatesPreview>(
     (playlistId, confirm) => removals.removeDuplicates(playlistId, confirm),
     {
+        startedMessage: 'Remoção iniciada.',
         emptyMessage: 'Nenhum duplicado encontrado.',
         confirmationMessage: (n) => `Confira os ${n} duplicados abaixo e repita com ?confirm=${n}. Nada foi removido.`,
         count: (preview) => preview.duplicates.length,
@@ -84,6 +48,7 @@ export const removeDuplicatedItems = removalHandler<DuplicatesPreview>(
 export const removeUnavailableItems = removalHandler<UnavailablePreview>(
     (playlistId, confirm) => removals.removeUnavailable(playlistId, confirm),
     {
+        startedMessage: 'Remoção iniciada.',
         emptyMessage: 'Nenhum vídeo apagado encontrado.',
         confirmationMessage: (n) =>
             `Confira os ${n} vídeos apagados abaixo e repita com ?confirm=${n}. Nada foi removido.`,
@@ -93,16 +58,8 @@ export const removeUnavailableItems = removalHandler<UnavailablePreview>(
 );
 
 export const restoreBackup = asyncHandler(async (req, res) => {
-    const backupId = req.params.backupId;
-    if (!/^[A-Za-z0-9_-]+\.json$/.test(backupId)) {
-        return res.status(400).json({ erro: 'backup_invalid', mensagem: 'Backup inválido.' });
-    }
-
-    const file = path.resolve(backupDir(), backupId);
-    const directory = `${path.resolve(backupDir())}${path.sep}`;
-    if (!file.startsWith(directory)) {
-        return res.status(400).json({ erro: 'backup_invalid', mensagem: 'Backup inválido.' });
-    }
+    const file = resolveRecordFile(req.params.backupId, BACKUP_NAME);
+    if (!file) return res.status(400).json({ erro: 'backup_invalid', mensagem: 'Backup inválido.' });
 
     let backup: PlaylistBackup;
     try {

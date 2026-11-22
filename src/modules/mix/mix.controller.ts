@@ -6,11 +6,17 @@ import { alreadyRunningReply, budgetExhaustedReply, sendReply } from '../jobs/jo
 import { isPlaylistId } from '../playlist/playlist-id';
 import { isReadFailure, sendReadFailure } from '../playlist/read-failure';
 import { quotaTracker } from '../quota/quota-tracker.service';
-import { formatMixJob, formatMixPreview, formatMixSides } from './mix.formatter';
+import { resolveRecordFile } from '../removal/backup';
+import { removalReply } from '../removal/removal.replies';
+import { RemovalService } from '../removal/removal.service';
+import type { MixUndoPreview, RemovalReplySpec } from '../removal/removal.types';
+import { formatMixJob, formatMixPreview, formatMixSides, formatUndoPreview } from './mix.formatter';
 import { MixService } from './mix.service';
 import type { MixIdsCheck, MixStartOutcome } from './mix.types';
+import { addedItemIds, MIX_RECORD_NAME, tryReadMixRecord } from './mix-record';
 
 const mixes = new MixService();
+const removals = new RemovalService();
 
 /** Valida os dois ids antes de qualquer chamada ao YouTube. */
 function checkIds(req: Request): MixIdsCheck {
@@ -53,6 +59,14 @@ function startReply(result: MixStartOutcome): JobReply {
     }
 }
 
+const UNDO_REPLY_SPEC: RemovalReplySpec<MixUndoPreview> = {
+    startedMessage: 'Desfazer iniciado.',
+    emptyMessage: 'Nada para desfazer: os vídeos deste Mix já não estão no destino.',
+    confirmationMessage: (n) => `Confira os ${n} vídeos abaixo e repita com ?confirm=${n}. Nada foi removido.`,
+    count: (preview) => preview.items.length,
+    formatPreview: formatUndoPreview,
+};
+
 export const previewMix = asyncHandler(async (req, res) => {
     const checked = checkIds(req);
     if ('reply' in checked) return sendReply(res, checked.reply);
@@ -69,4 +83,19 @@ export const startMix = asyncHandler(async (req, res) => {
     const result = await mixes.start(checked.ids, parseConfirm(req.query.confirm));
     if (isReadFailure(result)) return sendReadFailure(res, result);
     return sendReply(res, startReply(result));
+});
+
+export const undoMix = asyncHandler(async (req, res) => {
+    const file = resolveRecordFile(req.params.recordId, MIX_RECORD_NAME);
+    if (!file) {
+        return res.status(400).json({ erro: 'registro_invalido', mensagem: 'Nome de registro de Mix inválido.' });
+    }
+    const record = tryReadMixRecord(file);
+    if (!record) {
+        return res.status(404).json({ erro: 'registro_nao_encontrado', mensagem: 'Registro de Mix não encontrado.' });
+    }
+
+    const result = await removals.undoMix(record.targetId, addedItemIds(record), parseConfirm(req.query.confirm));
+    if (isReadFailure(result)) return sendReadFailure(res, result);
+    return sendReply(res, removalReply(result, UNDO_REPLY_SPEC));
 });

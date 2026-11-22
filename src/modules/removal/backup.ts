@@ -7,6 +7,20 @@ import type { PlaylistBackup } from './removal.types';
 
 export const backupDir = () => setting('BACKUP_DIR');
 
+/** Nome aceito para um backup de remoção. */
+export const BACKUP_NAME = /^[A-Za-z0-9_-]+\.json$/;
+
+/**
+ * Caminho de um arquivo de BACKUP_DIR a partir do nome vindo da requisição, ou `undefined` se o nome
+ * não bate com o padrão ou se, depois do `path.resolve`, o arquivo sai do diretório.
+ */
+export function resolveRecordFile(name: string, pattern: RegExp): string | undefined {
+    if (!pattern.test(name)) return undefined;
+    const directory = `${path.resolve(backupDir())}${path.sep}`;
+    const file = path.resolve(backupDir(), name);
+    return file.startsWith(directory) ? file : undefined;
+}
+
 /**
  * Cria um arquivo novo em BACKUP_DIR (`<label>-<data>.json`), só do dono (0o600) e sem sobrescrever
  * nenhum existente (flag 'wx'). Usado pelo backup da remoção e pelo registro do Mix.

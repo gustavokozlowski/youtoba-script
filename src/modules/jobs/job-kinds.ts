@@ -20,5 +20,6 @@ const mixSpec: JobKindSpec<MixJob> = {
 export const JOB_KINDS: Record<PlaylistJob['kind'], JobKindSpec<PlaylistJob>> = {
     duplicates: removalSpec,
     unavailable: removalSpec,
+    mix_undo: removalSpec,
     mix: mixSpec,
 };

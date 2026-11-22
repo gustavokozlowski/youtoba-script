@@ -7,7 +7,13 @@ import { type QuotaTracker, quotaTracker } from '../quota/quota-tracker.service'
 import { connectedClient } from '../quota/tracked-client';
 import type { ClientFactory } from '../quota/tracked-client.types';
 import { writeBackup } from './backup';
-import type { RemovalPlan, RemovalResult, RemoveDuplicatesResult, RemoveUnavailableResult } from './removal.types';
+import type {
+    RemovalPlan,
+    RemovalResult,
+    RemoveDuplicatesResult,
+    RemoveUnavailableResult,
+    UndoMixResult,
+} from './removal.types';
 import { type RemovalJobs, removalJobs } from './removal-jobs.service';
 
 /** Começa remoções (de duplicados ou de vídeos apagados) e consulta as que estão em andamento. */
@@ -35,6 +41,15 @@ export class RemovalService {
         return this.run(playlistId, confirm, (entries) => {
             const preview = this.playlists.unavailablePreview(playlistId, entries);
             return { kind: 'unavailable', preview, targets: preview.deleted };
+        });
+    }
+
+    /** Desfaz um Mix: remove do destino só os itens cujo `playlistItemId` está em `itemIds` (os que o Mix adicionou). */
+    undoMix(playlistId: string, itemIds: ReadonlySet<string>, confirm: number | undefined): Promise<UndoMixResult> {
+        return this.run(playlistId, confirm, (entries) => {
+            const items = entries.filter((entry) => itemIds.has(entry.playlistItemId));
+            const preview = { ...this.playlists.removalPreview(playlistId, entries, items), items };
+            return { kind: 'mix_undo', preview, targets: items };
         });
     }
 

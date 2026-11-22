@@ -29,7 +29,7 @@ export interface RestoreResult {
 }
 
 /** O que se remove: duplicados ou vídeos apagados. */
-export type RemovalKind = 'duplicates' | 'unavailable';
+export type RemovalKind = 'duplicates' | 'unavailable' | 'mix_undo';
 
 /** Item a remover; `firstPosition` só existe nos duplicados (posição da ocorrência que fica). */
 export type RemovalTarget = PlaylistEntry & { firstPosition?: number };
@@ -48,6 +48,13 @@ export type RemovalResult<P extends RemovalPreviewBase> = ReadFailure | RemovalS
 
 export type RemoveDuplicatesResult = RemovalResult<DuplicatesPreview>;
 export type RemoveUnavailableResult = RemovalResult<UnavailablePreview>;
+
+/** Dry-run do desfazer: só os itens do registro do Mix que ainda estão no destino. */
+export interface MixUndoPreview extends RemovalPreviewBase {
+    items: RemovalTarget[];
+}
+
+export type UndoMixResult = RemovalResult<MixUndoPreview>;
 
 /** O que muda de um tipo de remoção para outro: como ler os alvos de uma playlist já lida. */
 export interface RemovalPlan<P extends RemovalPreviewBase> {
@@ -91,6 +98,7 @@ export type JobItemState = 'apagado' | 'falhou' | 'pendente';
 
 /** O que muda na resposta HTTP de cada tipo de remoção. */
 export interface RemovalReplySpec<P extends RemovalPreviewBase> {
+    startedMessage: string;
     emptyMessage: string;
     confirmationMessage: (count: number) => string;
     count: (preview: P) => number;

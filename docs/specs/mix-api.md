@@ -106,11 +106,36 @@ Fica no mesmo `playlistJobs`, com `playlistId` = destino e `kind: 'mix'`. Roda c
   - `maxAdicoesPorDia` é `floor((limiteDiario - unidadesLeitura) / 50)`, a mesma conta da remoção.
 - **Ordem das checagens:** a validação dos ids (400) vem antes de tudo; o `already_running` vem antes de qualquer leitura no YouTube.
 
-## PR 3b (depois): desfazer
+## PR 3b: desfazer
 
-`POST /mixes/:registro/undo?confirm=N`:
-1. Valida o nome (`^mix-[A-Za-z0-9_-]+\.json$`, dentro de `BACKUP_DIR`). A validação de caminho do restore vira um helper comum.
-2. Lê o destino agora e cruza com `added`. Só os itens do registro que ainda estão lá podem sair.
-3. Pede confirmação pelo número exato.
-4. Grava o backup do destino.
-5. Remove pelo pipeline de remoção, com `kind: 'mix_undo'`.
+`POST /mixes/:registro/undo?confirm=<N>`: tira do destino **só** os itens que aquele Mix adicionou. Usa o pipeline da remoção: backup do destino antes, job e progresso em `/jobs/:id`.
+
+O `:registro` é o nome do arquivo (`mix-<destino>-<data>.json`), sem caminho. O job do Mix passa a trazer `desfazer: "/mixes/<nome>/undo"`.
+
+| Ordem | Situação | Resposta |
+|---|---|---|
+| 1 | Nome fora de `^mix-[A-Za-z0-9_-]+\.json$` ou fora de `BACKUP_DIR` depois do `path.resolve` | 400 `{ erro: "registro_invalido", mensagem }` |
+| 2 | Arquivo não existe ou não é um registro de Mix válido (`readMixRecord`) | 404 `{ erro: "registro_nao_encontrado", mensagem }` |
+| 3 | Já há job `running` no destino (inclusive o próprio Mix ainda rodando) | 409 `already_running` |
+| 4 | Sem saldo para ler o destino | 429 `daily_budget_exhausted` |
+| 5 | Falha de leitura | `sendReadFailure` |
+| 6 | Nenhum item do registro (`added[].playlistItemId`) está no destino agora | 200 `{ mensagem: "Nada para desfazer: os vídeos deste Mix já não estão no destino.", removidos: 0 }` |
+| 7 | `confirm` diferente do número de itens do registro ainda no destino | 409 `{ erro: "confirmation_required", mensagem, destino, itens: [formatEntry...], quotaHoje }` |
+| 8 | Saldo não cobre nenhuma remoção | 429 |
+| 9 | Ok | 202 `{ mensagem: "Desfazer iniciado.", acompanhar, ...formatJob }` |
+
+**Antes do 202:**
+- O caso 3 é conferido de novo logo antes do start, sem `await` entre as duas checagens.
+- O backup do destino inteiro é gravado (`writeBackup`).
+
+**O job:**
+- É um `RemovalJob` com `kind: 'mix_undo'` e `tipo: "desfazer_mix"` na resposta.
+- Os alvos são as entradas atuais do destino cujo `playlistItemId` está no registro.
+- Aparece em `remocoes` no `GET /jobs`.
+
+**Regras de integridade:**
+- Nunca remove um item que não está no registro, mesmo que seja o mesmo vídeo.
+- Um vídeo que o dono adicionou de novo por fora tem outro `playlistItemId` e fica.
+- Repetir é seguro: o que já saiu não está mais no destino.
+
+**Validação de caminho:** a do `restoreBackup` e a do desfazer viram um helper só, com o padrão do nome como parâmetro.

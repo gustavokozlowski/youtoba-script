@@ -11,6 +11,7 @@ import type {
     PlaylistEntry,
     QuotaToday,
     ReadFailure,
+    RemovalPreviewBase,
     UnavailablePreview,
 } from './playlist.types';
 import { analysisEstimate, analyzable, overviewTotals, summarizeEach } from './playlist-overview';
@@ -104,12 +105,9 @@ export class PlaylistService {
     preview(playlistId: string, entries: PlaylistEntry[]): DuplicatesPreview {
         const { unique, duplicates } = findDuplicates(entries);
         return {
-            playlistId,
-            itemCount: entries.length,
+            ...this.removalPreview(playlistId, entries, duplicates),
             unique: unique.length,
             duplicates,
-            quota: estimateRemovalQuota(entries.length, duplicates.length),
-            quotaToday: this.quotaToday(),
         };
     }
 
@@ -117,10 +115,17 @@ export class PlaylistService {
     unavailablePreview(playlistId: string, entries: PlaylistEntry[]): UnavailablePreview {
         const deleted = findDeleted(entries);
         return {
+            ...this.removalPreview(playlistId, entries, deleted),
+            deleted,
+        };
+    }
+
+    /** O dry-run de uma remoção de alvos já escolhidos em uma playlist já lida. */
+    removalPreview(playlistId: string, entries: PlaylistEntry[], targets: PlaylistEntry[]): RemovalPreviewBase {
+        return {
             playlistId,
             itemCount: entries.length,
-            deleted,
-            quota: estimateRemovalQuota(entries.length, deleted.length),
+            quota: estimateRemovalQuota(entries.length, targets.length),
             quotaToday: this.quotaToday(),
         };
     }

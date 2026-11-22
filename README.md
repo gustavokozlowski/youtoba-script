@@ -134,6 +134,7 @@ Depois do primeiro login, o refresh token fica salvo **cifrado** (AES-256-GCM) e
 | `DELETE` | `/playlist/:playlistId/remove-duplicates?confirm=N` | Inicia a remoção em segundo plano e responde na hora (`202`) com um `jobId`. Exige `confirm` igual ao número de duplicados encontrados; grava um backup antes. |
 | `GET` | `/playlist/:destino/mix?origem=<id>` | **Dry-run do Mix**: o que entraria no fim do destino vindo da origem e o que seria pulado (já no destino, repetido na origem, apagado ou privado), com o custo. Não escreve nada. |
 | `POST` | `/playlist/:destino/mix?origem=<id>&confirm=N` | Inicia o Mix em segundo plano (`202` com `jobId`). A origem nunca muda; o destino só ganha itens, no fim. Exige `confirm` igual ao número que entra; grava um registro do que entrou (`backups/mix-*.json`) antes do primeiro insert. Detalhes em `docs/specs/mix-api.md`. |
+| `POST` | `/mixes/:registro/undo?confirm=N` | **Desfaz um Mix**: tira do destino só os itens que aquele Mix adicionou e que ainda estão lá (por `playlistItemId`; uma cópia do mesmo vídeo posta por fora fica). Grava o backup do destino antes. O link vem no campo `desfazer` do job do Mix. |
 
 ### Acompanhamento e quota
 
