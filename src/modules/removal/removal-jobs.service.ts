@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { errorMessage } from '../../shared/errors';
 import { logger } from '../../shared/logger';
+import { type JobStore, playlistJobs } from '../jobs/job-store';
+import type { PlaylistJob } from '../jobs/job-store.types';
 import { recordRemoval } from './backup';
 import type { RemovalJob, StartRemovalParams } from './removal.types';
 
@@ -9,25 +11,24 @@ import type { RemovalJob, StartRemovalParams } from './removal.types';
  * o registro do que já foi removido continua no arquivo de backup (atualizado a cada item).
  */
 export class RemovalJobs {
-    private readonly jobs = new Map<string, RemovalJob>();
-    private readonly running = new Map<string, Promise<void>>();
+    constructor(private readonly store: JobStore<PlaylistJob> = playlistJobs) {}
 
     get(id: string): RemovalJob | undefined {
-        return this.jobs.get(id);
+        return this.store.get(id);
     }
 
     /** Todas as remoções desde que o servidor subiu, a mais recente primeiro. */
     list(): RemovalJob[] {
-        return [...this.jobs.values()].reverse();
+        return this.store.list();
     }
 
     runningFor(playlistId: string): RemovalJob | undefined {
-        return [...this.jobs.values()].find((job) => job.playlistId === playlistId && job.status === 'running');
+        return this.store.runningFor(playlistId);
     }
 
     /** Resolve quando o job termina. Útil para scripts e testes. */
     settled(id: string): Promise<void> {
-        return this.running.get(id) ?? Promise.resolve();
+        return this.store.settled(id);
     }
 
     start(params: StartRemovalParams): RemovalJob {
@@ -44,8 +45,7 @@ export class RemovalJobs {
             startedAt: new Date().toISOString(),
             backupFile: params.backupFile,
         };
-        this.jobs.set(job.id, job);
-        this.running.set(job.id, this.run(job, params));
+        this.store.track(job, this.run(job, params));
         return job;
     }
 
